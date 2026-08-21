@@ -105,7 +105,7 @@ return [
         OperationTerminated::class => [
             FlushOnce::class,
             FlushTemporaryContainerInstances::class,
-            // DisconnectFromDatabases::class,
+            DisconnectFromDatabases::class,
             // CollectGarbage::class,
         ],
 
@@ -135,6 +135,10 @@ return [
     ],
 
     'flush' => [
+        // stancl/tenancy CacheTenancyBootstrapper 'cache' binding'ini extend eder;
+        // Octane bunu kendi basina geri almaz. BACKEND-PLAN.md §2.3
+        'cache',
+        'cache.store',
         //
     ],
 

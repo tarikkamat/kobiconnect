@@ -1,6 +1,9 @@
 <?php
 
+use App\Listeners\ConfigureTenantHost;
 use Laravel\Fortify\Features;
+use Stancl\Tenancy\Middleware\InitializeTenancyByPath;
+use Stancl\Tenancy\Middleware\ScopeSessions;
 
 return [
 
@@ -86,8 +89,15 @@ return [
     |
     */
 
-    'prefix' => '',
+    // Kullanicilar tenant semasinda yasar, bu yuzden giris de tenant'a baglidir:
+    // /{tenant}/login. Tenant, route'un ILK parametresi olmak zorunda.
+    'prefix' => '{tenant}',
 
+    /*
+     * Auth tenant panelinde yasar (BACKEND-PLAN.md §4.1). Fortify route'lari
+     * bu yuzden tenant subdomain'ine baglanir; central domain'de login yoktur.
+     * Not: config/tenancy.php bu dosyadan sonra yuklendigi icin env() okunur.
+     */
     'domain' => null,
 
     /*
@@ -101,7 +111,14 @@ return [
     |
     */
 
-    'middleware' => ['web'],
+    // bootstrap/app.php'deki tenant grubuyla ayni yigin: Fortify kendi
+    // route'larini kaydettigi icin burada tekrar edilmek zorunda.
+    'middleware' => [
+        'web',
+        InitializeTenancyByPath::class,
+        ScopeSessions::class,
+        ConfigureTenantHost::class,
+    ],
 
     /*
     |--------------------------------------------------------------------------
@@ -142,6 +159,12 @@ return [
     |
     */
 
+    /*
+     * DIKKAT: WebAuthn'de Relying Party ID host'a baglidir ve plan (B) secenegini
+     * secti — RP ID = tenant subdomain'i (BACKEND-PLAN.md §4.2). Asagidaki degerler
+     * yalnizca central fallback'tir; gercek degerler TenancyInitialized olayinda
+     * App\Listeners\ConfigureTenantPasskeys tarafindan runtime'da yazilir.
+     */
     'passkeys' => [
         'relying_party_id' => parse_url(config('app.url'), PHP_URL_HOST),
         'allowed_origins' => [config('app.url')],

@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Listeners\FlushPasswordBroker;
+use App\Listeners\FlushPermissionCache;
+use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
@@ -18,7 +21,10 @@ class TenancyServiceProvider extends ServiceProvider
     // By default, no namespace is used to support the callable array syntax.
     public static string $controllerNamespace = '';
 
-    public function events()
+    /**
+     * @return array<class-string, list<mixed>>
+     */
+    public function events(): array
     {
         return [
             // Tenant events
@@ -27,7 +33,7 @@ class TenancyServiceProvider extends ServiceProvider
                 JobPipeline::make([
                     Jobs\CreateDatabase::class,
                     Jobs\MigrateDatabase::class,
-                    // Jobs\SeedDatabase::class,
+                    Jobs\SeedDatabase::class,
 
                     // Your own jobs to prepare the tenant.
                     // Provision API keys, create S3 buckets, anything you want!
@@ -70,11 +76,15 @@ class TenancyServiceProvider extends ServiceProvider
             Events\InitializingTenancy::class => [],
             Events\TenancyInitialized::class => [
                 Listeners\BootstrapTenancy::class,
+                FlushPermissionCache::class,
+                FlushPasswordBroker::class,
             ],
 
             Events\EndingTenancy::class => [],
             Events\TenancyEnded::class => [
                 Listeners\RevertToCentralContext::class,
+                FlushPermissionCache::class,
+                FlushPasswordBroker::class,
             ],
 
             Events\BootstrappingTenancy::class => [],
@@ -92,20 +102,32 @@ class TenancyServiceProvider extends ServiceProvider
         ];
     }
 
-    public function register()
+    public function register(): void
     {
         //
     }
 
-    public function boot()
+    public function boot(): void
     {
         $this->bootEvents();
-        $this->mapRoutes();
+
+        // Tenant route'ları bootstrap/app.php icinde domain kapsamiyla yuklenir.
+        // Paket varsayilani olan mapRoutes() booted() icinde calisiyordu ve
+        // routes/web.php'deki "/" route'unu eziyordu.
 
         $this->makeTenancyMiddlewareHighestPriority();
+
+        // Bilinmeyen bir workspace slug'i varsayilan olarak
+        // TenantCouldNotBeIdentifiedByPathException firlatir ve 500 dondururdu.
+        // Kullanici yanlis slug yazdiginda stack trace gormemeli.
+        Middleware\InitializeTenancyByPath::$onFail = static fn () => abort(404);
+
+        // API tarafi `X-Tenant` basligi ile tanimlanir; eksik/gecersiz basligi
+        // 404 degil 400 ile karsilamak dogru sinyaldir.
+        Middleware\InitializeTenancyByRequestData::$onFail = static fn () => abort(400, 'Gecersiz veya eksik X-Tenant basligi.');
     }
 
-    protected function bootEvents()
+    protected function bootEvents(): void
     {
         foreach ($this->events() as $event => $listeners) {
             foreach ($listeners as $listener) {
@@ -118,17 +140,7 @@ class TenancyServiceProvider extends ServiceProvider
         }
     }
 
-    protected function mapRoutes()
-    {
-        $this->app->booted(function () {
-            if (file_exists(base_path('routes/tenant.php'))) {
-                Route::namespace(static::$controllerNamespace)
-                    ->group(base_path('routes/tenant.php'));
-            }
-        });
-    }
-
-    protected function makeTenancyMiddlewareHighestPriority()
+    protected function makeTenancyMiddlewareHighestPriority(): void
     {
         $tenancyMiddleware = [
             // Even higher priority than the initialization middleware
@@ -141,8 +153,12 @@ class TenancyServiceProvider extends ServiceProvider
             Middleware\InitializeTenancyByRequestData::class,
         ];
 
+        // Application sozlesmesi ArrayAccess degil; prependToMiddlewarePriority
+        // yalnizca somut Foundation\Http\Kernel uzerinde bulunur.
+        $kernel = $this->app->make(Kernel::class);
+
         foreach (array_reverse($tenancyMiddleware) as $middleware) {
-            $this->app[\Illuminate\Contracts\Http\Kernel::class]->prependToMiddlewarePriority($middleware);
+            $kernel->prependToMiddlewarePriority($middleware);
         }
     }
 }

@@ -1,0 +1,29 @@
+<?php
+
+declare(strict_types=1);
+
+use App\Http\Controllers\Catalog\ProductController;
+use Illuminate\Support\Facades\Route;
+
+/*
+| catalog route'lari.
+| `routes/tenant.php` icinden ['auth','verified','license'] grubunda yuklenir;
+| burada middleware TEKRAR TANIMLANMAZ.
+|
+| Bu dosya `routes/tenant.php` icindeki `catalog` blogundan ONCE yuklenir, bu
+| yuzden `products/create` sabit segmenti `products/{product}` ile catismaz.
+|
+| CSV/XLSX ice aktarma BILEREK yok: toplu fiyat/stok islemi ayni ihtiyaci
+| dosya yukleme, sutun eslemesi ve hata raporu makinesi olmadan karsiliyor.
+*/
+Route::prefix('catalog')->group(function (): void {
+    Route::get('products/create', [ProductController::class, 'create'])->name('products.create');
+    Route::post('products', [ProductController::class, 'store'])->name('products.store');
+
+    // Toplu islem uclari `{product}` route'undan once gelmeli.
+    // `preview` sayfa gezinmesi olmadan cagrilir (useHttp) ve JSON doner.
+    Route::post('products/bulk/preview', [ProductController::class, 'bulkPreview'])->name('products.bulk-preview');
+    Route::post('products/bulk', [ProductController::class, 'bulkUpdate'])->name('products.bulk-update');
+
+    Route::delete('products/{product}', [ProductController::class, 'destroy'])->name('products.destroy');
+});

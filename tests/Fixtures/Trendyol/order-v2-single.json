@@ -1,0 +1,44 @@
+{
+  "totalElements": 1,
+  "totalPages": 1,
+  "page": 0,
+  "size": 200,
+  "content": [
+    {
+      "orderNumber": "1084507121",
+      "shipmentPackageId": 1234567,
+      "shipmentPackageStatus": "Invoiced",
+      "status": "Invoiced",
+      "orderDate": 1762860000000,
+      "lastModifiedDate": 1762869000000,
+      "currencyCode": "TRY",
+      "customerFirstName": "Ayşe",
+      "customerLastName": "Yılmaz",
+      "customerEmail": "ayse.yilmaz@example.com",
+      "invoiceNumber": "GIB2026000000001",
+      "invoiceLink": "https://cdn.trendyol.com/invoice/GIB2026000000001.pdf",
+      "invoiceStatus": "Success",
+      "packageGrossAmount": 449.9,
+      "packageTotalDiscount": 30.0,
+      "packageTotalPrice": 419.9,
+      "createdBy": "order-creation",
+      "packageHistories": [
+        { "createdDate": 1762860000000, "status": "Created" },
+        { "createdDate": 1762869000000, "status": "Invoiced" }
+      ],
+      "lines": [
+        {
+          "lineId": 90001,
+          "quantity": 2,
+          "barcode": "KOBI-001",
+          "stockCode": "KOBI-001",
+          "currencyCode": "TRY",
+          "lineUnitPrice": 149.9,
+          "lineTotalDiscount": 30.0,
+          "vatRate": 20,
+          "orderLineItemStatusName": "Invoiced"
+        }
+      ]
+    }
+  ]
+}

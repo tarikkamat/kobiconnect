@@ -2,21 +2,43 @@
 
 declare(strict_types=1);
 
-use Stancl\Tenancy\Database\Models\Domain;
 use App\Models\Tenant;
+use App\Support\SequentialTenantIdGenerator;
+use Stancl\Tenancy\Bootstrappers\CacheTenancyBootstrapper;
+use Stancl\Tenancy\Bootstrappers\DatabaseTenancyBootstrapper;
+use Stancl\Tenancy\Bootstrappers\FilesystemTenancyBootstrapper;
+use Stancl\Tenancy\Bootstrappers\QueueTenancyBootstrapper;
+use Stancl\Tenancy\Database\Models\Domain;
+use Stancl\Tenancy\Features\CrossDomainRedirect;
+use Stancl\Tenancy\Features\TenantConfig;
+use Stancl\Tenancy\TenantDatabaseManagers\MySQLDatabaseManager;
+use Stancl\Tenancy\TenantDatabaseManagers\PostgreSQLSchemaManager;
+use Stancl\Tenancy\TenantDatabaseManagers\SQLiteDatabaseManager;
 
 return [
     'tenant_model' => Tenant::class,
-    'id_generator' => Stancl\Tenancy\UUIDGenerator::class,
+    // Sira numarasi (1001, 1002, ...) — URL segmenti olarak okunur kalsin diye.
+    // Yalnizca id bos birakilinca calisir (Stancl GeneratesIds), yani testler
+    // sabit bir id vermeye devam edebilir.
+    'id_generator' => SequentialTenantIdGenerator::class,
 
     'domain_model' => Domain::class,
 
     /**
-     * The list of domains hosting your central app.
+     * Uygulamanin TEK host'u. Tenant subdomain'den DEGIL, path'ten cozulur:
+     * app.kobiconnect.com/{tenant}/dashboard — bkz. bootstrap/app.php
      *
-     * Only relevant if you're using the domain or subdomain identification middleware.
+     * kobiconnect.com (landing) ayri bir projedir, buraya hic ugramaz.
+     */
+    'app_domain' => env('APP_DOMAIN', 'app.kobiconnect.test'),
+
+    /**
+     * Domain tabanli tanimlama KULLANILMIYOR. Bu liste yalnizca
+     * PreventAccessFromCentralDomains gibi domain farkindali yardimcilar icin
+     * duruyor; path tabanli akista devrede degil.
      */
     'central_domains' => [
+        env('APP_DOMAIN', 'app.kobiconnect.test'),
         '127.0.0.1',
         'localhost',
     ],
@@ -28,10 +50,10 @@ return [
      * To configure their behavior, see the config keys below.
      */
     'bootstrappers' => [
-        Stancl\Tenancy\Bootstrappers\DatabaseTenancyBootstrapper::class,
-        Stancl\Tenancy\Bootstrappers\CacheTenancyBootstrapper::class,
-        Stancl\Tenancy\Bootstrappers\FilesystemTenancyBootstrapper::class,
-        Stancl\Tenancy\Bootstrappers\QueueTenancyBootstrapper::class,
+        DatabaseTenancyBootstrapper::class,
+        CacheTenancyBootstrapper::class,
+        FilesystemTenancyBootstrapper::class,
+        QueueTenancyBootstrapper::class,
         // Stancl\Tenancy\Bootstrappers\RedisTenancyBootstrapper::class, // Note: phpredis is needed
     ],
 
@@ -39,7 +61,7 @@ return [
      * Database tenancy config. Used by DatabaseTenancyBootstrapper.
      */
     'database' => [
-        'central_connection' => env('DB_CONNECTION', 'central'),
+        'central_connection' => 'central',
 
         /**
          * Connection used as a "template" for the dynamically created tenant database connection.
@@ -58,10 +80,11 @@ return [
          * TenantDatabaseManagers are classes that handle the creation & deletion of tenant databases.
          */
         'managers' => [
-            'sqlite' => Stancl\Tenancy\TenantDatabaseManagers\SQLiteDatabaseManager::class,
-            'mysql' => Stancl\Tenancy\TenantDatabaseManagers\MySQLDatabaseManager::class,
-            'mariadb' => Stancl\Tenancy\TenantDatabaseManagers\MySQLDatabaseManager::class,
-            'pgsql' => Stancl\Tenancy\TenantDatabaseManagers\PostgreSQLDatabaseManager::class,
+            'sqlite' => SQLiteDatabaseManager::class,
+            'mysql' => MySQLDatabaseManager::class,
+            'mariadb' => MySQLDatabaseManager::class,
+            // Schema-per-tenant: tek fiziksel DB, tek connection pool (Octane dostu).
+            'pgsql' => PostgreSQLSchemaManager::class,
 
         /**
          * Use this database manager for MySQL to have a DB user created for each tenant database.
@@ -167,8 +190,8 @@ return [
         // Stancl\Tenancy\Features\UserImpersonation::class,
         // Stancl\Tenancy\Features\TelescopeTags::class,
         // Stancl\Tenancy\Features\UniversalRoutes::class,
-        // Stancl\Tenancy\Features\TenantConfig::class, // https://tenancyforlaravel.com/docs/v3/features/tenant-config
-        // Stancl\Tenancy\Features\CrossDomainRedirect::class, // https://tenancyforlaravel.com/docs/v3/features/cross-domain-redirect
+        TenantConfig::class,
+        CrossDomainRedirect::class,
         // Stancl\Tenancy\Features\ViteBundler::class,
     ],
 
@@ -195,6 +218,9 @@ return [
      */
     'seeder_parameters' => [
         '--class' => 'DatabaseSeeder', // root seeder class
-        // '--force' => true, // This needs to be true to seed tenant databases in production
+        // ZORUNLU: tenants:seed ConfirmableTrait kullanir. Production'da --force
+        // olmadan sessizce hicbir sey yapmaz -> roller kurulmaz -> kayitta
+        // assignRole('Sahip') patlar -> her kayit telafiyle geri alinir.
+        '--force' => true,
     ],
 ];

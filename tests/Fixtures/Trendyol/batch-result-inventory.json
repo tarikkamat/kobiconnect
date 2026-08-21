@@ -1,0 +1,31 @@
+{
+  "batchRequestId": "fa75dfd5-6ce6-4730-a09e-97563500000-1529854840",
+  "items": [
+    {
+      "requestItem": {
+        "barcode": "8680000000",
+        "quantity": 100,
+        "salePrice": 112.85,
+        "listPrice": 113.85,
+        "updateRequestDate": "2025-05-08T11:37:07.950+00:00"
+      },
+      "status": "SUCCESS",
+      "failureReasons": []
+    },
+    {
+      "requestItem": {
+        "barcode": "8680000001",
+        "quantity": 5,
+        "updateRequestDate": "2025-05-08T11:37:07.950+00:00"
+      },
+      "status": "FAILED",
+      "failureReasons": ["Barkod bulunamadi"]
+    }
+  ],
+  "creationDate": 1746704227950,
+  "lastModification": 1746704230000,
+  "sourceType": "API",
+  "itemCount": 2,
+  "failedItemCount": 1,
+  "batchRequestType": "ProductInventoryUpdate"
+}

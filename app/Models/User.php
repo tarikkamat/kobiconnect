@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -13,6 +13,7 @@ use Illuminate\Support\Carbon;
 use Laravel\Fortify\Contracts\PasskeyUser;
 use Laravel\Fortify\PasskeyAuthenticatable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
+use Spatie\Permission\Traits\HasRoles;
 
 /**
  * @property int $id
@@ -29,16 +30,35 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
  */
 #[Fillable(['name', 'email', 'password'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
-class User extends Authenticatable implements PasskeyUser
+class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable, PasskeyAuthenticatable, TwoFactorAuthenticatable;
+    use HasFactory, HasRoles, Notifiable, PasskeyAuthenticatable, TwoFactorAuthenticatable;
 
     /**
      * Get the attributes that should be cast.
      *
      * @return array<string, string>
      */
+    /**
+     * Uygulama tek host'ta yasadigi icin passkey Relying Party ID tum
+     * tenant'lar icin AYNIDIR. Paket varsayilani handle'i `users|{id}` uzerinden
+     * turetir; bu durumda tenant A'nin 1 numarali kullanicisi ile tenant B'nin
+     * 1 numarali kullanicisi ayni handle'i uretir. Authenticator bunlari tek
+     * hesap sanip birbirinin passkey'ini EZEBILIR.
+     *
+     * Tenant anahtarini handle'a katarak bunu onluyoruz.
+     */
+    public function getPasskeyUserHandle(): string
+    {
+        return hash_hmac(
+            'sha256',
+            $this->getTable().'|'.(string) tenant()?->getTenantKey().'|'.$this->getKey(),
+            (string) config('passkeys.user_handle_secret'),
+            binary: true,
+        );
+    }
+
     protected function casts(): array
     {
         return [

@@ -5,6 +5,7 @@ import { initializeTheme } from '@/hooks/use-appearance';
 import AppLayout from '@/layouts/app-layout';
 import AuthLayout from '@/layouts/auth-layout';
 import SettingsLayout from '@/layouts/settings/layout';
+import { initialiseTenantUrlDefaults } from '@/lib/tenant-url-defaults';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
@@ -14,7 +15,10 @@ createInertiaApp({
         switch (true) {
             case name === 'welcome':
                 return null;
+            // Central onboarding sayfalarinda oturum yoktur; AppLayout'un
+            // kenar cubugu ve auth.user beklentisi burada karsilanamaz.
             case name.startsWith('auth/'):
+            case name.startsWith('onboarding/'):
                 return AuthLayout;
             case name.startsWith('settings/'):
                 return [AppLayout, SettingsLayout];
@@ -23,7 +27,10 @@ createInertiaApp({
         }
     },
     strictMode: true,
-    withApp(app) {
+    withApp(app, { page }) {
+        // Wayfinder'in tenant varsayilanini besle — bkz. lib/tenant-url-defaults.
+        initialiseTenantUrlDefaults(page);
+
         return (
             <TooltipProvider delayDuration={0}>
                 {app}

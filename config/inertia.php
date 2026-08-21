@@ -16,7 +16,11 @@ return [
     */
 
     'ssr' => [
-        'enabled' => true,
+        // KAPALI: bu kapali bir panel, SEO gereksinimi yok ve
+        // resources/js/ssr.tsx giris noktasi hic yazilmadi. Acik birakmak her
+        // sayfa render'inda SSR sunucusuna bosuna baglanti denemesi demekti
+        // (FRONTEND-PLAN.md §0).
+        'enabled' => false,
         'url' => 'http://127.0.0.1:13714',
         // 'bundle' => base_path('bootstrap/ssr/ssr.mjs'),
 

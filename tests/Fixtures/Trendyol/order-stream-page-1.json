@@ -1,0 +1,152 @@
+{
+  "content": [
+    {
+      "orderNumber": "1084507121",
+      "orderCountryCode": "TR",
+      "shipmentPackageId": 1234567,
+      "shipmentPackageStatus": "Created",
+      "status": "Created",
+      "orderDate": 1762860000000,
+      "lastModifiedDate": 1762865408581,
+      "currencyCode": "TRY",
+      "channelId": 1,
+      "supplierId": 4321,
+      "customerId": 88991122,
+      "customerFirstName": "Ayşe",
+      "customerLastName": "Yılmaz",
+      "customerEmail": "ayse.yilmaz@example.com",
+      "identityNumber": "12345678901",
+      "taxNumber": null,
+      "commercial": false,
+      "micro": false,
+      "isCod": false,
+      "createdBy": "order-creation",
+      "cargoProviderName": "Trendyol Express",
+      "cargoTrackingNumber": 7318429576123456789,
+      "cargoTrackingLink": "https://kargotakip.trendyol.com/?trackingNumber=7318429576123456789",
+      "cargoSenderNumber": "1122334455",
+      "cargoDeci": 3.5,
+      "packageGrossAmount": 449.9,
+      "packageSellerDiscount": 20.0,
+      "packageTyDiscount": 10.0,
+      "packageTotalDiscount": 30.0,
+      "packageTotalPrice": 419.9,
+      "deliveryType": "normal",
+      "deliveryAddressType": "Shipment",
+      "shipmentAddress": {
+        "id": 55443322,
+        "firstName": "Ayşe",
+        "lastName": "Yılmaz",
+        "address1": "Barbaros Mah. Ihlamur Sok. No:12 D:4",
+        "address2": "",
+        "city": "İstanbul",
+        "cityCode": 34,
+        "district": "Ataşehir",
+        "districtId": 1234,
+        "neighborhood": "Barbaros",
+        "neighborhoodId": 4321,
+        "postalCode": "34746",
+        "countryCode": "TR",
+        "phone": "05001234567",
+        "fullAddress": "Barbaros Mah. Ihlamur Sok. No:12 D:4 Ataşehir İstanbul",
+        "fullName": "Ayşe Yılmaz",
+        "latitude": "40.9901",
+        "longitude": "29.1274"
+      },
+      "invoiceAddress": {
+        "id": 55443323,
+        "firstName": "Ayşe",
+        "lastName": "Yılmaz",
+        "address1": "Barbaros Mah. Ihlamur Sok. No:12 D:4",
+        "city": "İstanbul",
+        "district": "Ataşehir",
+        "countryCode": "TR",
+        "fullAddress": "Barbaros Mah. Ihlamur Sok. No:12 D:4 Ataşehir İstanbul"
+      },
+      "packageHistories": [
+        { "createdDate": 1762860000000, "status": "Created" }
+      ],
+      "lines": [
+        {
+          "lineId": 90001,
+          "quantity": 2,
+          "barcode": "KOBI 001",
+          "stockCode": "KOBI-001",
+          "contentId": 700123,
+          "productName": "Termos 750 ml Siyah",
+          "productSize": " 21",
+          "productColor": "Siyah",
+          "productCategoryId": 411,
+          "currencyCode": "TRY",
+          "lineUnitPrice": 149.9,
+          "lineGrossAmount": 299.8,
+          "lineSellerDiscount": 20.0,
+          "lineTyDiscount": 10.0,
+          "lineTotalDiscount": 30.0,
+          "vatRate": 20,
+          "commission": 12.5,
+          "orderLineItemStatusName": "Created",
+          "sellerId": 4321
+        },
+        {
+          "lineId": 90002,
+          "quantity": 1,
+          "barcode": "ESLESMEYEN-9",
+          "stockCode": "ESLESMEYEN-9",
+          "contentId": 700124,
+          "productName": "Bilinmeyen Ürün",
+          "currencyCode": "TRY",
+          "lineUnitPrice": 150.1,
+          "lineGrossAmount": 150.1,
+          "lineTotalDiscount": 0.0,
+          "vatRate": 20,
+          "commission": 15.0,
+          "orderLineItemStatusName": "Created",
+          "sellerId": 4321
+        }
+      ]
+    },
+    {
+      "orderNumber": "1084507999",
+      "shipmentPackageId": 1234599,
+      "shipmentPackageStatus": "Awaiting",
+      "status": "Awaiting",
+      "orderDate": 1762861000000,
+      "lastModifiedDate": 1762861500000,
+      "currencyCode": "TRY",
+      "customerFirstName": "Mehmet",
+      "customerLastName": "Demir",
+      "customerEmail": "mehmet.demir@example.com",
+      "packageGrossAmount": 99.9,
+      "packageTotalDiscount": 0.0,
+      "packageTotalPrice": 99.9,
+      "createdBy": "order-creation",
+      "shipmentAddress": {
+        "city": "Ankara",
+        "district": "Çankaya",
+        "phone": "05009876543",
+        "fullAddress": "Kızılay Mah. 1. Cad. No:5 Çankaya Ankara"
+      },
+      "packageHistories": [
+        { "createdDate": 1762861000000, "status": "Awaiting" }
+      ],
+      "lines": [
+        {
+          "lineId": 90003,
+          "quantity": 1,
+          "barcode": "KOBI-002",
+          "stockCode": "KOBI-002",
+          "currencyCode": "TRY",
+          "lineUnitPrice": 99.9,
+          "lineGrossAmount": 99.9,
+          "lineTotalDiscount": 0.0,
+          "vatRate": 10,
+          "orderLineItemStatusName": "Awaiting"
+        }
+      ]
+    }
+  ],
+  "size": 2,
+  "hasMore": true,
+  "nextCursor": "eyJsYXN0TW9kaWZpZWREYXRlIjoxNzYyODYxNTAwMDAwfQ=="
+}

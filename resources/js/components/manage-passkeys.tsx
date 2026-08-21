@@ -29,7 +29,7 @@ export default function ManagePasskeys(props: Props) {
     const passkeys = props.passkeys ?? [];
 
     const handleDelete = (id: number, onError: () => void) => {
-        router.delete(destroy.url(id), {
+        router.delete(destroy.url({ passkey: id }), {
             preserveScroll: true,
             onError,
         });

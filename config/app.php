@@ -17,6 +17,22 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Guvenilir Proxy'ler
+    |--------------------------------------------------------------------------
+    |
+    | Cloudflare + VDS. Burada durmasinin sebebi: `bootstrap/app.php` icinde
+    | env() cagirmak config cache'lendiginde (yani URETIMDE) null dondurur ve
+    | proxy guveni sessizce kaybolur.
+    |
+    | '*' yalnizca origin sunucusu SADECE Cloudflare IP araliklarina acikken
+    | guvenlidir; aksi halde X-Forwarded-For sahtelenebilir.
+    |
+    */
+
+    'trusted_proxies' => env('TRUSTED_PROXIES', '*'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Environment
     |--------------------------------------------------------------------------
     |

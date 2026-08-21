@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\License;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -33,13 +34,43 @@ class HandleInertiaRequests extends Middleware
      *
      * @return array<string, mixed>
      */
+    /**
+     * @return array<string, mixed>
+     */
     public function share(Request $request): array
     {
+        $user = $request->user();
+        $license = tenant() === null ? null : License::where('tenant_id', tenant('id'))->first();
+
         return [
             ...parent::share($request),
             'name' => config('app.name'),
             'auth' => [
-                'user' => $request->user(),
+                'user' => $user,
+            ],
+            // Yetkiler UI'da aksiyonu gizlemek icin degil, DEVRE DISI birakmak
+            // icin kullanilir — BACKEND-PLAN.md §4.3.
+            // `?->` sart: bu middleware central route'larda da calisir ve orada
+            // users/roles tablosu yoktur.
+            'permissions' => $user?->getAllPermissions()->pluck('name')->all() ?? [],
+            'roles' => $user?->getRoleNames()->all() ?? [],
+            'tenant' => tenant() === null ? null : [
+                'id' => tenant('id'),
+                'host' => $request->getHost(),
+            ],
+            // Ham enum PAYLASILMAZ: grace period'da `status` hala `active`
+            // doner, dolayisiyla arayuz grace durumunu hicbir zaman goremezdi.
+            'license' => $license === null ? null : [
+                'status' => match (true) {
+                    $license->inGracePeriod() => 'grace',
+                    ! $license->hasAccess() => 'expired',
+                    default => $license->status->value,
+                },
+                'endsAt' => $license->ends_at?->toIso8601String(),
+                'graceDaysLeft' => $license->inGracePeriod() && $license->grace_until !== null
+                    ? (int) ceil(now()->diffInDays($license->grace_until, false))
+                    : null,
+                'readOnly' => $license->isReadOnly(),
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];

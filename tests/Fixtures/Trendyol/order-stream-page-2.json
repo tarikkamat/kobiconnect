@@ -1,0 +1,55 @@
+{
+  "content": [
+    {
+      "orderNumber": "1084500001",
+      "shipmentPackageId": 1230001,
+      "shipmentPackageStatus": "Delivered",
+      "status": "Delivered",
+      "orderDate": 1762700000000,
+      "lastModifiedDate": 1762790000000,
+      "currencyCode": "TRY",
+      "customerFirstName": "Zeynep",
+      "customerLastName": "Kaya",
+      "customerEmail": "zeynep.kaya@example.com",
+      "cargoProviderName": "Aras Kargo",
+      "cargoTrackingNumber": 9318429576987654321,
+      "cargoTrackingLink": "https://kargotakip.trendyol.com/?trackingNumber=9318429576987654321",
+      "cargoDeci": 1.0,
+      "packageGrossAmount": 249.5,
+      "packageTotalDiscount": 0.0,
+      "packageTotalPrice": 249.5,
+      "createdBy": "order-creation",
+      "shipmentAddress": {
+        "city": "İzmir",
+        "district": "Karşıyaka",
+        "phone": "05551112233",
+        "fullAddress": "Bostanlı Mah. Cemal Gürsel Cad. No:9 Karşıyaka İzmir"
+      },
+      "packageHistories": [
+        { "createdDate": 1762700000000, "status": "Created" },
+        { "createdDate": 1762710000000, "status": "Picking" },
+        { "createdDate": 1762720000000, "status": "Invoiced" },
+        { "createdDate": 1762730000000, "status": "Shipped" },
+        { "createdDate": 1762790000000, "status": "Delivered" }
+      ],
+      "lines": [
+        {
+          "lineId": 80001,
+          "quantity": 1,
+          "barcode": "KOBI-001",
+          "stockCode": "KOBI-001",
+          "currencyCode": "TRY",
+          "lineUnitPrice": 249.5,
+          "lineGrossAmount": 249.5,
+          "lineTotalDiscount": 0.0,
+          "vatRate": 20,
+          "commission": 12.5,
+          "orderLineItemStatusName": "Delivered"
+        }
+      ]
+    }
+  ],
+  "size": 1,
+  "hasMore": false,
+  "nextCursor": null
+}

@@ -4,8 +4,12 @@ namespace App\Providers;
 
 use App\Actions\Fortify\CreateNewUser;
 use App\Actions\Fortify\ResetUserPassword;
+use App\Listeners\ConfigureTenantHost;
+use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Contracts\Auth\CanResetPassword;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
@@ -13,6 +17,7 @@ use Illuminate\Validation\Rules\Password;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;
 use Laravel\Fortify\Fortify;
+use Stancl\Tenancy\Events\TenancyInitialized;
 
 class FortifyServiceProvider extends ServiceProvider
 {
@@ -32,6 +37,18 @@ class FortifyServiceProvider extends ServiceProvider
         $this->configureActions();
         $this->configureViews();
         $this->configureRateLimiting();
+
+        // Sifirlama baglantisi central'a gider: kullanici panel adresini
+        // bilmeden /reset-password/{token} ekranina duser, tenant e-postadan
+        // cozulur (PasswordResetController). Bu olmadan bildirim tenant
+        // route'unu (/{tenant}/reset-password) uretirdi.
+        ResetPassword::createUrlUsing(fn (CanResetPassword $notifiable, string $token): string => route('central.password.reset', [
+            'token' => $token,
+            'email' => $notifiable->getEmailForPasswordReset(),
+        ]));
+
+        // Passkey RP ID ve `{tenant}` URL varsayilani tenant host'una baglidir.
+        Event::listen(TenancyInitialized::class, [ConfigureTenantHost::class, 'configure']);
     }
 
     /**

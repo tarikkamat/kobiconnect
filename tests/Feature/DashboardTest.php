@@ -2,6 +2,10 @@
 
 use App\Models\User;
 
+beforeEach(function (): void {
+    $this->grantActiveLicense();
+});
+
 test('guests are redirected to the login page', function () {
     $response = $this->get(route('dashboard'));
     $response->assertRedirect(route('login'));

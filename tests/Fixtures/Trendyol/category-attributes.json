@@ -1,0 +1,7 @@
+{ "id": 14609, "name": "Muay Thai Kaskı", "displayName": "Muay Thai Kaskı",
+  "categoryAttributes": [
+    { "allowCustom": false,
+      "attribute": {"id": 293, "name": "Beden"},
+      "categoryId": 14609, "required": true,
+      "varianter": true, "slicer": false,
+      "allowMultipleAttributeValues": false } ] }

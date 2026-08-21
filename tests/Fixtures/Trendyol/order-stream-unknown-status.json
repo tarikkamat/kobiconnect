@@ -1,0 +1,35 @@
+{
+  "content": [
+    {
+      "orderNumber": "1084500777",
+      "shipmentPackageId": 1230777,
+      "shipmentPackageStatus": "Repack",
+      "status": "Repack",
+      "orderDate": 1762600000000,
+      "lastModifiedDate": 1762600500000,
+      "currencyCode": "TRY",
+      "customerFirstName": "Ali",
+      "customerLastName": "Veli",
+      "packageGrossAmount": 59.9,
+      "packageTotalDiscount": 0.0,
+      "packageTotalPrice": 59.9,
+      "packageHistories": [],
+      "lines": [
+        {
+          "lineId": 70777,
+          "quantity": 1,
+          "barcode": "KOBI-001",
+          "stockCode": "KOBI-001",
+          "currencyCode": "TRY",
+          "lineUnitPrice": 59.9,
+          "lineTotalDiscount": 0.0,
+          "vatRate": 20,
+          "orderLineItemStatusName": "Repack"
+        }
+      ]
+    }
+  ],
+  "size": 1,
+  "hasMore": false,
+  "nextCursor": null
+}
