@@ -1,14 +1,38 @@
-/** Kullanicinin verdigi semadaki kart konumlari; logolar `public/apps` altindan. */
+/**
+ * Kullanicinin verdigi semadaki kart konumlari. `canvas` logo dosyasinin
+ * viewBox olcusu, `content` ise icindeki gorunur alanin bbox'i (bazi
+ * dosyalarda genis bos pay var); ikisi birlikte logolari esit boyda
+ * ortalamamizi saglar.
+ */
 const CARDS = [
-    { slug: 'trendyol', x: 580, y: 130 },
-    { slug: 'shopify', x: 610, y: 240 },
-    { slug: 'ideasoft', x: 630, y: 350 },
-    { slug: 'ciceksepeti', x: 620, y: 460 },
-    { slug: 'hepsiburada', x: 600, y: 570 },
-    { slug: 'pttavm', x: 560, y: 680 },
-    { slug: 'amazon', x: 510, y: 790 },
-    { slug: 'n11', x: 460, y: 900 },
+    { slug: 'trendyol', x: 580, y: 130, canvas: [111, 45], content: [0, 10, 111, 25] },
+    { slug: 'shopify', x: 610, y: 240, canvas: [960, 302], content: [0, 9, 960, 276] },
+    { slug: 'ideasoft', x: 630, y: 350, canvas: [400, 222], content: [34, 76, 332, 68] },
+    { slug: 'ciceksepeti', x: 620, y: 460, canvas: [858, 518], content: [54, 186, 750, 146] },
+    { slug: 'hepsiburada', x: 600, y: 570, canvas: [282, 48], content: [0, 0, 282, 48] },
+    { slug: 'pttavm', x: 560, y: 680, canvas: [502, 127], content: [0, 0, 502, 127] },
+    { slug: 'amazon', x: 510, y: 790, canvas: [603, 182], content: [0, 0, 602, 181] },
+    { slug: 'n11', x: 460, y: 900, canvas: [100, 53], content: [1, 0, 99, 52] },
 ];
+
+const CARD_W = 360;
+const CARD_H = 100;
+const LOGO_H = 40;
+const LOGO_MAX_W = 250;
+
+/** Logoyu kart ortasina, icerigi LOGO_H yuksekliginde olacak sekilde yerlestirir. */
+function logoRect({ canvas, content }: (typeof CARDS)[number]) {
+    const [cw, ch] = canvas;
+    const [bx, by, bw, bh] = content;
+    const k = Math.min(LOGO_H / bh, LOGO_MAX_W / bw);
+
+    return {
+        width: cw * k,
+        height: ch * k,
+        x: CARD_W / 2 - (bx + bw / 2) * k,
+        y: CARD_H / 2 - (by + bh / 2) * k,
+    };
+}
 
 /** Bezier bitis noktalari (kart sol kenari, dikey ortasi). */
 const ENDPOINTS = CARDS.map(({ x, y }) => ({ x, y: y + 50 }));
@@ -16,8 +40,8 @@ const ENDPOINTS = CARDS.map(({ x, y }) => ({ x, y: y + 50 }));
 export function IntegrationsDiagram({ className }: { className?: string }) {
     return (
         <svg
-            viewBox="0 0 1200 1800"
-            preserveAspectRatio="xMidYMid slice"
+            viewBox="0 60 1000 1200"
+            preserveAspectRatio="xMaxYMid slice"
             aria-hidden="true"
             className={className}
         >
@@ -153,20 +177,21 @@ export function IntegrationsDiagram({ className }: { className?: string }) {
                 <circle cx="0" cy="0" r="8" fill="#ffffff" />
             </g>
 
-            {CARDS.map(({ slug, x, y }) => (
+            {CARDS.map((card) => (
                 <g
-                    key={slug}
-                    transform={`translate(${x}, ${y})`}
+                    key={card.slug}
+                    transform={`translate(${card.x}, ${card.y})`}
                     filter="url(#softShadow)"
                 >
-                    <rect width="360" height="100" rx="20" fill="#ffffff" />
+                    <rect
+                        width={CARD_W}
+                        height={CARD_H}
+                        rx="20"
+                        fill="#ffffff"
+                    />
                     <image
-                        href={`/apps/${slug}.svg`}
-                        x="50"
-                        y="25"
-                        width="260"
-                        height="50"
-                        preserveAspectRatio="xMidYMid meet"
+                        href={`/apps/${card.slug}.svg`}
+                        {...logoRect(card)}
                     />
                 </g>
             ))}

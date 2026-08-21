@@ -43,11 +43,12 @@ export default function AuthSplitLayout({
 
             <div className="relative hidden overflow-hidden bg-muted lg:block">
                 <IntegrationsDiagram className="absolute inset-0 size-full" />
-                <div className="absolute inset-x-0 bottom-0 flex flex-col gap-2 bg-gradient-to-t from-black/60 to-transparent p-10 pt-24 text-white">
+                {/* ponytail: sema acik tonlu, o yuzden metin koyu. */}
+                <div className="absolute inset-x-0 bottom-0 flex flex-col gap-2 p-10 text-neutral-800">
                     <p className="text-2xl font-medium text-balance">
                         Pazaryerlerinizi tek panelden yönetin.
                     </p>
-                    <p className="text-sm text-white/80">
+                    <p className="text-sm text-neutral-600">
                         Ürün, stok, fiyat ve siparişler; Trendyol, Hepsiburada
                         ve diğer kanallar için tek yerde.
                     </p>
