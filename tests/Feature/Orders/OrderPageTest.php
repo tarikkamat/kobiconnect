@@ -193,3 +193,15 @@ it('refuses a user without the orders.view permission', function (): void {
         ->get(route('orders.index'))
         ->assertForbidden();
 });
+
+it('sends the marketplace code so the list can show the source logo', function (): void {
+    seedOrder();
+
+    $this->actingAs(User::factory()->create()->assignRole('Yönetici'))
+        ->get(route('orders.index'))
+        ->assertOk()
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('orders.data.0.marketplace', 'trendyol')
+            ->where('orders.data.0.connection', 'Trendyol Ana')
+        );
+});

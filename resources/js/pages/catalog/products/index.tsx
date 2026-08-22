@@ -5,6 +5,11 @@ import { BulkEditDialog } from '@/components/catalog/bulk-edit-dialog';
 import { PermissionButton } from '@/components/catalog/permission-button';
 import { ProductStatusBadge } from '@/components/catalog/product-status-badge';
 import Heading from '@/components/heading';
+import {
+    
+    MarketplaceAvatarStack
+} from '@/components/marketplace-avatar';
+import type {MarketplaceChannel} from '@/components/marketplace-avatar';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
@@ -35,6 +40,8 @@ type ProductRow = {
     variantCount: number;
     stock: number;
     price: string | null;
+    /** Urunun yuklendigi pazaryerleri, baglanti basina tek kayit. */
+    channels: MarketplaceChannel[];
     createdAt: string | null;
 };
 
@@ -298,6 +305,7 @@ export default function ProductIndex({
                                             </button>
                                         </TableHead>
                                         <TableHead>Durum</TableHead>
+                                        <TableHead>Pazaryerleri</TableHead>
                                         <TableHead className="text-right">
                                             Varyant
                                         </TableHead>
@@ -359,6 +367,11 @@ export default function ProductIndex({
                                                 <ProductStatusBadge
                                                     status={product.status}
                                                     label={product.statusLabel}
+                                                />
+                                            </TableCell>
+                                            <TableCell>
+                                                <MarketplaceAvatarStack
+                                                    channels={product.channels}
                                                 />
                                             </TableCell>
                                             <TableCell className="text-right tabular-nums">

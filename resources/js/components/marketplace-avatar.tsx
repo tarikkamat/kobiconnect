@@ -19,7 +19,7 @@ export function MarketplaceAvatar({
 }: {
     code: string;
     name?: string;
-    size?: 'sm' | 'md';
+    size?: 'sm' | 'md' | 'lg';
     className?: string;
 }) {
     return (
@@ -27,9 +27,9 @@ export function MarketplaceAvatar({
             app={{ logo: `/apps/${code}.svg`, name: name ?? code }}
             className={cn(
                 'shrink-0 ring-1 ring-border',
-                size === 'sm'
-                    ? 'size-6 rounded-md p-1'
-                    : 'size-8 rounded-lg p-1.5',
+                size === 'sm' && 'size-6 rounded-md p-1',
+                size === 'md' && 'size-8 rounded-lg p-1.5',
+                size === 'lg' && 'size-11 rounded-xl p-2',
                 className,
             )}
         />
@@ -64,15 +64,15 @@ export function MarketplaceAvatarStack({
     }
 
     return (
-        <div className="flex items-center -space-x-1.5">
+        <div className="flex items-center -space-x-2.5">
             {channels.map((channel) => (
                 <Tooltip key={`${channel.marketplace}-${channel.name}`}>
                     <TooltipTrigger asChild>
-                        <span tabIndex={0} className="rounded-md">
+                        <span tabIndex={0} className="rounded-xl">
                             <MarketplaceAvatar
                                 code={channel.marketplace}
                                 name={channel.name}
-                                size="sm"
+                                size="lg"
                                 className={cn(
                                     'ring-2 ring-background outline outline-border',
                                     channel.state === 'failed' &&

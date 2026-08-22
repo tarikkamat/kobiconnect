@@ -1,11 +1,14 @@
 import { Head, InfiniteScroll, Link, router } from '@inertiajs/react';
 import { Search, TriangleAlert, Unlink } from 'lucide-react';
 import Heading from '@/components/heading';
+import { MarketplaceAvatar } from '@/components/marketplace-avatar';
 import {
     OrderStatusBadge,
     PENDING_PAYMENT,
 } from '@/components/orders/order-status-badge';
 import { Badge } from '@/components/ui/badge';
+import { DataTable  } from '@/components/ui/data-table';
+import type {DataTableColumns} from '@/components/ui/data-table';
 import { Input } from '@/components/ui/input';
 import {
     Select,
@@ -14,14 +17,6 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/components/ui/table';
 import { Toggle } from '@/components/ui/toggle';
 import { index, show } from '@/routes/orders';
 
@@ -33,6 +28,8 @@ type OrderRow = {
     statusLabel: string;
     externalStatus: string;
     connection: string | null;
+    /** Bagli kanalin pazaryeri kodu; logo yolu bundan turetilir. */
+    marketplace: string | null;
     customer: string | null;
     total: string | null;
     placedAt: string | null;
@@ -57,6 +54,98 @@ type Props = {
 
 /** Radix Select bos deger kabul etmez; "hepsi" secenegi bu sabitle temsil edilir. */
 const ALL = 'all';
+
+/**
+ * Kolon tanimlari modul kapsaminda durur: her render'da yeniden uretilirse
+ * TanStack tum kolon modelini bosuna kurar.
+ */
+const COLUMNS: DataTableColumns<OrderRow> = [
+    {
+        id: 'marketplace',
+        header: 'Kanal',
+        meta: { className: 'w-16' },
+        cell: ({ row }) =>
+            row.original.marketplace ? (
+                <MarketplaceAvatar
+                    code={row.original.marketplace}
+                    name={row.original.connection ?? undefined}
+                    size="lg"
+                />
+            ) : (
+                <span className="text-muted-foreground">—</span>
+            ),
+    },
+    {
+        id: 'order',
+        header: 'Sipariş',
+        cell: ({ row }) => (
+            <>
+                <Link
+                    href={show({ order: row.original.id })}
+                    instant
+                    className="font-medium underline-offset-4 hover:underline"
+                >
+                    {row.original.orderNumber}
+                </Link>
+                <span className="block text-xs text-muted-foreground">
+                    Paket {row.original.packageId}
+                    {row.original.connection
+                        ? ` · ${row.original.connection}`
+                        : ''}
+                </span>
+            </>
+        ),
+    },
+    {
+        id: 'status',
+        header: 'Durum',
+        cell: ({ row }) => (
+            <>
+                <OrderStatusBadge
+                    status={row.original.status}
+                    label={row.original.statusLabel}
+                />
+                {/* Ham pazaryeri durumu bilgi olarak durur: bilinmeyen bir
+                    deger varsayilana katlanmaz. */}
+                <span className="block text-xs text-muted-foreground">
+                    {row.original.externalStatus}
+                </span>
+            </>
+        ),
+    },
+    {
+        id: 'customer',
+        header: 'Müşteri',
+        cell: ({ row }) => row.original.customer ?? '—',
+    },
+    {
+        id: 'lines',
+        header: 'Kalem',
+        meta: { className: 'text-right tabular-nums' },
+        cell: ({ row }) => (
+            <>
+                {row.original.lineCount}
+                {row.original.unmatchedCount > 0 && (
+                    <Badge variant="destructive" className="ml-2">
+                        {row.original.unmatchedCount} eşleşmemiş
+                    </Badge>
+                )}
+            </>
+        ),
+    },
+    {
+        id: 'total',
+        header: 'Tutar',
+        meta: { className: 'text-right tabular-nums' },
+        cell: ({ row }) => row.original.total ?? '—',
+    },
+    {
+        id: 'placedAt',
+        header: 'Sipariş tarihi',
+        meta: { className: 'text-muted-foreground' },
+        cell: ({ row }) => row.original.placedAt ?? '—',
+    },
+];
 
 export default function OrderIndex({
     orders,
@@ -207,84 +296,16 @@ export default function OrderIndex({
                     <div className="rounded-xl border">
                         {/* Sayfalama tiklamasi yok: <InfiniteScroll> sonraki sayfayi kendisi ekler. */}
                         <InfiniteScroll data="orders" buffer={300}>
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>Sipariş</TableHead>
-                                        <TableHead>Durum</TableHead>
-                                        <TableHead>Müşteri</TableHead>
-                                        <TableHead className="text-right">
-                                            Kalem
-                                        </TableHead>
-                                        <TableHead className="text-right">
-                                            Tutar
-                                        </TableHead>
-                                        <TableHead>Sipariş tarihi</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {orders.data.map((order) => (
-                                        <TableRow
-                                            key={order.id}
-                                            className={
-                                                order.status === PENDING_PAYMENT
-                                                    ? 'bg-amber-50/60 dark:bg-amber-950/30'
-                                                    : undefined
-                                            }
-                                        >
-                                            <TableCell>
-                                                <Link
-                                                    href={show({
-                                                        order: order.id,
-                                                    })}
-                                                    instant
-                                                    className="font-medium underline-offset-4 hover:underline"
-                                                >
-                                                    {order.orderNumber}
-                                                </Link>
-                                                <span className="block text-xs text-muted-foreground">
-                                                    Paket {order.packageId}
-                                                    {order.connection
-                                                        ? ` · ${order.connection}`
-                                                        : ''}
-                                                </span>
-                                            </TableCell>
-                                            <TableCell>
-                                                <OrderStatusBadge
-                                                    status={order.status}
-                                                    label={order.statusLabel}
-                                                />
-                                                {/* Ham pazaryeri durumu bilgi olarak durur:
-                                                    bilinmeyen bir deger varsayilana katlanmaz. */}
-                                                <span className="block text-xs text-muted-foreground">
-                                                    {order.externalStatus}
-                                                </span>
-                                            </TableCell>
-                                            <TableCell>
-                                                {order.customer ?? '—'}
-                                            </TableCell>
-                                            <TableCell className="text-right tabular-nums">
-                                                {order.lineCount}
-                                                {order.unmatchedCount > 0 && (
-                                                    <Badge
-                                                        variant="destructive"
-                                                        className="ml-2"
-                                                    >
-                                                        {order.unmatchedCount}{' '}
-                                                        eşleşmemiş
-                                                    </Badge>
-                                                )}
-                                            </TableCell>
-                                            <TableCell className="text-right tabular-nums">
-                                                {order.total ?? '—'}
-                                            </TableCell>
-                                            <TableCell className="text-muted-foreground">
-                                                {order.placedAt ?? '—'}
-                                            </TableCell>
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
+                            <DataTable
+                                columns={COLUMNS}
+                                data={orders.data}
+                                getRowId={(order) => String(order.id)}
+                                rowClassName={(order) =>
+                                    order.status === PENDING_PAYMENT
+                                        ? 'bg-amber-50/60 dark:bg-amber-950/30'
+                                        : undefined
+                                }
+                            />
                         </InfiniteScroll>
                     </div>
                 )}

@@ -45,6 +45,14 @@ class ProductController extends Controller
         'archived' => 'Arşivlendi',
     ];
 
+    /**
+     * Bir üründe aynı kanala ait birçok varyant olabilir; avatarda gösterilecek
+     * tek durumu bu sıra belirler — en kötü olan kazanır.
+     *
+     * @var list<string>
+     */
+    private const array STATE_SEVERITY = ['failed', 'pending', 'syncing', 'synced'];
+
     public function index(Request $request): Response
     {
         Gate::authorize('viewAny', Product::class);
@@ -71,6 +79,8 @@ class ProductController extends Controller
                 'variants:id,product_id',
                 'variants.inventoryItems:id,variant_id,available',
                 'variants.prices:id,variant_id,currency,list_price',
+                'variants.listings:id,variant_id,connection_id,sync_state',
+                'variants.listings.connection:id,marketplace,name',
             ])
             ->when($search !== '', fn (Builder $query) => $query->search($search))
             ->when($status !== null, fn (Builder $query) => $query->where('status', $status))
@@ -98,6 +108,7 @@ class ProductController extends Controller
                 'variantCount' => $product->variants->count(),
                 'stock' => $this->availableStock($product->variants),
                 'price' => $this->lowestPrice($product->variants),
+                'channels' => $this->channels($product->variants),
                 // Tarih de sunucuda bicimlenir, Europe/Istanbul — FRONTEND-PLAN §7.
                 'createdAt' => $product->created_at?->timezone('Europe/Istanbul')->format('d.m.Y'),
             ]);
@@ -292,6 +303,44 @@ class ProductController extends Controller
             'price' => $price === null ? null : (float) $price->list_price,
             'priceFormatted' => $price === null ? null : $this->money((float) $price->list_price),
         ];
+    }
+
+    /**
+     * Ürünün satışa çıktığı kanallar: varyant listelemelerinden türetilir,
+     * bağlantı başına tek avatar. Logo kodu `connection.marketplace`'ten gelir.
+     *
+     * @param  Collection<int, ProductVariant>  $variants
+     * @return list<array{marketplace: string, name: string, state: string}>
+     */
+    private function channels(Collection $variants): array
+    {
+        return $variants
+            ->flatMap(fn (ProductVariant $variant): Collection => $variant->listings)
+            ->filter(fn (ChannelListing $listing): bool => $listing->connection !== null)
+            ->groupBy('connection_id')
+            ->map(fn (Collection $listings): array => [
+                'marketplace' => $listings->first()->connection->marketplace,
+                'name' => $listings->first()->connection->name,
+                'state' => $this->worstState($listings),
+            ])
+            ->values()
+            ->all();
+    }
+
+    /**
+     * @param  Collection<int, ChannelListing>  $listings
+     */
+    private function worstState(Collection $listings): string
+    {
+        $states = $listings->map(fn (ChannelListing $listing): string => $listing->sync_state->value)->all();
+
+        foreach (self::STATE_SEVERITY as $state) {
+            if (in_array($state, $states, true)) {
+                return $state;
+            }
+        }
+
+        return 'synced';
     }
 
     /**

@@ -2,8 +2,11 @@
 
 declare(strict_types=1);
 
+use App\Enums\ListingSyncState;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Models\Brand;
+use App\Models\ChannelConnection;
+use App\Models\ChannelListing;
 use App\Models\InventoryItem;
 use App\Models\Price;
 use App\Models\Product;
@@ -11,6 +14,7 @@ use App\Models\ProductImage;
 use App\Models\ProductVariant;
 use App\Models\User;
 use Database\Seeders\TenantRoleSeeder;
+use Illuminate\Support\Facades\Http;
 use Inertia\Testing\AssertableInertia;
 
 beforeEach(function (): void {
@@ -147,4 +151,51 @@ it('lets the warehouse role read the catalog but not edit it', function (): void
         ->assertForbidden();
 
     expect($product->refresh()->name)->toBe('Dokunulmaz');
+});
+
+it('collapses variant listings into one avatar per channel with the worst state', function (): void {
+    // Listeleme kaydi olusturmak pazaryerine push tetikler; bu test yalnizca
+    // listedeki avatarla ilgileniyor.
+    Http::fake();
+
+    $connection = ChannelConnection::factory()->create([
+        'marketplace' => 'trendyol',
+        'name' => 'Trendyol Ana',
+    ]);
+
+    $product = Product::factory()->create(['name' => 'Termos']);
+    $first = ProductVariant::factory()->for($product)->create();
+    $second = ProductVariant::factory()->for($product)->create();
+
+    ChannelListing::factory()->create([
+        'connection_id' => $connection->getKey(),
+        'variant_id' => $first->getKey(),
+        'sync_state' => ListingSyncState::Synced,
+    ]);
+    ChannelListing::factory()->create([
+        'connection_id' => $connection->getKey(),
+        'variant_id' => $second->getKey(),
+        'sync_state' => ListingSyncState::Failed,
+    ]);
+
+    $this->actingAs(catalogUser('Yönetici'))
+        ->get(route('products.index'))
+        ->assertOk()
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->has('products.data.0.channels', 1)
+            ->where('products.data.0.channels.0.marketplace', 'trendyol')
+            ->where('products.data.0.channels.0.name', 'Trendyol Ana')
+            ->where('products.data.0.channels.0.state', 'failed')
+        );
+});
+
+it('sends no channels for a product that is on no marketplace', function (): void {
+    ProductVariant::factory()->for(Product::factory()->create())->create();
+
+    $this->actingAs(catalogUser('Yönetici'))
+        ->get(route('products.index'))
+        ->assertOk()
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->has('products.data.0.channels', 0)
+        );
 });
