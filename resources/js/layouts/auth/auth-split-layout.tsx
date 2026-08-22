@@ -1,11 +1,13 @@
 import { Link } from '@inertiajs/react';
 import AppLogoIcon from '@/components/app-logo-icon';
-import { IntegrationsDiagram } from '@/components/integrations-diagram';
+import { MarketplaceMarquee } from '@/components/marketplace-marquee';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { home } from '@/routes';
 import type { AuthLayoutProps } from '@/types';
 
 /**
- * shadcn `login-02` blogu: solda form, sagda kapak paneli.
+ * shadcn `login-02` blogu: solda form, sagda kapak paneli. Kapakta pazaryeri
+ * logolarinin capraz aktigi marquee durur (bkz. MarketplaceMarquee).
  */
 export default function AuthSplitLayout({
     children,
@@ -41,17 +43,54 @@ export default function AuthSplitLayout({
                 </div>
             </div>
 
-            <div className="relative hidden overflow-hidden bg-muted lg:block">
-                <IntegrationsDiagram className="absolute inset-0 size-full" />
-                {/* ponytail: sema acik tonlu, o yuzden metin koyu. */}
-                <div className="absolute inset-x-0 bottom-0 flex flex-col gap-2 p-10 text-neutral-800">
-                    <p className="text-2xl font-medium text-balance">
-                        Pazaryerlerinizi tek panelden yönetin.
+            <div className="relative hidden overflow-hidden bg-zinc-950 lg:block">
+                <MarketplaceMarquee className="absolute inset-0" />
+
+                {/* ponytail: marquee koyu zeminli, o yuzden metin acik tonlu. */}
+                <div className="absolute inset-x-0 bottom-0 flex flex-col gap-3 p-10 text-white">
+                    <div className="flex items-center gap-2 text-xs font-medium text-zinc-300">
+                        <span className="relative flex size-2">
+                            <span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-400/60 motion-reduce:hidden" />
+                            <span className="relative inline-flex size-2 rounded-full bg-emerald-400" />
+                        </span>
+                        12+ pazaryeri ve e-ticaret altyapısı
+                    </div>
+                    <p className="text-3xl font-semibold text-balance">
+                        Tüm satış kanallarınız, tek panel.
                     </p>
-                    <p className="text-sm text-neutral-600">
-                        Ürün, stok, fiyat ve siparişler; Trendyol, Hepsiburada
-                        ve diğer kanallar için tek yerde.
+                    <p className="max-w-md text-sm text-zinc-300">
+                        Ürünlerinizi bir kez ekleyin; Trendyol&apos;dan
+                        Amazon&apos;a her kanalda satın. Stok, fiyat ve
+                        siparişler kendiliğinden senkronda kalır.
                     </p>
+                    <div className="mt-2 flex items-center gap-3">
+                        <div className="flex -space-x-2">
+                            {[
+                                ['AY', 'bg-emerald-900 text-emerald-200'],
+                                ['MK', 'bg-sky-900 text-sky-200'],
+                                ['EÖ', 'bg-amber-900 text-amber-200'],
+                                ['SD', 'bg-rose-900 text-rose-200'],
+                                ['ZT', 'bg-violet-900 text-violet-200'],
+                            ].map(([initials, color]) => (
+                                <Avatar
+                                    key={initials}
+                                    className="size-9 ring-2 ring-zinc-950"
+                                >
+                                    <AvatarFallback
+                                        className={`text-xs font-medium ${color}`}
+                                    >
+                                        {initials}
+                                    </AvatarFallback>
+                                </Avatar>
+                            ))}
+                        </div>
+                        <p className="text-sm text-zinc-300">
+                            <span className="font-semibold text-white">
+                                1.000+ KOBİ
+                            </span>{' '}
+                            satışını KobiConnect ile yönetiyor
+                        </p>
+                    </div>
                 </div>
             </div>
         </div>
