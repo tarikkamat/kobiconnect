@@ -27,7 +27,13 @@ export type ChannelShare = {
  * degerleri satis trendinin son 30 gununun toplamiyla birebir tutar: ikisi de
  * ayni matristen gelir. Legend yerine alttaki logolu liste okunur.
  */
-export function ChannelShareChart({ share }: { share: ChannelShare }) {
+export function ChannelShareChart({
+    share,
+    className,
+}: {
+    share: ChannelShare;
+    className?: string;
+}) {
     const colors = useChartColors();
 
     const options = useMemo<ApexOptions>(() => {
@@ -83,6 +89,7 @@ export function ChannelShareChart({ share }: { share: ChannelShare }) {
 
     return (
         <ChartCard
+            className={className}
             title="Kanal payı"
             description={`Seçili dönem · ${share.total}`}
             href={connectionsRoute().url}

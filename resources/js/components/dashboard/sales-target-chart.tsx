@@ -26,7 +26,13 @@ export type SalesTarget = {
  * kirpilir: halka tasarsa "hedefin ustunde" bilgisi yerine bozuk bir cizim
  * cikar; gercek tutarlar alttaki listede zaten yazar.
  */
-export function SalesTargetChart({ target }: { target: SalesTarget }) {
+export function SalesTargetChart({
+    target,
+    className,
+}: {
+    target: SalesTarget;
+    className?: string;
+}) {
     const colors = useChartColors();
 
     const options = useMemo<ApexOptions>(() => {
@@ -73,6 +79,7 @@ export function SalesTargetChart({ target }: { target: SalesTarget }) {
 
     return (
         <ChartCard
+            className={className}
             title="Satış hedefi"
             description={`${target.month} · ${target.overall.achieved} / ${target.overall.target}`}
             href={ordersRoute().url}

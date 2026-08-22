@@ -81,7 +81,6 @@ it('answers the setup question synchronously and defers every heavy widget', fun
             ->missing('channelShare')
             ->missing('orderVolume')
             ->missing('salesTarget')
-            ->missing('syncThroughput')
         );
 });
 
@@ -246,14 +245,6 @@ it('formats money and percentages on the server', function (): void {
         ->and($kpis[3]['value'])->toContain('%')
         ->and($target['overall']['target'])->toContain('₺')
         ->and($target['items'][0]['percent'])->toBeLessThanOrEqual(100);
-});
-
-it('keeps sync throughput on twelve weekly buckets', function (): void {
-    $throughput = (array) dashboardProp('syncThroughput')->json('props.syncThroughput');
-
-    expect($throughput['rows'])->toHaveCount(12)
-        ->and($throughput['rows'][0])->toHaveKeys(['week', 'succeeded', 'failed'])
-        ->and($throughput['failureRate'])->toContain('%');
 });
 
 it('totals order volume on the server for the header switches', function (): void {

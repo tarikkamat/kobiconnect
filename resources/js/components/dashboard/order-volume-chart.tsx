@@ -44,7 +44,13 @@ const METRICS: Metric[] = ['orders', 'revenue', 'returns'];
  * yana uc grafik yerine tek grafik + ustte toplamlar, cunku karsilastirilan
  * sey ayni gun.
  */
-export function OrderVolumeChart({ volume }: { volume: OrderVolume }) {
+export function OrderVolumeChart({
+    volume,
+    className,
+}: {
+    volume: OrderVolume;
+    className?: string;
+}) {
     const [metric, setMetric] = useState<Metric>('orders');
     const colors = useChartColors();
 
@@ -107,7 +113,7 @@ export function OrderVolumeChart({ volume }: { volume: OrderVolume }) {
     );
 
     return (
-        <Card>
+        <Card className={className}>
             <div className="flex flex-col items-stretch border-b sm:flex-row">
                 <div className="flex flex-1 flex-col justify-center gap-1 px-5 pt-4 pb-3 sm:py-5">
                     <CardTitle className="flex items-center gap-2">
@@ -167,9 +173,9 @@ export function OrderVolumeChart({ volume }: { volume: OrderVolume }) {
  * Bu kartin basligi genel `ChartSkeleton`'dan farkli (kenarlikli baslik +
  * uc toplam kutusu); ayni iskeletle beklerse veri gelince yerlesim kayar.
  */
-export function OrderVolumeSkeleton() {
+export function OrderVolumeSkeleton({ className }: { className?: string }) {
     return (
-        <Card>
+        <Card className={className}>
             <div className="flex flex-col items-stretch border-b sm:flex-row">
                 <div className="flex flex-1 flex-col justify-center gap-1 px-5 pt-4 pb-3 sm:py-5">
                     <Skeleton className="h-6 w-32" />

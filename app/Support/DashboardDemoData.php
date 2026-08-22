@@ -253,45 +253,6 @@ final class DashboardDemoData
     }
 
     /**
-     * Son 12 haftanin senkron isi: basarili / basarisiz islem adedi. Sipariş
-     * hacmiyle orantili uretilir — panel kendi icinde tutarli kalsin.
-     *
-     * @return array{demo: bool, failureRate: string, rows: list<array<string, mixed>>}
-     */
-    public function syncThroughput(): array
-    {
-        $rows = [];
-        $days = $this->lastTwelveWeeks();
-
-        foreach (array_chunk($days, 7) as $week) {
-            $orders = (int) array_sum(array_map(
-                fn (array $day): int => (int) array_sum(array_column($day['channels'], 'orders')),
-                $week,
-            ));
-
-            /** @var array{date: string} $first */
-            $first = $week[0];
-            $failed = (int) round($orders * (crc32('sync'.$first['date']) % 40) / 1000);
-
-            $rows[] = [
-                'week' => CarbonImmutable::parse($first['date'])->translatedFormat('d M'),
-                // Bir siparis birden fazla islem dogurur (stok, fiyat, kargo).
-                'succeeded' => $orders * 3 + 40 - $failed,
-                'failed' => $failed,
-            ];
-        }
-
-        $succeeded = (int) array_sum(array_column($rows, 'succeeded'));
-        $failed = (int) array_sum(array_column($rows, 'failed'));
-
-        return [
-            'demo' => true,
-            'failureRate' => $this->percent($succeeded + $failed > 0 ? $failed / ($succeeded + $failed) * 100 : 0),
-            'rows' => $rows,
-        ];
-    }
-
-    /**
      * @return array<string, mixed>
      */
     private function kpi(string $key, string $label, string $value, float $current, float $previous, string $tone, bool $inverted = false): array

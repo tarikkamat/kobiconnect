@@ -35,9 +35,6 @@ import { SalesTargetChart } from '@/components/dashboard/sales-target-chart';
 import type { SalesTarget } from '@/components/dashboard/sales-target-chart';
 import { SalesTrendChart } from '@/components/dashboard/sales-trend-chart';
 import type { SalesTrend } from '@/components/dashboard/sales-trend-chart';
-import { SyncThroughputChart } from '@/components/dashboard/sync-throughput-chart';
-import type { SyncThroughput } from '@/components/dashboard/sync-throughput-chart';
-import { WidgetCard, WidgetSkeleton } from '@/components/dashboard/widget-card';
 import { DateRangePicker } from '@/components/date-range-picker';
 import Heading from '@/components/heading';
 import { MarketplaceAvatar } from '@/components/marketplace-avatar';
@@ -64,18 +61,7 @@ type Props = {
     };
     sales?: { count: number; total: string; today: number };
     unmatched?: { lines: number; orders: number };
-    syncHealth?: {
-        failedOperations: number;
-        pendingOperations: number;
-        runs: {
-            id: number;
-            connection: string | null;
-            marketplace: string | null;
-            resource: string;
-            status: string;
-            startedAt: string | null;
-        }[];
-    };
+    syncHealth?: { failedOperations: number; pendingOperations: number };
     criticalStock?: {
         count: number;
         items: {
@@ -103,17 +89,6 @@ type Props = {
     channelShare?: ChannelShare;
     orderVolume?: OrderVolume;
     salesTarget?: SalesTarget;
-    syncThroughput?: SyncThroughput;
-};
-
-const RUN_STATUS_VARIANTS: Record<
-    string,
-    'default' | 'secondary' | 'destructive' | 'outline'
-> = {
-    completed: 'default',
-    succeeded: 'default',
-    running: 'secondary',
-    failed: 'destructive',
 };
 
 /** Calisan baglanti satiri sakin durur; duraklatilan ve hatali one cikar. */
@@ -215,7 +190,6 @@ export default function Dashboard({
     channelShare,
     orderVolume,
     salesTarget,
-    syncThroughput,
 }: Props) {
     /**
      * Yeni tenant "veri yok" gormemeli, NE YAPACAGINI gormeli. Bu uc adim
@@ -306,6 +280,10 @@ export default function Dashboard({
 
                 {started && (
                     <>
+                        <Deferred data="kpis" fallback={<KpiStripSkeleton />}>
+                            {kpis && <KpiStrip kpis={kpis} />}
+                        </Deferred>
+
                         {/* Uyarılar ve satış trendi yan yana: "neye
                             müdahale etmeliyim" ile "işler nereye gidiyor"
                             aynı ekran yüksekliğinde durur. */}
@@ -385,105 +363,34 @@ export default function Dashboard({
                             </Deferred>
                         </div>
 
-                        <Deferred data="kpis" fallback={<KpiStripSkeleton />}>
-                            {kpis && <KpiStrip kpis={kpis} />}
-                        </Deferred>
-
-                        <div className="grid gap-4 md:grid-cols-2">
+                        {/* Tek 12'lik ızgara: sipariş hacmi 8, kritik stok 4
+                            (ilk sıra); kanal payı, satış hedefi ve bağlantılar
+                            4'er (ikinci sıra). xl altında ikişerli. */}
+                        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-12">
                             <Deferred
-                                data="channelShare"
-                                fallback={<ChartSkeleton rows={3} />}
-                            >
-                                {channelShare && (
-                                    <ChannelShareChart share={channelShare} />
-                                )}
-                            </Deferred>
-
-                            <Deferred
-                                data="salesTarget"
+                                data="orderVolume"
                                 fallback={
-                                    <ChartSkeleton height={240} rows={3} />
+                                    <OrderVolumeSkeleton className="xl:col-span-8" />
                                 }
                             >
-                                {salesTarget && (
-                                    <SalesTargetChart target={salesTarget} />
-                                )}
-                            </Deferred>
-                        </div>
-
-                        {/* Detay listeleri: özet şeridindeki sayının arkasındaki
-                            ilk beş satır. Üçü de aynı yükseklikte durur. */}
-                        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                            <Deferred
-                                data="syncHealth"
-                                fallback={
-                                    <WidgetSkeleton
-                                        rows={4}
-                                        className="min-h-56"
+                                {orderVolume && (
+                                    <OrderVolumeChart
+                                        volume={orderVolume}
+                                        className="xl:col-span-8"
                                     />
-                                }
-                            >
-                                <WidgetCard
-                                    title="Son senkron koşuları"
-                                    href={monitorRoute().url}
-                                    className="min-h-56"
-                                >
-                                    {syncHealth?.runs.length === 0 ? (
-                                        <p className="text-sm text-muted-foreground">
-                                            Henüz bir senkron koşusu yok.
-                                        </p>
-                                    ) : (
-                                        <ul className="space-y-2.5 text-sm">
-                                            {syncHealth?.runs.map((run) => (
-                                                <li
-                                                    key={run.id}
-                                                    className="flex items-center gap-2.5"
-                                                >
-                                                    {run.marketplace && (
-                                                        <MarketplaceAvatar
-                                                            code={
-                                                                run.marketplace
-                                                            }
-                                                            name={
-                                                                run.connection ??
-                                                                undefined
-                                                            }
-                                                            size="sm"
-                                                        />
-                                                    )}
-                                                    <span className="min-w-0 flex-1 truncate">
-                                                        {run.resource}
-                                                        <span className="block truncate text-xs text-muted-foreground">
-                                                            {run.connection ??
-                                                                'Bilinmeyen kanal'}{' '}
-                                                            ·{' '}
-                                                            {run.startedAt ??
-                                                                '—'}
-                                                        </span>
-                                                    </span>
-                                                    <Badge
-                                                        variant={
-                                                            RUN_STATUS_VARIANTS[
-                                                                run.status
-                                                            ] ?? 'outline'
-                                                        }
-                                                    >
-                                                        {run.status}
-                                                    </Badge>
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    )}
-                                </WidgetCard>
+                                )}
                             </Deferred>
 
                             <Deferred
                                 data="criticalStock"
-                                fallback={<ListCardSkeleton />}
+                                fallback={
+                                    <ListCardSkeleton className="xl:col-span-4" />
+                                }
                             >
                                 <ListCard
                                     title="Kritik stok"
                                     href={stockRoute().url}
+                                    className="xl:col-span-4"
                                     badge={
                                         (criticalStock?.count ?? 0) > 0 ? (
                                             <Badge
@@ -539,15 +446,49 @@ export default function Dashboard({
                             </Deferred>
 
                             <Deferred
+                                data="channelShare"
+                                fallback={
+                                    <ChartSkeleton
+                                        rows={3}
+                                        className="xl:col-span-4"
+                                    />
+                                }
+                            >
+                                {channelShare && (
+                                    <ChannelShareChart
+                                        share={channelShare}
+                                        className="xl:col-span-4"
+                                    />
+                                )}
+                            </Deferred>
+
+                            <Deferred
+                                data="salesTarget"
+                                fallback={
+                                    <ChartSkeleton
+                                        height={240}
+                                        rows={3}
+                                        className="xl:col-span-4"
+                                    />
+                                }
+                            >
+                                {salesTarget && (
+                                    <SalesTargetChart
+                                        target={salesTarget}
+                                        className="xl:col-span-4"
+                                    />
+                                )}
+                            </Deferred>
+                            <Deferred
                                 data="connections"
                                 fallback={
-                                    <ListCardSkeleton className="md:col-span-2 xl:col-span-1" />
+                                    <ListCardSkeleton className="xl:col-span-4" />
                                 }
                             >
                                 <ListCard
                                     title="Kanal bağlantıları"
                                     href={connectionsRoute().url}
-                                    className="md:col-span-2 xl:col-span-1"
+                                    className="xl:col-span-4"
                                     badge={
                                         (connections?.errored ?? 0) > 0 ? (
                                             <Badge
@@ -601,28 +542,6 @@ export default function Dashboard({
                                         <ListEmpty>Bağlı kanal yok.</ListEmpty>
                                     )}
                                 </ListCard>
-                            </Deferred>
-                        </div>
-
-                        <div className="grid gap-4 xl:grid-cols-2">
-                            <Deferred
-                                data="orderVolume"
-                                fallback={<OrderVolumeSkeleton />}
-                            >
-                                {orderVolume && (
-                                    <OrderVolumeChart volume={orderVolume} />
-                                )}
-                            </Deferred>
-
-                            <Deferred
-                                data="syncThroughput"
-                                fallback={<ChartSkeleton height={240} />}
-                            >
-                                {syncThroughput && (
-                                    <SyncThroughputChart
-                                        throughput={syncThroughput}
-                                    />
-                                )}
                             </Deferred>
                         </div>
                     </>

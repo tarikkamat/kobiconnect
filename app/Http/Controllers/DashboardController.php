@@ -27,8 +27,8 @@ use stdClass;
  * boyama beş toplama sorgusunu beklemez. Hepsi varsayılan grupta olduğu için
  * istemci TEK bir ek istek atar.
  *
- * Grafikler (kpis, salesTrend, channelShare, orderVolume, salesTarget,
- * syncThroughput) MVP sunumu için ÖRNEK veriyle gelir; üretimi tek bir yerde,
+ * Grafikler (kpis, salesTrend, channelShare, orderVolume, salesTarget)
+ * MVP sunumu için ÖRNEK veriyle gelir; üretimi tek bir yerde,
  * `App\Support\DashboardDemoData` içinde durur ve panelde rozetle işaretlidir.
  *
  * Yalnızca "bu tenant'ta veri var mı" sorusu senkron cevaplanır; yeni bir
@@ -43,18 +43,6 @@ class DashboardController extends Controller
         'active' => 'Bağlı',
         'paused' => 'Duraklatıldı',
         'error' => 'Hata',
-    ];
-
-    /**
-     * @var array<string, string>
-     */
-    private const array RESOURCE_LABELS = [
-        'orders' => 'Siparişler',
-        'products' => 'Ürünler',
-        'claims' => 'İadeler',
-        'questions' => 'Sorular',
-        'stock' => 'Stok',
-        'prices' => 'Fiyatlar',
     ];
 
     public function __invoke(Request $request, DashboardDemoData $demo): Response
@@ -87,7 +75,6 @@ class DashboardController extends Controller
             'channelShare' => Inertia::defer(fn (): array => $demo->channelShare()),
             'orderVolume' => Inertia::defer(fn (): array => $demo->orderVolume()),
             'salesTarget' => Inertia::defer(fn (): array => $demo->salesTarget()),
-            'syncThroughput' => Inertia::defer(fn (): array => $demo->syncThroughput()),
         ]);
     }
 
@@ -162,9 +149,10 @@ class DashboardController extends Controller
     }
 
     /**
-     * Senkron sağlığı: son koşular + outbox'ta başarısız kalan işlem sayısı.
+     * Senkron sağlığı: outbox'ta bekleyen ve başarısız kalan işlem sayısı.
+     * Son koşuların listesi panelden kalktı; ayrıntı Senkron Monitörü'nde.
      *
-     * @return array{failedOperations: int, pendingOperations: int, runs: list<array<string, mixed>>}
+     * @return array{failedOperations: int, pendingOperations: int}
      */
     private function syncHealth(): array
     {
@@ -176,24 +164,6 @@ class DashboardController extends Controller
         return [
             'failedOperations' => (int) $operations->get(SyncState::Failed->value, 0),
             'pendingOperations' => (int) $operations->get(SyncState::Pending->value, 0),
-            'runs' => array_values(DB::table('sync_runs')
-                ->leftJoin('channel_connections', 'channel_connections.id', '=', 'sync_runs.connection_id')
-                ->orderByDesc('sync_runs.started_at')
-                ->limit(5)
-                ->get([
-                    'sync_runs.id', 'sync_runs.resource', 'sync_runs.status',
-                    'sync_runs.started_at', 'channel_connections.name as connection',
-                    'channel_connections.marketplace',
-                ])
-                ->map(fn (stdClass $run): array => [
-                    'id' => (int) $run->id,
-                    'connection' => $run->connection,
-                    'marketplace' => $run->marketplace,
-                    'resource' => self::RESOURCE_LABELS[$run->resource] ?? $run->resource,
-                    'status' => (string) $run->status,
-                    'startedAt' => $this->dateTime($run->started_at),
-                ])
-                ->all()),
         ];
     }
 
