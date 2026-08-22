@@ -252,8 +252,10 @@ export function ChartCard({
     children: ReactNode;
 }) {
     return (
-        <Card className={className}>
-            <CardHeader className="py-3.5">
+        // Card'in kendi `py-6`+`gap-6`'si sifirlanir: dikey bosluk artik
+        // basliga ve govdeye ait, yoksa grafigin altinda 36px beyaz kalir.
+        <Card className={cn('gap-0 py-0', className)}>
+            <CardHeader className="flex-row items-center justify-between gap-2 border-b py-4">
                 <CardHeading>
                     <CardTitle className="flex items-center gap-2">
                         {href ? (
@@ -283,7 +285,7 @@ export function ChartCard({
                 </CardHeading>
                 {action && <CardToolbar>{action}</CardToolbar>}
             </CardHeader>
-            <CardContent className="px-2.5 pt-4 pb-3 sm:px-5">
+            <CardContent className="px-2.5 py-4 sm:px-5">
                 {children}
             </CardContent>
         </Card>
@@ -306,14 +308,14 @@ export function ChartSkeleton({
     className?: string;
 }) {
     return (
-        <Card className={className}>
-            <CardHeader className="py-3.5">
+        <Card className={cn('gap-0 py-0', className)}>
+            <CardHeader className="border-b py-4">
                 <div className="space-y-1">
                     <Skeleton className="h-4 w-40" />
                     <Skeleton className="h-5 w-56" />
                 </div>
             </CardHeader>
-            <CardContent className="px-2.5 pt-4 pb-3 sm:px-5">
+            <CardContent className="px-2.5 py-4 sm:px-5">
                 <Skeleton className="w-full" style={{ height }} />
                 {rows > 0 && (
                     <div className="mt-2 space-y-1">

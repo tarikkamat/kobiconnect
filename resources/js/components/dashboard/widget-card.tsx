@@ -27,7 +27,9 @@ export function WidgetCard({
     return (
         <Card
             className={cn(
-                'relative transition-colors hover:border-ring',
+                // Dikey bosluk header/content'e ait; Card'in kendi py-6+gap-6'si
+                // eklenirse icerigin altinda 24px beyaz kalir.
+                'relative gap-0 py-0 transition-colors hover:border-ring',
                 alert && 'border-amber-500',
                 className,
             )}
@@ -59,7 +61,7 @@ export function WidgetSkeleton({
     className?: string;
 }) {
     return (
-        <Card className={className}>
+        <Card className={cn('gap-0 py-0', className)}>
             <CardHeader className="min-h-12 py-2.5">
                 <Skeleton className="h-4 w-32" />
             </CardHeader>

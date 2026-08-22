@@ -5,10 +5,13 @@ import {
     CircleCheck,
     CircleDashed,
     PackageOpen,
-    ShoppingCart,
     TriangleAlert,
     Unlink,
 } from 'lucide-react';
+import {
+    AlertsCard,
+    AlertsCardSkeleton,
+} from '@/components/dashboard/alerts-card';
 import { ChannelShareChart } from '@/components/dashboard/channel-share-chart';
 import type { ChannelShare } from '@/components/dashboard/channel-share-chart';
 import { ChartSkeleton } from '@/components/dashboard/chart-kit';
@@ -23,7 +26,6 @@ import { SalesTargetChart } from '@/components/dashboard/sales-target-chart';
 import type { SalesTarget } from '@/components/dashboard/sales-target-chart';
 import { SalesTrendChart } from '@/components/dashboard/sales-trend-chart';
 import type { SalesTrend } from '@/components/dashboard/sales-trend-chart';
-import { StatTile, StatTileSkeleton } from '@/components/dashboard/stat-tile';
 import { SyncThroughputChart } from '@/components/dashboard/sync-throughput-chart';
 import type { SyncThroughput } from '@/components/dashboard/sync-throughput-chart';
 import { WidgetCard, WidgetSkeleton } from '@/components/dashboard/widget-card';
@@ -311,100 +313,87 @@ export default function Dashboard({
 
                 {started && (
                     <>
-                        {/* Özet şeridi: beş kart tek iskelette, hepsi aynı
-                            yükseklikte — veri gelince yerleşim kaymaz. */}
-                        <Deferred
-                            data={STAT_PROPS}
-                            fallback={
-                                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
-                                    {[0, 1, 2, 3, 4].map((slot) => (
-                                        <StatTileSkeleton key={slot} />
-                                    ))}
-                                </div>
-                            }
-                        >
-                            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
-                                <StatTile
-                                    icon={ShoppingCart}
-                                    label="Sipariş"
-                                    value={sales?.count ?? 0}
-                                    detail={`${sales?.total ?? ''} · bugün ${sales?.today ?? 0}`}
-                                    href={ordersRoute().url}
+                        {/* Uyarılar ve satış trendi yan yana: "neye
+                            müdahale etmeliyim" ile "işler nereye gidiyor"
+                            aynı ekran yüksekliğinde durur. */}
+                        <div className="grid gap-4 lg:grid-cols-3">
+                            <Deferred
+                                data="salesTrend"
+                                fallback={
+                                    <ChartSkeleton className="lg:col-span-2" />
+                                }
+                            >
+                                {salesTrend && (
+                                    <SalesTrendChart
+                                        trend={salesTrend}
+                                        summary={`${sales?.count ?? 0} sipariş · ${sales?.total ?? ''} · bugün ${sales?.today ?? 0}`}
+                                        className="lg:col-span-2"
+                                    />
+                                )}
+                            </Deferred>
+
+                            <Deferred
+                                data={STAT_PROPS}
+                                fallback={<AlertsCardSkeleton />}
+                            >
+                                <AlertsCard
+                                    alerts={[
+                                        {
+                                            key: 'unmatched',
+                                            label: 'Eşleşmemiş satır',
+                                            detail:
+                                                (unmatched?.lines ?? 0) === 0
+                                                    ? 'Bütün satırlar katalogla eşleşti'
+                                                    : `${unmatched?.orders} siparişte, eşlenmeden hazırlanamaz`,
+                                            count: unmatched?.lines ?? 0,
+                                            icon: Unlink,
+                                            tone: 'warn',
+                                            href: unmatchedOrders,
+                                        },
+                                        {
+                                            key: 'operations',
+                                            label: 'Başarısız işlem',
+                                            detail: `${syncHealth?.pendingOperations ?? 0} işlem kuyrukta bekliyor`,
+                                            count:
+                                                syncHealth?.failedOperations ??
+                                                0,
+                                            icon: CircleAlert,
+                                            tone: 'alert',
+                                            href: operationsRoute().url,
+                                        },
+                                        {
+                                            key: 'stock',
+                                            label: 'Kritik stok',
+                                            detail:
+                                                (criticalStock?.count ?? 0) ===
+                                                0
+                                                    ? 'Emniyet stoğu altında varyant yok'
+                                                    : 'Varyant emniyet stoğunun altında',
+                                            count: criticalStock?.count ?? 0,
+                                            icon: PackageOpen,
+                                            tone: 'warn',
+                                            href: stockRoute().url,
+                                        },
+                                        {
+                                            key: 'connections',
+                                            label: 'Bağlantı hatası',
+                                            detail:
+                                                (connections?.errored ?? 0) ===
+                                                0
+                                                    ? `${connections?.items.length ?? 0} bağlantı sorunsuz çalışıyor`
+                                                    : 'Hatalı bağlantı sessizce durur',
+                                            count: connections?.errored ?? 0,
+                                            icon: Cable,
+                                            tone: 'alert',
+                                            href: connectionsRoute().url,
+                                        },
+                                    ]}
                                 />
-                                <StatTile
-                                    icon={Unlink}
-                                    label="Eşleşmemiş satır"
-                                    value={unmatched?.lines ?? 0}
-                                    detail={
-                                        (unmatched?.lines ?? 0) === 0
-                                            ? 'Bütün satırlar katalogla eşleşti'
-                                            : `${unmatched?.orders} siparişte, eşlenmeden hazırlanamaz`
-                                    }
-                                    href={unmatchedOrders}
-                                    tone={
-                                        (unmatched?.lines ?? 0) > 0
-                                            ? 'warn'
-                                            : 'neutral'
-                                    }
-                                />
-                                <StatTile
-                                    icon={CircleAlert}
-                                    label="Başarısız işlem"
-                                    value={syncHealth?.failedOperations ?? 0}
-                                    detail={`${syncHealth?.pendingOperations ?? 0} işlem kuyrukta bekliyor`}
-                                    href={operationsRoute().url}
-                                    tone={
-                                        (syncHealth?.failedOperations ?? 0) > 0
-                                            ? 'alert'
-                                            : 'neutral'
-                                    }
-                                />
-                                <StatTile
-                                    icon={PackageOpen}
-                                    label="Kritik stok"
-                                    value={criticalStock?.count ?? 0}
-                                    detail={
-                                        (criticalStock?.count ?? 0) === 0
-                                            ? 'Emniyet stoğu altında varyant yok'
-                                            : 'Varyant emniyet stoğunun altında'
-                                    }
-                                    href={stockRoute().url}
-                                    tone={
-                                        (criticalStock?.count ?? 0) > 0
-                                            ? 'warn'
-                                            : 'neutral'
-                                    }
-                                />
-                                <StatTile
-                                    icon={Cable}
-                                    label="Bağlantı hatası"
-                                    value={connections?.errored ?? 0}
-                                    detail={
-                                        (connections?.errored ?? 0) === 0
-                                            ? `${connections?.items.length ?? 0} bağlantı sorunsuz çalışıyor`
-                                            : 'Hatalı bağlantı sessizce durur'
-                                    }
-                                    href={connectionsRoute().url}
-                                    tone={
-                                        (connections?.errored ?? 0) > 0
-                                            ? 'alert'
-                                            : 'neutral'
-                                    }
-                                />
-                            </div>
-                        </Deferred>
+                            </Deferred>
+                        </div>
 
                         <Deferred data="kpis" fallback={<KpiStripSkeleton />}>
                             {kpis && <KpiStrip kpis={kpis} />}
-                        </Deferred>
-
-                        <Deferred
-                            data="salesTrend"
-                            fallback={<ChartSkeleton />}
-                        >
-                            {salesTrend && (
-                                <SalesTrendChart trend={salesTrend} />
-                            )}
                         </Deferred>
 
                         <div className="grid gap-4 md:grid-cols-2">

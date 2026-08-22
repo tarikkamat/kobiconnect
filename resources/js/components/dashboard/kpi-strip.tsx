@@ -57,7 +57,7 @@ export function KpiStrip({ kpis }: { kpis: Kpis }) {
     return (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             {kpis.items.map((item, index) => (
-                <Card key={item.key} className="overflow-hidden">
+                <Card key={item.key} className="gap-0 overflow-hidden py-0">
                     <CardContent className="px-4 pt-4 pb-0">
                         <div className="flex items-start justify-between gap-2">
                             <p className="text-sm text-muted-foreground">
@@ -118,7 +118,7 @@ export function KpiStripSkeleton() {
     return (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             {[0, 1, 2, 3].map((slot) => (
-                <Card key={slot} className="overflow-hidden">
+                <Card key={slot} className="gap-0 overflow-hidden py-0">
                     <CardContent className="px-4 pt-4 pb-0">
                         <div className="flex items-start justify-between gap-2">
                             <Skeleton className="h-5 w-20" />

@@ -26,7 +26,16 @@ export type SalesTrend = {
  * Pazaryeri basina gunluk ciro, yigilmis alan (gradyan dolgu, yumusak cizgi).
  * Donem sayfanin ustundeki seciciden gelir; sunucu satirlari kesilmis gonderir.
  */
-export function SalesTrendChart({ trend }: { trend: SalesTrend }) {
+export function SalesTrendChart({
+    trend,
+    summary,
+    className,
+}: {
+    trend: SalesTrend;
+    /** Secili donemin GERCEK siparis toplami; grafik ornek veri olabilir. */
+    summary?: string;
+    className?: string;
+}) {
     const colors = useChartColors();
 
     const series = useMemo(
@@ -83,9 +92,12 @@ export function SalesTrendChart({ trend }: { trend: SalesTrend }) {
     return (
         <ChartCard
             title="Satış trendi"
-            description="Pazaryeri bazında günlük ciro · seçili dönem"
+            description={
+                summary ?? 'Pazaryeri bazında günlük ciro · seçili dönem'
+            }
             href={ordersRoute().url}
             demo={trend.demo}
+            className={className}
         >
             {/* 224px grafik + 36px legend = iskeletin 260px'i; kayma olmaz. */}
             <div className="h-56">
