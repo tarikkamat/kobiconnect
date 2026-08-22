@@ -18,10 +18,8 @@ type Props = {
         hasProducts: boolean;
         hasOrders: boolean;
     };
-    sales?: {
-        today: { count: number; total: string };
-        week: { count: number; total: string };
-    };
+    /** `count`/`total` secili donemin toplamidir, `today` yalnizca bugunun adedi. */
+    sales?: { count: number; total: string; today: number };
     unmatched?: { lines: number; orders: number };
     syncHealth?: {
         failedOperations: number;
@@ -185,21 +183,18 @@ export default function Dashboard({
                                             Bugün
                                         </p>
                                         <p className="text-2xl font-semibold tabular-nums">
-                                            {sales?.today.count ?? 0}
-                                        </p>
-                                        <p className="text-sm text-muted-foreground tabular-nums">
-                                            {sales?.today.total}
+                                            {sales?.today ?? 0}
                                         </p>
                                     </div>
                                     <div>
                                         <p className="text-xs text-muted-foreground">
-                                            Bu hafta
+                                            Seçili dönem
                                         </p>
                                         <p className="text-2xl font-semibold tabular-nums">
-                                            {sales?.week.count ?? 0}
+                                            {sales?.count ?? 0}
                                         </p>
                                         <p className="text-sm text-muted-foreground tabular-nums">
-                                            {sales?.week.total}
+                                            {sales?.total}
                                         </p>
                                     </div>
                                 </div>

@@ -98,15 +98,12 @@ it('snapshots the capabilities the driver actually implements', function (): voi
 it('never sends a stored secret back to the browser', function (): void {
     $this->actingAs($this->manager)->post(route('connections.store'), connectionPayload());
 
+    // Vitrin baglanti kaydi TASIMAZ; sir sizintisi icin tek kapi budur.
     $this->actingAs($this->manager)
         ->get(route('apps.index'))
         ->assertDontSee('top-secret-value')
         ->assertDontSee('public-key')
-        ->assertInertia(fn (AssertableInertia $page) => $page
-            ->where('connections.0.credentials.secretsStored', true)
-            ->missing('connections.0.credentials.values.api_secret')
-            ->missing('connections.0.credentials.values.api_key')
-        );
+        ->assertInertia(fn (AssertableInertia $page) => $page->missing('connections'));
 });
 
 it('keeps the stored secret when the form leaves the field blank', function (): void {

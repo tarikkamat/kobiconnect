@@ -73,7 +73,7 @@ it('derives capability badges from the driver, not from a hardcoded list', funct
     ));
 });
 
-it('lists installed connections next to the storefront', function (): void {
+it('counts installed connections on the card without leaking credentials', function (): void {
     $this->actingAs($this->manager)->post(route('connections.store'), [
         'name' => 'Ana mağaza',
         'marketplace' => 'trendyol',
@@ -90,8 +90,8 @@ it('lists installed connections next to the storefront', function (): void {
         // Sirlar prop'a HIC girmez; kart yalnizca kurulu sayisini bilir.
         ->assertDontSee('top-secret-value')
         ->assertInertia(fn (AssertableInertia $page) => $page
-            ->has('connections', 1)
-            ->where('connections.0.name', 'Ana mağaza')
+            // Kurulu baglantilarin listesi vitrinde YOK — yalnizca sayac.
+            ->missing('connections')
             ->where('apps.0.code', 'hepsiburada')
             ->where('apps.0.installed', 0)
         );

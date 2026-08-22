@@ -7,6 +7,7 @@ import {
     Package,
     Plug,
     ShoppingCart,
+    Store,
     Warehouse,
 } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
@@ -53,6 +54,11 @@ function mainNavItems(): NavItem[] {
             href: dashboard(),
             icon: LayoutGrid,
         },
+        {
+            title: 'Uygulama Mağazası',
+            href: apps(),
+            icon: Store,
+        },
     ];
 }
 
@@ -92,7 +98,6 @@ function navGroups(): NavGroup[] {
             title: 'Kanallar',
             icon: Plug,
             items: [
-                { title: 'Uygulama Mağazası', href: apps() },
                 { title: 'Eşlemeler', href: mapping() },
                 { title: 'Listelemeler', href: listings() },
                 { title: 'Ön Eşleşme', href: matches() },
