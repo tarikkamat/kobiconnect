@@ -21,8 +21,6 @@ final class RegisterTenantController extends Controller
 {
     public function create(): Response
     {
-        // Plan sectirmiyoruz — kayit formu kisa kalsin. Herkes en ucuz halka
-        // acik planla baslar (RegisterTenantRequest::defaultPlanCode).
         return Inertia::render('onboarding/register', [
             'passwordRules' => Password::defaults()->toPasswordRulesString(),
         ]);
@@ -30,8 +28,8 @@ final class RegisterTenantController extends Controller
 
     public function store(RegisterTenantRequest $request, RegisterTenant $registerTenant): RedirectResponse
     {
-        /** @var array{company: string, name: string, email: string, password: string, plan: string} $input */
-        $input = $request->safe()->only(['company', 'name', 'email', 'password', 'plan']);
+        /** @var array{company: string, name: string, email: string, password: string} $input */
+        $input = $request->safe()->only(['company', 'name', 'email', 'password']);
 
         [$owner, $tenant] = $registerTenant($input);
 

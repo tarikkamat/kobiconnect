@@ -14,11 +14,12 @@ use Inertia\Inertia;
 use Inertia\Response;
 
 /**
- * Uygulama magazasi — vitrin ve uygulama detayi.
+ * Uygulama magazasi — tek ekran: vitrin + kurulu baglantilar.
  *
- * Vitrin `config/apps.php` + surucu kaydindan gelir (App\Support\AppCatalog);
- * kurulu baglantilar detay sayfasindadir. Kimlik bilgileri BURADAN HIC CIKMAZ:
- * arayuze yalnizca gizli olmayan alanlar ve "kayitli" isareti doner.
+ * Vitrin `config/apps.php` + surucu kaydindan gelir (App\Support\AppCatalog).
+ * Detay sayfasi BILEREK yok: karta tiklamak dogrudan kurulum cekmecesini acar.
+ * Kimlik bilgileri BURADAN HIC CIKMAZ: arayuze yalnizca gizli olmayan alanlar
+ * ve "kayitli" isareti doner.
  */
 class AppStoreController extends Controller
 {
@@ -55,30 +56,16 @@ class AppStoreController extends Controller
                 ],
                 $this->catalog->all(),
             ),
+            'connections' => ChannelConnection::query()
+                ->orderBy('name')
+                ->get()
+                ->map($this->row(...))
+                ->all(),
             'categories' => array_map(
                 static fn (string $value, string $label): array => ['value' => $value, 'label' => $label],
                 array_keys($this->catalog->categories()),
                 array_values($this->catalog->categories()),
             ),
-        ]);
-    }
-
-    public function show(string $app): Response
-    {
-        Gate::authorize('viewAny', ChannelConnection::class);
-
-        $definition = $this->catalog->find($app);
-
-        abort_if($definition === null, 404);
-
-        return Inertia::render('channels/apps/show', [
-            'app' => $definition,
-            'connections' => ChannelConnection::query()
-                ->where('marketplace', $app)
-                ->orderBy('name')
-                ->get()
-                ->map($this->row(...))
-                ->all(),
         ]);
     }
 

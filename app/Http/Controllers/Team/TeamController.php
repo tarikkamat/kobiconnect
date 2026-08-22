@@ -135,7 +135,7 @@ class TeamController extends Controller
         }
 
         throw ValidationException::withMessages([
-            'role' => 'Son "Sahip" rolü kaldırılamaz: hesabın sahipsiz kalması faturalama ve plan yönetimini kalıcı olarak kilitler. Önce başka bir kullanıcıyı Sahip yapın.',
+            'role' => 'Son "Sahip" rolü kaldırılamaz: hesabın sahipsiz kalması yönetimi kalıcı olarak kilitler. Önce başka bir kullanıcıyı Sahip yapın.',
         ]);
     }
 

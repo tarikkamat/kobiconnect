@@ -55,7 +55,6 @@ it('frees the seat when a user loses their role', function (): void {
         ->delete(route('team.destroy', $revoked))
         ->assertRedirect();
 
-    // Koltuk serbest kaldi: dorduncu davet artik gecmeli.
     $this->actingAs($this->owner)
         ->post(route('team.store'), [
             'name' => 'Yerine Gelen',

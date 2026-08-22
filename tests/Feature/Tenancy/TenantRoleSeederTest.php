@@ -15,13 +15,11 @@ test('it seeds the five starting roles into the tenant schema', function () {
         ->toEqualCanonicalizing(['Sahip', 'Yönetici', 'Depo', 'Muhasebe', 'Müşteri Temsilcisi']);
 });
 
-test('billing and tenant deletion belong to the owner alone', function () {
+test('tenant deletion belongs to the owner alone', function () {
     $owner = User::factory()->create()->assignRole('Sahip');
     $admin = User::factory()->create()->assignRole('Yönetici');
 
-    expect($owner->can('billing.manage'))->toBeTrue()
-        ->and($owner->can('tenant.delete'))->toBeTrue()
-        ->and($admin->can('billing.manage'))->toBeFalse()
+    expect($owner->can('tenant.delete'))->toBeTrue()
         ->and($admin->can('tenant.delete'))->toBeFalse()
         ->and($admin->can('catalog.manage'))->toBeTrue();
 });

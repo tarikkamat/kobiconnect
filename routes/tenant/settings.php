@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Settings\NotificationPreferenceController;
+use App\Http\Controllers\Settings\TableColumnController;
 use App\Http\Controllers\Team\TeamController;
 use Illuminate\Support\Facades\Route;
 
@@ -26,6 +27,14 @@ Route::prefix('settings')->group(function (): void {
         ->name('notification-preferences.edit');
     Route::put('notifications', [NotificationPreferenceController::class, 'update'])
         ->name('notification-preferences.update');
+
+    // Tablo kolon gorunurlugu — ekransiz, kolon secicisinden sessiz kayit.
+    Route::patch('table-columns', [TableColumnController::class, 'update'])
+        ->name('table-columns.update');
+
+    // Lisans — dummy vitrin, controller'siz. Lisans mimarisi kararlastirilinca
+    // gercek modele baglanacak; simdilik ekran tasarimi icin statik veri.
+    Route::inertia('license', 'settings/license')->name('license.edit');
 });
 
 /*

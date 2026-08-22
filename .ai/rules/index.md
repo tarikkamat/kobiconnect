@@ -11,6 +11,7 @@ Before planning or editing, find the row whose globs match the file's path and r
 | app/Providers/TenancyServiceProvider.php | .ai/rules/providers.md |
 | routes/tenant.php, routes/web.php | .ai/rules/routes.md |
 | database/seeders/** | .ai/rules/seeders.md |
+| app/Support/TenantUserProvider.php, config/auth.php | .ai/rules/support.md |
 | database/migrations/tenant/** | .ai/rules/tenant.md |
 | tests/** | .ai/rules/tests.md |
 | app/Marketplaces/Trendyol/** | .ai/rules/trendyol.md |

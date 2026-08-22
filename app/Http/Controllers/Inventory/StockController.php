@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Inventory;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Inventory\StockAdjustmentRequest;
+use App\Models\ChannelListing;
 use App\Models\InventoryItem;
 use App\Models\ProductVariant;
 use App\Models\Warehouse;
@@ -48,7 +49,7 @@ class StockController extends Controller
             ->get(['id', 'name', 'code', 'is_default']);
 
         $variants = ProductVariant::query()
-            ->with(['product:id,name', 'inventoryItems'])
+            ->with(['product:id,name', 'inventoryItems', 'listings.connection:id,name,marketplace'])
             ->when($search !== '', fn (Builder $query) => $query->where(
                 fn (Builder $group) => $group
                     ->where('sku', 'ilike', '%'.$search.'%')
@@ -69,6 +70,17 @@ class StockController extends Controller
                 'barcode' => $variant->barcode,
                 'productId' => $variant->product_id,
                 'productName' => $variant->product->name,
+                // Varyantin satista oldugu kanallar; operator stogu duzeltirken
+                // hangi pazaryerini etkiledigini gormek zorunda.
+                'channels' => $variant->listings
+                    ->map(fn (ChannelListing $listing): array => [
+                        'marketplace' => (string) $listing->connection?->marketplace,
+                        'name' => (string) $listing->connection?->name,
+                        'state' => $listing->sync_state->value,
+                    ])
+                    ->filter(fn (array $channel): bool => $channel['marketplace'] !== '')
+                    ->values()
+                    ->all(),
                 // Hucreler depo sirasiyla; eksik satir sifirla doldurulur ki
                 // istemci tarafinda eslestirme yapmak gerekmesin.
                 'cells' => $warehouses

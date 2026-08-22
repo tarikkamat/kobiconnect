@@ -57,7 +57,7 @@ afterEach(fn () => forgetGeneratedTenants());
  */
 function onboardingPayload(array $overrides = []): array
 {
-    // Workspace adresi ve plan formda YOK: ikisi de sunucuda belirlenir.
+    // Workspace adresi formda YOK: sunucuda belirlenir.
     return [
         'company' => ONBOARDING_COMPANY,
         'name' => 'Ayşe Yılmaz',
@@ -68,12 +68,29 @@ function onboardingPayload(array $overrides = []): array
     ];
 }
 
-it('kayit ekrani plan sectirmez', function (): void {
+it('kayit ekrani yalnizca hesap bilgisi ister', function (): void {
     $this->get(route('onboarding.register'))
         ->assertOk()
         ->assertInertia(fn ($page) => $page
             ->component('onboarding/register')
             ->missing('plans'));
+});
+
+it('panelde oturumu olan kullaniciya kayit ekranini misafir olarak acar', function (): void {
+    // Tek host = tek session cookie: paneldeki oturumun anahtari central
+    // istekle de gelir. Central baglantida users tablosu yoktur; session'daki
+    // id cozulmeye kalkilsa "relation users does not exist" olurdu.
+    // TenantUserProvider central'da user yuklemeyi hic denemez.
+    $user = User::factory()->create();
+
+    tenancy()->end();
+
+    $this->withSession([auth()->guard('web')->getName() => $user->getAuthIdentifier()])
+        ->get(route('onboarding.register'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('onboarding/register')
+            ->where('auth.user', null));
 });
 
 it('workspace adresini 1001 ve sonrasindan sirayla atar', function (): void {

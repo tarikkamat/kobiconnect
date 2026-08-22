@@ -10,7 +10,9 @@ use App\Models\User;
 use App\Observers\ChannelListingObserver;
 use App\Observers\InventoryItemObserver;
 use App\Observers\PriceObserver;
+use App\Support\TenantUserProvider;
 use Carbon\CarbonImmutable;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -44,6 +46,11 @@ class AppServiceProvider extends ServiceProvider
      */
     protected function configureDefaults(): void
     {
+        // users tenant semasinda yasar; central istekte session'dan user
+        // cozulmeye kalkilirsa "relation users does not exist" olur. Bkz.
+        // App\Support\TenantUserProvider.
+        Auth::provider('tenant-eloquent', fn ($app, array $config): TenantUserProvider => new TenantUserProvider($app['hash'], $config['model']));
+
         // Horizon central domain'de yasar; orada tenant kullanicisi ve dolayisiyla
         // rol yoktur. Bu yuzden yetki rol degil operator listesiyle verilir.
         Gate::define('viewHorizon', fn (?User $user): bool => app()->isLocal()

@@ -99,7 +99,7 @@ it('never sends a stored secret back to the browser', function (): void {
     $this->actingAs($this->manager)->post(route('connections.store'), connectionPayload());
 
     $this->actingAs($this->manager)
-        ->get(route('apps.show', ['app' => 'trendyol']))
+        ->get(route('apps.index'))
         ->assertDontSee('top-secret-value')
         ->assertDontSee('public-key')
         ->assertInertia(fn (AssertableInertia $page) => $page
@@ -161,11 +161,22 @@ it('blocks every connection route for a role without channels.manage', function 
     $connection = ChannelConnection::factory()->create();
 
     $this->actingAs($warehouse)->get(route('apps.index'))->assertForbidden();
-    $this->actingAs($warehouse)->get(route('apps.show', ['app' => 'trendyol']))->assertForbidden();
+    $this->actingAs($warehouse)->get(route('apps.index'))->assertForbidden();
     $this->actingAs($warehouse)->post(route('connections.store'), connectionPayload())->assertForbidden();
     $this->actingAs($warehouse)->patch(route('connections.update', $connection), connectionPayload())->assertForbidden();
     $this->actingAs($warehouse)->post(route('connections.health', $connection))->assertForbidden();
     $this->actingAs($warehouse)->delete(route('connections.destroy', $connection))->assertForbidden();
 
     expect(ChannelConnection::query()->count())->toBe(1);
+});
+
+it('names the connection itself when the form leaves the name out', function (): void {
+    $payload = connectionPayload();
+    unset($payload['name']);
+
+    $this->actingAs($this->manager)->post(route('connections.store'), $payload)->assertRedirect();
+    $this->actingAs($this->manager)->post(route('connections.store'), [...$payload, 'seller_id' => '654321'])->assertRedirect();
+
+    expect(ChannelConnection::query()->orderBy('id')->pluck('name')->all())
+        ->toBe(['trendyol-connection', 'trendyol-connection-2']);
 });

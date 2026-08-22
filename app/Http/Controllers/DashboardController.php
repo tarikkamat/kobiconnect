@@ -6,6 +6,9 @@ namespace App\Http\Controllers;
 
 use App\Enums\ConnectionStatus;
 use App\Marketplaces\Data\Enums\SyncState;
+use App\Support\DashboardDemoData;
+use Carbon\CarbonImmutable;
+use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Number;
@@ -23,6 +26,10 @@ use stdClass;
  * Widget'ların tamamı `Inertia::defer()` ile gelir (FRONTEND-PLAN §3): ilk
  * boyama beş toplama sorgusunu beklemez. Hepsi varsayılan grupta olduğu için
  * istemci TEK bir ek istek atar.
+ *
+ * Grafikler (kpis, salesTrend, channelShare, orderVolume, salesTarget,
+ * syncThroughput) MVP sunumu için ÖRNEK veriyle gelir; üretimi tek bir yerde,
+ * `App\Support\DashboardDemoData` içinde durur ve panelde rozetle işaretlidir.
  *
  * Yalnızca "bu tenant'ta veri var mı" sorusu senkron cevaplanır; yeni bir
  * tenant iskelet yerine doğrudan boş durumu görür, skeleton yanıp sönmez.
@@ -50,9 +57,15 @@ class DashboardController extends Controller
         'prices' => 'Fiyatlar',
     ];
 
-    public function __invoke(): Response
+    public function __invoke(Request $request, DashboardDemoData $demo): Response
     {
+        [$from, $to] = $this->range($request);
+        $demo->forRange($from, $to);
+
         return Inertia::render('dashboard', [
+            // Secili donem her widget'in ustunde tek kaynaktan durur; secici
+            // varsayilani buradan okur, istemci tarih hesabi yapmaz.
+            'range' => ['from' => $from->toDateString(), 'to' => $to->toDateString()],
             // Ucuz uc `exists()`; boş durumun skeleton arkasında saklanmamasi
             // icin bilerek deferred DEGIL.
             'setup' => [
@@ -60,40 +73,65 @@ class DashboardController extends Controller
                 'hasProducts' => DB::table('products')->exists(),
                 'hasOrders' => DB::table('orders')->exists(),
             ],
-            'sales' => Inertia::defer(fn (): array => $this->sales()),
+            'sales' => Inertia::defer(fn (): array => $this->sales($from, $to)),
             'unmatched' => Inertia::defer(fn (): array => $this->unmatched()),
             'syncHealth' => Inertia::defer(fn (): array => $this->syncHealth()),
             'criticalStock' => Inertia::defer(fn (): array => $this->criticalStock()),
             'connections' => Inertia::defer(fn (): array => $this->connections()),
+
+            // Grafikler ORNEK veriyle gelir (App\Support\DashboardDemoData);
+            // kartlarda "Örnek veri" rozetiyle isaretlidir. Ayni varsayilan
+            // grupta olduklari icin istemci hala TEK ek istek atar.
+            'kpis' => Inertia::defer(fn (): array => $demo->kpis()),
+            'salesTrend' => Inertia::defer(fn (): array => $demo->salesTrend()),
+            'channelShare' => Inertia::defer(fn (): array => $demo->channelShare()),
+            'orderVolume' => Inertia::defer(fn (): array => $demo->orderVolume()),
+            'salesTarget' => Inertia::defer(fn (): array => $demo->salesTarget()),
+            'syncThroughput' => Inertia::defer(fn (): array => $demo->syncThroughput()),
         ]);
     }
 
     /**
-     * Bugün ve bu hafta gelen sipariş adedi ve tutarı.
+     * Panelin dönem sınırları. Varsayılan son 30 gün; `from`/`to` sorgu
+     * parametreleriyle herhangi iki tarih arasına çekilir. Ters verilmiş bir
+     * aralık hataya katlanmaz, sessizce düzeltilir: operatör panelde form
+     * doğrulamasıyla uğraşmaz.
+     *
+     * @return array{0: CarbonImmutable, 1: CarbonImmutable}
+     */
+    private function range(Request $request): array
+    {
+        $validated = $request->validate([
+            'from' => ['nullable', 'date_format:Y-m-d'],
+            'to' => ['nullable', 'date_format:Y-m-d'],
+        ]);
+
+        $today = CarbonImmutable::now('Europe/Istanbul')->startOfDay();
+
+        $to = isset($validated['to'])
+            ? CarbonImmutable::parse($validated['to'], 'Europe/Istanbul')->startOfDay()
+            : $today;
+        $from = isset($validated['from'])
+            ? CarbonImmutable::parse($validated['from'], 'Europe/Istanbul')->startOfDay()
+            : $to->subDays(29);
+
+        return $from->greaterThan($to) ? [$to, $from] : [$from, $to];
+    }
+
+    /**
+     * Seçili dönemde gelen sipariş adedi ve tutarı.
      *
      * Gün sınırı Europe/Istanbul'a göre alınır ve UTC'ye çevrilerek sorulur:
      * `placed_at` zaman dilimsiz saklanıyor, "bugün" ise operatörün günü.
      *
-     * @return array{today: array{count: int, total: string}, week: array{count: int, total: string}}
+     * @return array{count: int, total: string, today: int}
      */
-    private function sales(): array
-    {
-        $local = Carbon::now('Europe/Istanbul');
-
-        return [
-            'today' => $this->salesSince($local->copy()->startOfDay()),
-            'week' => $this->salesSince($local->copy()->startOfWeek()),
-        ];
-    }
-
-    /**
-     * @return array{count: int, total: string}
-     */
-    private function salesSince(Carbon $from): array
+    private function sales(CarbonImmutable $from, CarbonImmutable $to): array
     {
         /** @var stdClass $row */
         $row = DB::table('orders')
             ->where('placed_at', '>=', $from->utc())
+            ->where('placed_at', '<', $to->addDay()->utc())
             // `totals` her zaman `net` tasimaz; eksik alan toplami bozmamali.
             ->selectRaw("count(*) as orders, coalesce(sum((totals->>'net')::numeric), 0) as total")
             ->first();
@@ -102,6 +140,9 @@ class DashboardController extends Controller
             'count' => (int) $row->orders,
             // Para sunucuda bicimlenir — FRONTEND-PLAN §7.
             'total' => (string) Number::currency((float) $row->total, 'TRY', 'tr'),
+            'today' => (int) DB::table('orders')
+                ->where('placed_at', '>=', CarbonImmutable::now('Europe/Istanbul')->startOfDay()->utc())
+                ->count(),
         ];
     }
 
@@ -142,10 +183,12 @@ class DashboardController extends Controller
                 ->get([
                     'sync_runs.id', 'sync_runs.resource', 'sync_runs.status',
                     'sync_runs.started_at', 'channel_connections.name as connection',
+                    'channel_connections.marketplace',
                 ])
                 ->map(fn (stdClass $run): array => [
                     'id' => (int) $run->id,
                     'connection' => $run->connection,
+                    'marketplace' => $run->marketplace,
                     'resource' => self::RESOURCE_LABELS[$run->resource] ?? $run->resource,
                     'status' => (string) $run->status,
                     'startedAt' => $this->dateTime($run->started_at),
@@ -206,6 +249,8 @@ class DashboardController extends Controller
                 ->map(fn (stdClass $connection): array => [
                     'id' => (int) $connection->id,
                     'name' => (string) $connection->name,
+                    // Logo yolu koddan turetilir (/apps/{kod}.svg) — AppCatalog
+                    // ile ayni kaynak, bkz. AppCatalog::present().
                     'marketplace' => (string) $connection->marketplace,
                     'status' => (string) $connection->status,
                     'statusLabel' => self::CONNECTION_STATUS_LABELS[$connection->status] ?? $connection->status,

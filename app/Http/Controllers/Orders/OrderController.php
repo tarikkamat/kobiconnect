@@ -85,6 +85,7 @@ class OrderController extends Controller
                 'orders.totals',
                 'orders.customer',
                 'channel_connections.name as connection_name',
+                'channel_connections.marketplace',
             ])
             ->selectSub($this->lineCount(), 'line_count')
             ->selectSub($this->lineCount()->whereNull('order_lines.variant_id'), 'unmatched_count')
@@ -114,6 +115,9 @@ class OrderController extends Controller
                 'statusLabel' => $this->statusLabel((string) $order->status),
                 'externalStatus' => (string) $order->external_status,
                 'connection' => $order->connection_name,
+                // Logo yolu koddan turetilir (/apps/{kod}.svg) — AppCatalog ile
+                // ayni kaynak, bkz. AppCatalog::present().
+                'marketplace' => $order->marketplace,
                 'customer' => $this->maskedName($order->customer),
                 'total' => $this->money($order->totals, (string) $order->currency),
                 'placedAt' => $this->dateTime($order->placed_at),

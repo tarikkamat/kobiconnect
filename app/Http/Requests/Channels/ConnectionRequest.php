@@ -44,7 +44,8 @@ class ConnectionRequest extends FormRequest
         $updating = $this->connection() !== null;
 
         return [
-            'name' => ['required', 'string', 'max:255'],
+            // Ad SORULMAZ; bos gelirse sunucu uretir (bkz. name()).
+            'name' => ['nullable', 'string', 'max:255'],
             'marketplace' => [
                 Rule::requiredIf(! $updating),
                 Rule::in(array_keys($this->configuredMarketplaces())),
@@ -117,10 +118,46 @@ class ConnectionRequest extends FormRequest
 
         return [
             ...($connection === null ? ['marketplace' => $this->marketplace()] : []),
-            'name' => $this->string('name')->toString(),
+            'name' => $this->name($connection),
             'credentials' => $credentials,
             'external_seller_id' => $identity,
         ];
+    }
+
+    /**
+     * Kullanici ad girmez: form kisa kalsin. Bos birakilirsa
+     * `hepsiburada-connection`, ikincisinde `hepsiburada-connection-2` ...
+     * Duzenlemede bos ad mevcut adi korur.
+     */
+    private function name(?ChannelConnection $connection): string
+    {
+        $name = $this->string('name')->toString();
+
+        if ($name !== '') {
+            return $name;
+        }
+
+        if ($connection !== null) {
+            return $connection->name;
+        }
+
+        $base = $this->marketplace().'-connection';
+        $taken = ChannelConnection::query()
+            ->where('name', 'like', $base.'%')
+            ->pluck('name')
+            ->all();
+
+        if (! in_array($base, $taken, true)) {
+            return $base;
+        }
+
+        $suffix = 2;
+
+        while (in_array($base.'-'.$suffix, $taken, true)) {
+            $suffix++;
+        }
+
+        return $base.'-'.$suffix;
     }
 
     /**

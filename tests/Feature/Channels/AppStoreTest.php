@@ -86,21 +86,20 @@ it('lists installed connections next to the storefront', function (): void {
     ])->assertRedirect();
 
     $this->actingAs($this->manager)
-        ->get(route('apps.show', ['app' => 'trendyol']))
+        ->get(route('apps.index'))
+        // Sirlar prop'a HIC girmez; kart yalnizca kurulu sayisini bilir.
+        ->assertDontSee('top-secret-value')
         ->assertInertia(fn (AssertableInertia $page) => $page
-            ->component('channels/apps/show')
-            ->where('app.code', 'trendyol')
             ->has('connections', 1)
             ->where('connections.0.name', 'Ana mağaza')
+            ->where('apps.0.code', 'hepsiburada')
+            ->where('apps.0.installed', 0)
         );
 
-    $this->actingAs($this->manager)
-        ->get(route('apps.show', ['app' => 'hepsiburada']))
-        ->assertInertia(fn (AssertableInertia $page) => $page->has('connections', 0));
-});
+    $trendyol = collect($this->actingAs($this->manager)->get(route('apps.index'))
+        ->viewData('page')['props']['apps'])->firstWhere('code', 'trendyol');
 
-it('404s an app that is not in the catalog', function (): void {
-    $this->actingAs($this->manager)->get(route('apps.show', ['app' => 'gittigidiyor']))->assertNotFound();
+    expect($trendyol['installed'])->toBe(1);
 });
 
 it('redirects the old connections screen to the store', function (): void {

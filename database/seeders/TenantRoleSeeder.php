@@ -21,7 +21,6 @@ class TenantRoleSeeder extends Seeder
      * @var list<string>
      */
     private const array PERMISSIONS = [
-        'billing.manage',
         'tenant.delete',
         'users.manage',
         'channels.manage',
@@ -58,10 +57,10 @@ class TenantRoleSeeder extends Seeder
         // cozer; yeni yaratilanlari gormesi icin once onbellek dusurulmeli.
         app(PermissionRegistrar::class)->forgetCachedPermissions();
 
-        // Sahip her seyi yapar; Yonetici faturalama ve tenant silme haric her seyi.
+        // Sahip her seyi yapar; Yonetici tenant silme haric her seyi.
         Role::findOrCreate('Sahip', $guard)->syncPermissions(self::PERMISSIONS);
         Role::findOrCreate('Yönetici', $guard)->syncPermissions(
-            array_diff(self::PERMISSIONS, ['billing.manage', 'tenant.delete']),
+            array_diff(self::PERMISSIONS, ['tenant.delete']),
         );
 
         foreach (self::ROLES as $role => $permissions) {

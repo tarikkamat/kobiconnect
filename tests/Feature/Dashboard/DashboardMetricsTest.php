@@ -29,9 +29,12 @@ function dashboardUser(): User
  * Deferred prop'lar ilk boyamada gonderilmez; kismi yeniden yukleme ile gelir.
  * Yanit XHR JSON'udur, `assertInertia` yalnizca view yanitlarini okur.
  */
-function dashboardProp(string $prop): TestResponse
+/**
+ * @param  array<string, string>  $query
+ */
+function dashboardProp(string $prop, array $query = []): TestResponse
 {
-    return test()->actingAs(dashboardUser())->get(route('dashboard'), [
+    return test()->actingAs(dashboardUser())->get(route('dashboard', $query), [
         'X-Inertia' => 'true',
         'X-Inertia-Version' => (string) app(HandleInertiaRequests::class)->version(request()),
         'X-Inertia-Partial-Component' => 'dashboard',
@@ -73,22 +76,45 @@ it('answers the setup question synchronously and defers every heavy widget', fun
             ->missing('syncHealth')
             ->missing('criticalStock')
             ->missing('connections')
+            ->missing('kpis')
+            ->missing('salesTrend')
+            ->missing('channelShare')
+            ->missing('orderVolume')
+            ->missing('salesTarget')
+            ->missing('syncThroughput')
         );
 });
 
-it('formats sales totals on the server and keeps last week out of today', function (): void {
+it('sums sales over the default last-30-day range on the server', function (): void {
     seedDashboardOrder(['totals' => json_encode(['net' => '150.5000'])]);
+    // Donem disi siparis toplama girmez.
     seedDashboardOrder([
-        'placed_at' => now()->subDays(20),
+        'placed_at' => now()->subDays(45),
         'totals' => json_encode(['net' => '999.0000']),
     ]);
 
     $response = dashboardProp('sales')->assertOk();
 
-    expect($response->json('props.sales.today.count'))->toBe(1)
-        ->and($response->json('props.sales.today.total'))->toContain('150,50')
+    expect($response->json('props.sales.count'))->toBe(1)
+        ->and($response->json('props.sales.total'))->toContain('150,50')
         // Bicimlendirme sunucuda; istemciye ham sayi gitmiyor.
-        ->and($response->json('props.sales.today.total'))->toContain('₺');
+        ->and($response->json('props.sales.total'))->toContain('₺')
+        ->and($response->json('props.sales.today'))->toBe(1);
+});
+
+it('answers for any explicit from/to range', function (): void {
+    seedDashboardOrder([
+        'placed_at' => now()->subDays(45),
+        'totals' => json_encode(['net' => '999.0000']),
+    ]);
+
+    $response = dashboardProp('sales', [
+        'from' => now('Europe/Istanbul')->subDays(50)->toDateString(),
+        'to' => now('Europe/Istanbul')->subDays(40)->toDateString(),
+    ])->assertOk();
+
+    expect($response->json('props.sales.count'))->toBe(1)
+        ->and($response->json('props.sales.total'))->toContain('999');
 });
 
 it('counts unmatched order lines and the orders they belong to', function (): void {
@@ -146,4 +172,94 @@ it('surfaces errored connections so a silently stopped channel is visible', func
         // Isme gore sirali: "Trendyol Ana" once gelir.
         ->and($response->json('props.connections.items.0.statusLabel'))->toBe('Hata')
         ->and($response->json('props.connections.items.1.statusLabel'))->toBe('Bağlı');
+});
+
+/*
+|--------------------------------------------------------------------------
+| Grafikler — ornek veri (App\Support\DashboardDemoData)
+|--------------------------------------------------------------------------
+|
+| Gercek sorgulara gecildiginde bu blok da gider; sozlesme (series/rows) ayni
+| kaldigi surece frontend'e dokunulmaz.
+|
+*/
+
+it('draws chart series from the tenant own marketplaces', function (): void {
+    ChannelConnection::factory()->create(['marketplace' => 'hepsiburada']);
+
+    $response = dashboardProp('salesTrend')->assertOk();
+
+    expect($response->json('props.salesTrend.series'))->toBe([
+        ['key' => 'hepsiburada', 'label' => 'Hepsiburada', 'logo' => '/apps/hepsiburada.svg'],
+    ]);
+});
+
+it('falls back to showcase marketplaces when no channel is connected', function (): void {
+    $response = dashboardProp('salesTrend')->assertOk();
+
+    expect(array_column((array) $response->json('props.salesTrend.series'), 'key'))
+        ->toBe(['trendyol', 'hepsiburada'])
+        // Varsayilan donem son 30 gun.
+        ->and($response->json('props.salesTrend.rows'))->toHaveCount(30)
+        // Her satir her seriyi tasir; eksik anahtar grafikte bosluk acar.
+        ->and($response->json('props.salesTrend.rows.0'))
+        ->toHaveKeys(['date', 'trendyol', 'hepsiburada']);
+});
+
+it('trims the sales charts to the selected range', function (): void {
+    $response = dashboardProp('salesTrend', [
+        'from' => now('Europe/Istanbul')->subDays(6)->toDateString(),
+        'to' => now('Europe/Istanbul')->toDateString(),
+    ])->assertOk();
+
+    expect($response->json('props.salesTrend.rows'))->toHaveCount(7);
+});
+
+it('returns identical numbers on every request', function (): void {
+    // Rastgelelik olsaydi sunumda her yenilemede grafik ziplardi; Octane'de de
+    // global rastgelelik durumu istekler arasinda sizardi.
+    $first = dashboardProp('salesTrend')->json('props.salesTrend');
+    $second = dashboardProp('salesTrend')->json('props.salesTrend');
+
+    expect($first)->toBe($second);
+});
+
+it('feeds every chart from the same daily matrix', function (): void {
+    $trend = (array) dashboardProp('salesTrend')->json('props.salesTrend.rows');
+    $share = (array) dashboardProp('channelShare')->json('props.channelShare.items');
+
+    foreach ($share as $slice) {
+        $fromTrend = array_sum(array_column($trend, $slice['key']));
+
+        // Pasta dilimi trendin ayni donemdeki toplamiyla BIREBIR tutmali;
+        // tutmazsa panel kendi icinde celisir.
+        expect(round($fromTrend, 2))->toBe(round((float) $slice['value'], 2));
+    }
+});
+
+it('formats money and percentages on the server', function (): void {
+    $kpis = (array) dashboardProp('kpis')->json('props.kpis.items');
+    $target = (array) dashboardProp('salesTarget')->json('props.salesTarget');
+
+    expect($kpis)->toHaveCount(4)
+        ->and($kpis[0]['value'])->toContain('₺')
+        ->and($kpis[3]['value'])->toContain('%')
+        ->and($target['overall']['target'])->toContain('₺')
+        ->and($target['items'][0]['percent'])->toBeLessThanOrEqual(100);
+});
+
+it('keeps sync throughput on twelve weekly buckets', function (): void {
+    $throughput = (array) dashboardProp('syncThroughput')->json('props.syncThroughput');
+
+    expect($throughput['rows'])->toHaveCount(12)
+        ->and($throughput['rows'][0])->toHaveKeys(['week', 'succeeded', 'failed'])
+        ->and($throughput['failureRate'])->toContain('%');
+});
+
+it('totals order volume on the server for the header switches', function (): void {
+    $volume = (array) dashboardProp('orderVolume')->json('props.orderVolume');
+
+    expect($volume['rows'])->toHaveCount(30)
+        ->and($volume['totals']['revenue'])->toContain('₺')
+        ->and($volume['rows'][0]['orders'])->toBeGreaterThan(0);
 });

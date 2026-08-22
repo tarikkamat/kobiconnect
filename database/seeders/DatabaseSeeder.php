@@ -23,12 +23,6 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call(TenantRoleSeeder::class);
-
-        // Deposuz bir kurulum calismaz: envanter matrisi, katalogtaki satir ici
-        // stok duzenlemesi ve stok gonderimi hepsi bir depo satirina baglidir ve
-        // WarehouseController zaten "en az bir depo kalir" kuralini zorluyor.
-        // Yeni musteriyi bos bir ekranla karsilamak yerine varsayilanla basla;
-        // adi ve kodu Depolar ekranindan degistirilebilir.
         Warehouse::firstOrCreate(
             ['code' => 'ANA'],
             ['name' => 'Ana Depo', 'is_default' => true],
