@@ -70,6 +70,9 @@ export default function AppStoreIndex({ apps, categories }: Props) {
                         : {
                               value: setup.code,
                               label: setup.name,
+                              logo: setup.logo,
+                              logoScale: setup.logoScale,
+                              logoDarkInvert: setup.logoDarkInvert,
                               capabilities: setup.capabilities,
                               fields: setup.fields,
                           }

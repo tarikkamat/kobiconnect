@@ -1,8 +1,10 @@
 import { Form } from '@inertiajs/react';
+import { ShieldCheck } from 'lucide-react';
 import { useState } from 'react';
 import ConnectionController from '@/actions/App/Http/Controllers/Channels/ConnectionController';
 import { PermissionButton } from '@/components/catalog/permission-button';
 import InputError from '@/components/input-error';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
@@ -14,6 +16,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
 import {
     Sheet,
     SheetContent,
@@ -23,6 +26,7 @@ import {
     SheetTitle,
 } from '@/components/ui/sheet';
 import type { PermissionCheck } from '@/hooks/use-permission';
+import { cn } from '@/lib/utils';
 
 export type Option = { value: string; label: string };
 
@@ -45,6 +49,11 @@ export type CredentialField = {
 export type Marketplace = {
     value: string;
     label: string;
+    logo: string;
+    /** Kendi tuvalinde kucuk cizilmis markalar icin carpan (config/apps.php). */
+    logoScale: number;
+    /** Koyu wordmark karanlik temada beyaza boyanir (config/apps.php). */
+    logoDarkInvert: boolean;
     capabilities: Option[];
     fields: CredentialField[];
 };
@@ -88,16 +97,48 @@ export function ConnectionDrawer({
     return (
         <Sheet open={open} onOpenChange={onOpenChange}>
             <SheetContent className="w-full gap-0 overflow-y-auto sm:max-w-md">
-                <SheetHeader>
-                    <SheetTitle>
+                <SheetHeader className="gap-4">
+                    {/* Baslik logodur; ekran okuyucu icin metin gizli kalir. */}
+                    <SheetTitle className="sr-only">
                         {marketplace?.label ?? 'Bağlantı'}
                         {editing ? ' — bağlantıyı düzenle' : ' bağlantısı kur'}
                     </SheetTitle>
-                    <SheetDescription>
-                        Kimlik bilgileri şifrelenerek saklanır ve kaydedildikten
-                        sonra ekrana geri getirilmez. Kaydettiğinizde bağlantı
-                        pazaryerinde hemen denenir.
+
+                    {marketplace === null ? null : (
+                        // ponytail: cerceve yok. Koyu wordmark'lar karanlik
+                        // temada beyaza boyanir (config/apps.php:
+                        // logo_dark_invert), renkli logolar oldugu gibi kalir.
+                        <div className="flex items-center justify-start">
+                            <img
+                                src={marketplace.logo}
+                                alt={marketplace.label}
+                                style={
+                                    marketplace.logoScale === 1
+                                        ? undefined
+                                        : { scale: marketplace.logoScale }
+                                }
+                                className={cn(
+                                    'max-h-7 max-w-40 object-contain object-left',
+                                    marketplace.logoDarkInvert &&
+                                        'dark:brightness-0 dark:invert',
+                                )}
+                            />
+                        </div>
+                    )}
+
+                    <SheetDescription asChild>
+                        <Alert>
+                            <ShieldCheck />
+                            <AlertDescription>
+                                Kimlik bilgileri şifrelenerek saklanır ve
+                                kaydedildikten sonra ekrana geri getirilmez.
+                                Kaydettiğinizde bağlantı pazaryerinde hemen
+                                denenir.
+                            </AlertDescription>
+                        </Alert>
                     </SheetDescription>
+
+                    <Separator />
                 </SheetHeader>
 
                 {marketplace === null ? null : (
