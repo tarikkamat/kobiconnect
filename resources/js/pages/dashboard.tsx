@@ -5,7 +5,6 @@ import {
     CircleCheck,
     CircleDashed,
     PackageOpen,
-    TriangleAlert,
     Unlink,
 } from 'lucide-react';
 import {
@@ -17,6 +16,16 @@ import type { ChannelShare } from '@/components/dashboard/channel-share-chart';
 import { ChartSkeleton } from '@/components/dashboard/chart-kit';
 import { KpiStrip, KpiStripSkeleton } from '@/components/dashboard/kpi-strip';
 import type { Kpis } from '@/components/dashboard/kpi-strip';
+import type { RowTone } from '@/components/dashboard/list-card';
+import {
+    ListCard,
+    ListCardSkeleton,
+    ListEmpty,
+    ListRow,
+    RowPill,
+    RowText,
+    toneIcon,
+} from '@/components/dashboard/list-card';
 import {
     OrderVolumeChart,
     OrderVolumeSkeleton,
@@ -35,6 +44,7 @@ import { MarketplaceAvatar } from '@/components/marketplace-avatar';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { cn } from '@/lib/utils';
 import { dashboard } from '@/routes';
 import { index as connectionsRoute } from '@/routes/apps';
 import { index as ordersRoute } from '@/routes/orders';
@@ -106,13 +116,10 @@ const RUN_STATUS_VARIANTS: Record<
     failed: 'destructive',
 };
 
-const CONNECTION_STATUS_VARIANTS: Record<
-    string,
-    'default' | 'secondary' | 'destructive' | 'outline'
-> = {
-    active: 'default',
-    paused: 'secondary',
-    error: 'destructive',
+/** Calisan baglanti satiri sakin durur; duraklatilan ve hatali one cikar. */
+const CONNECTION_ROW_TONES: Record<string, RowTone> = {
+    paused: 'warn',
+    error: 'alert',
 };
 
 const unmatchedOrders = ordersRoute.url(undefined, {
@@ -472,132 +479,128 @@ export default function Dashboard({
 
                             <Deferred
                                 data="criticalStock"
-                                fallback={
-                                    <WidgetSkeleton
-                                        rows={4}
-                                        className="min-h-56"
-                                    />
-                                }
+                                fallback={<ListCardSkeleton />}
                             >
-                                <WidgetCard
+                                <ListCard
                                     title="Kritik stok"
                                     href={stockRoute().url}
-                                    alert={(criticalStock?.count ?? 0) > 0}
-                                    className="min-h-56"
+                                    badge={
+                                        (criticalStock?.count ?? 0) > 0 ? (
+                                            <Badge
+                                                variant="secondary"
+                                                className="tabular-nums"
+                                            >
+                                                {criticalStock?.count} varyant
+                                            </Badge>
+                                        ) : null
+                                    }
                                 >
-                                    {criticalStock?.count === 0 ? (
-                                        <p className="text-sm text-muted-foreground">
+                                    {criticalStock?.items.length ? (
+                                        criticalStock.items.map((item) => {
+                                            // Tukenmis stok satis durdurur;
+                                            // emniyetin altina inmek sadece
+                                            // siparis vermeyi hatirlatir.
+                                            const tone =
+                                                item.available <= 0
+                                                    ? 'alert'
+                                                    : 'warn';
+
+                                            return (
+                                                <ListRow
+                                                    key={item.id}
+                                                    tone={tone}
+                                                    href={stockRoute().url}
+                                                >
+                                                    <PackageOpen
+                                                        aria-hidden
+                                                        className={cn(
+                                                            'size-4 shrink-0',
+                                                            toneIcon(tone),
+                                                        )}
+                                                    />
+                                                    <RowText
+                                                        title={item.product}
+                                                        detail={item.sku}
+                                                    />
+                                                    <RowPill tone={tone}>
+                                                        {item.available} /{' '}
+                                                        {item.safetyStock}
+                                                    </RowPill>
+                                                </ListRow>
+                                            );
+                                        })
+                                    ) : (
+                                        <ListEmpty>
                                             Emniyet stokunun altına inen varyant
                                             yok.
-                                        </p>
-                                    ) : (
-                                        <ul className="space-y-2.5 text-sm">
-                                            {criticalStock?.items.map(
-                                                (item) => (
-                                                    <li
-                                                        key={item.id}
-                                                        className="flex items-center justify-between gap-2"
-                                                    >
-                                                        <span className="min-w-0 truncate">
-                                                            {item.product}
-                                                            <span className="block text-xs text-muted-foreground">
-                                                                {item.sku}
-                                                            </span>
-                                                        </span>
-                                                        <span className="shrink-0 text-sm tabular-nums">
-                                                            <span
-                                                                className={
-                                                                    item.available <=
-                                                                    item.safetyStock
-                                                                        ? 'font-medium text-destructive'
-                                                                        : undefined
-                                                                }
-                                                            >
-                                                                {item.available}
-                                                            </span>
-                                                            <span className="text-muted-foreground">
-                                                                {' '}
-                                                                /{' '}
-                                                                {
-                                                                    item.safetyStock
-                                                                }
-                                                            </span>
-                                                        </span>
-                                                    </li>
-                                                ),
-                                            )}
-                                        </ul>
+                                        </ListEmpty>
                                     )}
-                                </WidgetCard>
+                                </ListCard>
                             </Deferred>
 
                             <Deferred
                                 data="connections"
                                 fallback={
-                                    <WidgetSkeleton
-                                        rows={4}
-                                        className="min-h-56 md:col-span-2 xl:col-span-1"
-                                    />
+                                    <ListCardSkeleton className="md:col-span-2 xl:col-span-1" />
                                 }
                             >
-                                <WidgetCard
+                                <ListCard
                                     title="Kanal bağlantıları"
                                     href={connectionsRoute().url}
-                                    alert={(connections?.errored ?? 0) > 0}
-                                    className="min-h-56 md:col-span-2 xl:col-span-1"
+                                    className="md:col-span-2 xl:col-span-1"
+                                    badge={
+                                        (connections?.errored ?? 0) > 0 ? (
+                                            <Badge
+                                                variant="secondary"
+                                                className="tabular-nums"
+                                            >
+                                                {connections?.errored} hatalı
+                                            </Badge>
+                                        ) : null
+                                    }
                                 >
-                                    {connections?.items.length === 0 ? (
-                                        <p className="text-sm text-muted-foreground">
-                                            Bağlı kanal yok.
-                                        </p>
+                                    {connections?.items.length ? (
+                                        connections.items.map((connection) => {
+                                            const tone =
+                                                CONNECTION_ROW_TONES[
+                                                    connection.status
+                                                ];
+
+                                            return (
+                                                <ListRow
+                                                    key={connection.id}
+                                                    tone={tone}
+                                                    href={
+                                                        connectionsRoute().url
+                                                    }
+                                                >
+                                                    <MarketplaceAvatar
+                                                        code={
+                                                            connection.marketplace
+                                                        }
+                                                        name={connection.name}
+                                                        size="sm"
+                                                    />
+                                                    <RowText
+                                                        title={connection.name}
+                                                        detail={
+                                                            connection.checkedAt ??
+                                                            'Kontrol edilmedi'
+                                                        }
+                                                        muted={
+                                                            tone === undefined
+                                                        }
+                                                    />
+                                                    <RowPill tone={tone}>
+                                                        {connection.statusLabel}
+                                                    </RowPill>
+                                                </ListRow>
+                                            );
+                                        })
                                     ) : (
-                                        <ul className="space-y-2.5 text-sm">
-                                            {connections?.items.map(
-                                                (connection) => (
-                                                    <li
-                                                        key={connection.id}
-                                                        className="flex items-center gap-2.5"
-                                                    >
-                                                        <MarketplaceAvatar
-                                                            code={
-                                                                connection.marketplace
-                                                            }
-                                                            name={
-                                                                connection.name
-                                                            }
-                                                        />
-                                                        <span className="min-w-0 flex-1 truncate">
-                                                            {connection.name}
-                                                            <span className="block truncate text-xs text-muted-foreground">
-                                                                {connection.checkedAt ??
-                                                                    'Kontrol edilmedi'}
-                                                            </span>
-                                                        </span>
-                                                        <Badge
-                                                            variant={
-                                                                CONNECTION_STATUS_VARIANTS[
-                                                                    connection
-                                                                        .status
-                                                                ] ?? 'outline'
-                                                            }
-                                                        >
-                                                            {
-                                                                connection.statusLabel
-                                                            }
-                                                        </Badge>
-                                                    </li>
-                                                ),
-                                            )}
-                                        </ul>
+                                        <ListEmpty>Bağlı kanal yok.</ListEmpty>
                                     )}
-                                    {(connections?.errored ?? 0) > 0 && (
-                                        <p className="mt-3 flex items-start gap-2 text-sm text-amber-700 dark:text-amber-300">
-                                            <TriangleAlert className="mt-0.5 size-4 shrink-0" />
-                                            Hata veren bağlantı sessizce durur;
-                                            kimlik bilgilerini kontrol edin.
-                                        </p>
-                                    )}
-                                </WidgetCard>
+                                </ListCard>
                             </Deferred>
                         </div>
 
