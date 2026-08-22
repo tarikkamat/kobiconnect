@@ -29,11 +29,11 @@ import type { SalesTrend } from '@/components/dashboard/sales-trend-chart';
 import { SyncThroughputChart } from '@/components/dashboard/sync-throughput-chart';
 import type { SyncThroughput } from '@/components/dashboard/sync-throughput-chart';
 import { WidgetCard, WidgetSkeleton } from '@/components/dashboard/widget-card';
+import { DateRangePicker } from '@/components/date-range-picker';
 import Heading from '@/components/heading';
 import { MarketplaceAvatar } from '@/components/marketplace-avatar';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { dashboard } from '@/routes';
 import { index as connectionsRoute } from '@/routes/apps';
@@ -177,25 +177,11 @@ function RangePicker({ range }: { range: Range }) {
                 ))}
             </ToggleGroup>
 
-            <div className="flex items-center gap-1.5">
-                <Input
-                    type="date"
-                    value={range.from}
-                    max={range.to}
-                    aria-label="Dönem başlangıcı"
-                    className="h-8 w-fit"
-                    onChange={(event) => submit(event.target.value, range.to)}
-                />
-                <span className="text-muted-foreground">–</span>
-                <Input
-                    type="date"
-                    value={range.to}
-                    min={range.from}
-                    aria-label="Dönem sonu"
-                    className="h-8 w-fit"
-                    onChange={(event) => submit(range.from, event.target.value)}
-                />
-            </div>
+            <DateRangePicker
+                from={range.from}
+                to={range.to}
+                onSelect={submit}
+            />
         </div>
     );
 }
