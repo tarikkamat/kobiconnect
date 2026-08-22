@@ -29,15 +29,9 @@ class ConnectionController extends Controller
     {
         Gate::authorize('create', ChannelConnection::class);
 
-        $marketplace = (string) $request->validated('marketplace');
-
-        // Lisans kapisi: kilitli bir uygulama magazada gorunur ama kurulamaz.
-        // Kontrol BURADA, cunku arayuzdeki kilit yalnizca bir gostergedir.
-        abort_unless(
-            $this->catalog->isInstallable($marketplace) && $this->catalog->entitled($marketplace),
-            403,
-            'Bu uygulama planınıza dahil değil.',
-        );
+        // Surucusu olmayan uygulama kurulamaz; ConnectionRequest de ayni
+        // listeye bakar, bu kontrol o kural atlanirsa diye burada.
+        abort_unless($this->catalog->isInstallable((string) $request->validated('marketplace')), 403);
 
         $connection = ChannelConnection::create([
             ...$request->connectionAttributes(),

@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Route;
 
 /*
 | Senkron monitoru ve islem kuyrugu (channel_operations defteri).
-| `routes/tenant.php` icinden ['auth','verified','license'] grubunda yuklenir;
+| `routes/tenant.php` icinden ['auth','verified'] grubunda yuklenir;
 | burada middleware TEKRAR TANIMLANMAZ.
 */
 

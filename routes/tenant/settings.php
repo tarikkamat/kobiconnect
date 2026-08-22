@@ -2,37 +2,26 @@
 
 declare(strict_types=1);
 
-use App\Http\Controllers\Billing\LicenseController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Settings\NotificationPreferenceController;
 use App\Http\Controllers\Team\TeamController;
 use Illuminate\Support\Facades\Route;
 
 /*
-| Ek ayar ekranlari: ekip & roller, lisans & kullanim, bildirim tercihleri.
+| Ek ayar ekranlari: ekip & roller, bildirim tercihleri.
 |
-| `routes/tenant.php` icinden ['auth','verified'] grubunda yuklenir — `license`
-| BILEREK yok: suresi dolmus musteri lisans ekranini gorebilmeli, yoksa odeme
-| yapamaz. Lisans korumasi gereken route'a TEK TEK ->middleware('license') eklenir.
+| `routes/tenant.php` icinden ['auth','verified'] grubunda yuklenir.
 */
 
 Route::prefix('settings')->group(function (): void {
-    // Ekip yonetimi lisansa baglidir: suresi dolmus tenant yeni koltuk acamaz,
-    // grace period'da okuyabilir ama yazamaz (EnsureLicenseIsActive).
-    Route::prefix('team')->middleware('license')->group(function (): void {
+    Route::prefix('team')->group(function (): void {
         Route::get('/', [TeamController::class, 'index'])->name('team.index');
         Route::post('/', [TeamController::class, 'store'])->name('team.store');
         Route::patch('{user}', [TeamController::class, 'update'])->name('team.update');
         Route::delete('{user}', [TeamController::class, 'destroy'])->name('team.destroy');
     });
 
-    // Lisans & kullanim: `license` middleware'i BILEREK YOK. Suresi dolmus veya
-    // hic lisansi olmayan musteri de bu ekrani gorebilmeli — goremezse plan
-    // yenileme yolunu bulamaz ve panelden tamamen disari duser.
-    Route::get('license', [LicenseController::class, 'index'])->name('license.index');
-
-    // Bildirim tercihleri (olay x kanal matrisi, §11.3). `license` middleware'i
-    // YOK: bildirim gurultusunu kesmek suresi dolmus musterinin de hakki.
+    // Bildirim tercihleri (olay x kanal matrisi, §11.3).
     Route::get('notifications', [NotificationPreferenceController::class, 'edit'])
         ->name('notification-preferences.edit');
     Route::put('notifications', [NotificationPreferenceController::class, 'update'])
@@ -40,9 +29,7 @@ Route::prefix('settings')->group(function (): void {
 });
 
 /*
-| Bildirim merkezi. Ayar ekrani degil ama ayni middleware yigininda yasiyor:
-| `license` YOK — "lisansiniz doluyor" bildirimini gormek icin lisansin gecerli
-| olmasini sart kosmak, kapiyi disaridan kilitlemektir.
+| Bildirim merkezi. Ayar ekrani degil ama ayni middleware yigininda yasiyor.
 */
 Route::prefix('notifications')->group(function (): void {
     Route::get('/', [NotificationController::class, 'index'])->name('notifications.index');

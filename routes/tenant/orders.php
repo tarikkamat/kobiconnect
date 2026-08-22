@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Route;
 
 /*
 | Siparisler, kargo paketleri, iadeler.
-| `routes/tenant.php` icinden ['auth','verified','license'] grubunda yuklenir;
+| `routes/tenant.php` icinden ['auth','verified'] grubunda yuklenir;
 | burada middleware TEKRAR TANIMLANMAZ.
 |
 | Bu faz yalnizca OKUMA: statu guncelleme, kargo bildirme ve fatura gonderme

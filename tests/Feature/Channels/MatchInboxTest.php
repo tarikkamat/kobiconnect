@@ -22,7 +22,6 @@ beforeEach(function (): void {
     Queue::fake();
 
     $this->seed(TenantRoleSeeder::class);
-    $this->grantActiveLicense();
 
     $this->manager = User::factory()->create()->assignRole('Yönetici');
     // 'Depo' katalogu GORUR ama yonetemez: karar butonlarinin neden kilitli

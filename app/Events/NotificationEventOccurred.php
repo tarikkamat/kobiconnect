@@ -25,8 +25,6 @@ use Illuminate\Foundation\Events\Dispatchable;
  *
  * Bugun BAGLI olan tetikleyiciler:
  *  - StockCriticalLow → App\Observers\InventoryItemObserver
- *  - LicenseExpiring / QuotaWarning / QuotaExceeded → App\Events\License*
- *    (App\Listeners\Notifications\SendLicenseNotification, ayri yol)
  *
  * ponytail: asagidakilerin bugun karsiligi yok; olay tanimi hazir, tetikleyici
  * ilgili modulle birlikte gelecek. Baglanacaklari TEK satir soyle:

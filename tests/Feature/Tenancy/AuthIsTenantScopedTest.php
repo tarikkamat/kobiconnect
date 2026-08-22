@@ -23,7 +23,6 @@ test('auth routes are prefixed with the tenant path segment', function () {
 });
 
 test('the tenant path segment is resolved and dropped before the controller', function () {
-    $this->grantActiveLicense();
 
     $this->actingAs(User::factory()->create())
         ->get(route('dashboard'))

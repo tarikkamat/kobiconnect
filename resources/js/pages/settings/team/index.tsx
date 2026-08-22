@@ -63,18 +63,7 @@ export default function TeamSettings({
     const canManage = usePermission()('users.manage');
     const [pendingRemove, setPendingRemove] = useState<Member | null>(null);
 
-    const seatsFull = seats.max !== null && seats.used >= seats.max;
-
-    /**
-     * Koltuk limiti lisanstan gelir; gercek yaptirim CheckQuota'da (402), bu
-     * yalnizca butonun neden kilitli oldugunu soyleyen UX katmani.
-     */
-    const inviteCheck: PermissionCheck = seatsFull
-        ? {
-              allowed: false,
-              reason: `Planınızın kullanıcı kotası dolu (${seats.used}/${seats.max}). Yeni kullanıcı eklemek için planınızı yükseltin veya bir kullanıcının erişimini kaldırın.`,
-          }
-        : canManage;
+    const inviteCheck: PermissionCheck = canManage;
 
     /**
      * Son Sahip korumasi. Sunucu da ayni kurali zorlar (TeamController), burasi
@@ -118,175 +107,238 @@ export default function TeamSettings({
         <>
             <Head title="Ekip & Roller" />
 
-            <div className="space-y-6">
-                <Heading
-                    variant="small"
-                    title="Ekip & Roller"
-                    description="Kullanıcıları davet edin ve rollerini yönetin."
-                />
+            <div className="space-y-5">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Yeni Kullanıcı Davet Et</CardTitle>
+                    </CardHeader>
 
-                <p className="text-sm text-muted-foreground">
-                    Koltuk kullanımı:{' '}
-                    <span className="tabular-nums">
-                        {seats.used}
-                        {seats.max === null ? ' (limitsiz)' : ` / ${seats.max}`}
-                    </span>
-                    . Erişimi kaldırılan kullanıcı koltuğu serbest bırakır.
-                </p>
-
-                <Form
-                    {...TeamController.store.form()}
-                    options={{ preserveScroll: true }}
-                    resetOnSuccess
-                    className="grid gap-3 rounded-xl border p-4"
-                >
-                    {({ processing, errors }) => (
-                        <>
-                            <p className="text-sm font-medium">
-                                Yeni kullanıcı davet et
-                            </p>
-
-                            <div className="grid gap-2">
-                                <Label htmlFor="name">Ad soyad</Label>
-                                <Input id="name" name="name" required />
-                                <InputError message={errors.name} />
-                            </div>
-
-                            <div className="grid gap-2">
-                                <Label htmlFor="email">E-posta</Label>
-                                <Input
-                                    id="email"
-                                    name="email"
-                                    type="email"
-                                    required
-                                    autoComplete="off"
-                                />
-                                <InputError message={errors.email} />
-                            </div>
-
-                            <div className="grid gap-2">
-                                <Label htmlFor="role">Rol</Label>
-                                <Select name="role" defaultValue={roles[0]}>
-                                    <SelectTrigger id="role" className="w-full">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {roles.map((role) => (
-                                            <SelectItem key={role} value={role}>
-                                                {role}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                                <InputError message={errors.role} />
-                            </div>
-
-                            <p className="text-xs text-muted-foreground">
-                                Kullanıcı e-postasındaki bağlantıdan kendi
-                                şifresini belirler; siz bir şifre
-                                oluşturmazsınız.
-                            </p>
-
-                            <PermissionButton
-                                check={inviteCheck}
-                                type="submit"
-                                disabled={processing}
-                                className="justify-self-start"
-                            >
-                                Davet gönder
-                            </PermissionButton>
-                        </>
-                    )}
-                </Form>
-
-                <Separator />
-
-                <div className="grid gap-3">
-                    {members.map((member) => {
-                        const roleCheck = lastOwnerCheck(member);
-
-                        return (
-                            <div
-                                key={member.id}
-                                className="grid gap-3 rounded-xl border p-4"
-                            >
-                                <div className="flex flex-wrap items-start justify-between gap-2">
-                                    <div className="min-w-0">
-                                        <p className="flex items-center gap-2 font-medium">
-                                            <span className="truncate">
-                                                {member.name}
-                                            </span>
-                                            {member.roles.includes(
-                                                ownerRole,
-                                            ) && (
-                                                <ShieldCheck
-                                                    className="size-4 text-muted-foreground"
-                                                    aria-label="Sahip"
-                                                />
-                                            )}
-                                            {member.isSelf && (
-                                                <Badge variant="outline">
-                                                    Siz
-                                                </Badge>
-                                            )}
-                                        </p>
-                                        <p className="truncate text-sm text-muted-foreground">
-                                            {member.email}
-                                        </p>
+                    <Form
+                        {...TeamController.store.form()}
+                        options={{ preserveScroll: true }}
+                        resetOnSuccess
+                    >
+                        {({ processing, errors }) => (
+                            <>
+                                <CardContent className="grid gap-5">
+                                    <div className="flex flex-wrap items-baseline gap-2.5 lg:flex-nowrap">
+                                        <Label
+                                            htmlFor="name"
+                                            className="flex w-full max-w-40"
+                                        >
+                                            Ad soyad
+                                        </Label>
+                                        <div className="grid w-full gap-1.5">
+                                            <Input
+                                                id="name"
+                                                name="name"
+                                                required
+                                                placeholder="Ad Soyad"
+                                            />
+                                            <InputError message={errors.name} />
+                                        </div>
                                     </div>
 
-                                    <Badge
-                                        variant={
-                                            member.active
-                                                ? 'secondary'
-                                                : 'outline'
-                                        }
-                                    >
-                                        {member.active ? 'Aktif' : 'Devre dışı'}
-                                    </Badge>
-                                </div>
-
-                                <div className="flex flex-wrap items-end gap-2">
-                                    <div className="grid flex-1 gap-2">
+                                    <div className="flex flex-wrap items-baseline gap-2.5 lg:flex-nowrap">
                                         <Label
-                                            htmlFor={`role-${member.id}`}
-                                            className="text-xs text-muted-foreground"
+                                            htmlFor="email"
+                                            className="flex w-full max-w-40"
+                                        >
+                                            E-posta
+                                        </Label>
+                                        <div className="grid w-full gap-1.5">
+                                            <Input
+                                                id="email"
+                                                name="email"
+                                                type="email"
+                                                required
+                                                autoComplete="off"
+                                                placeholder="ornek@sirket.com"
+                                            />
+                                            <InputError
+                                                message={errors.email}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="flex flex-wrap items-baseline gap-2.5 lg:flex-nowrap">
+                                        <Label
+                                            htmlFor="role"
+                                            className="flex w-full max-w-40"
                                         >
                                             Rol
                                         </Label>
-                                        <RoleSelect
-                                            id={`role-${member.id}`}
-                                            check={roleCheck}
-                                            roles={roles}
-                                            value={member.roles[0] ?? ''}
-                                            onChange={(role) =>
-                                                assignRole(member, role)
-                                            }
-                                        />
+                                        <div className="grid w-full gap-1.5">
+                                            <Select
+                                                name="role"
+                                                defaultValue={roles[0]}
+                                            >
+                                                <SelectTrigger
+                                                    id="role"
+                                                    className="w-full"
+                                                >
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {roles.map((role) => (
+                                                        <SelectItem
+                                                            key={role}
+                                                            value={role}
+                                                        >
+                                                            {role}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                            <InputError message={errors.role} />
+                                        </div>
                                     </div>
 
-                                    <PermissionButton
-                                        check={removeCheck(member)}
-                                        variant="outline"
-                                        disabled={!member.active}
-                                        onClick={() => setPendingRemove(member)}
-                                    >
-                                        <UserMinus />
-                                        Erişimi kaldır
-                                    </PermissionButton>
-                                </div>
-
-                                {!member.active && (
-                                    <p className="text-xs text-muted-foreground">
-                                        Bu kullanıcının hiçbir yetkisi yok ve
-                                        koltuk tüketmiyor. Rol atayarak geri
-                                        açabilirsiniz.
+                                    <p className="text-2sm text-secondary-foreground">
+                                        Kullanıcı e-postasındaki bağlantıdan
+                                        kendi şifresini belirler; siz bir şifre
+                                        oluşturmazsınız.
                                     </p>
-                                )}
-                            </div>
-                        );
-                    })}
-                </div>
+                                </CardContent>
+
+                                <CardFooter className="justify-end">
+                                    <PermissionButton
+                                        check={inviteCheck}
+                                        type="submit"
+                                        disabled={processing}
+                                    >
+                                        Davet gönder
+                                    </PermissionButton>
+                                </CardFooter>
+                            </>
+                        )}
+                    </Form>
+                </Card>
+
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Ekip Üyeleri</CardTitle>
+                        <CardToolbar>
+                            <span className="text-sm text-secondary-foreground">
+                                Aktif kullanıcı:{' '}
+                                <span className="font-medium text-mono tabular-nums">
+                                    {seats.used}
+                                </span>
+                            </span>
+                        </CardToolbar>
+                    </CardHeader>
+                    <CardTable>
+                        <Table>
+                            <TableHeader>
+                                <TableRow className="bg-accent/60">
+                                    <TableHead className="h-10 min-w-48">
+                                        Kullanıcı
+                                    </TableHead>
+                                    <TableHead className="h-10 min-w-40">
+                                        Rol
+                                    </TableHead>
+                                    <TableHead className="h-10 min-w-24">
+                                        Durum
+                                    </TableHead>
+                                    <TableHead className="h-10 w-12" />
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {members.map((member) => (
+                                    <TableRow key={member.id}>
+                                        <TableCell className="py-3">
+                                            <div className="flex items-center gap-2">
+                                                <span className="truncate text-sm font-medium text-mono">
+                                                    {member.name}
+                                                </span>
+                                                {member.roles.includes(
+                                                    ownerRole,
+                                                ) && (
+                                                    <ShieldCheck
+                                                        className="size-4 shrink-0 text-muted-foreground"
+                                                        aria-label="Sahip"
+                                                    />
+                                                )}
+                                                {member.isSelf && (
+                                                    <Badge
+                                                        variant="secondary"
+                                                        appearance="light"
+                                                        size="sm"
+                                                    >
+                                                        Siz
+                                                    </Badge>
+                                                )}
+                                            </div>
+                                            <p className="truncate text-2sm text-secondary-foreground">
+                                                {member.email}
+                                            </p>
+                                        </TableCell>
+
+                                        <TableCell className="py-3">
+                                            <RoleSelect
+                                                id={`role-${member.id}`}
+                                                ariaLabel={`${member.name} rolü`}
+                                                check={lastOwnerCheck(member)}
+                                                roles={roles}
+                                                value={member.roles[0] ?? ''}
+                                                onChange={(role) =>
+                                                    assignRole(member, role)
+                                                }
+                                            />
+                                        </TableCell>
+
+                                        <TableCell className="py-3">
+                                            {member.active ? (
+                                                <Badge
+                                                    variant="success"
+                                                    appearance="light"
+                                                >
+                                                    Aktif
+                                                </Badge>
+                                            ) : (
+                                                <Tooltip>
+                                                    <TooltipTrigger asChild>
+                                                        <span tabIndex={0}>
+                                                            <Badge
+                                                                variant="secondary"
+                                                                appearance="light"
+                                                            >
+                                                                Devre dışı
+                                                            </Badge>
+                                                        </span>
+                                                    </TooltipTrigger>
+                                                    <TooltipContent>
+                                                        Bu kullanıcının hiçbir
+                                                        yetkisi yok ve koltuk
+                                                        tüketmiyor. Rol atayarak
+                                                        geri açabilirsiniz.
+                                                    </TooltipContent>
+                                                </Tooltip>
+                                            )}
+                                        </TableCell>
+
+                                        <TableCell className="py-3 text-end">
+                                            <PermissionButton
+                                                check={removeCheck(member)}
+                                                variant="ghost"
+                                                mode="icon"
+                                                disabled={!member.active}
+                                                title="Erişimi kaldır"
+                                                aria-label={`${member.name} erişimini kaldır`}
+                                                className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                                                onClick={() =>
+                                                    setPendingRemove(member)
+                                                }
+                                            >
+                                                <UserMinus />
+                                            </PermissionButton>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </CardTable>
+                </Card>
             </div>
 
             <Dialog

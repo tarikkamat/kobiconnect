@@ -8,7 +8,6 @@ use App\Actions\Team\InviteUser;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Team\InviteUserRequest;
 use App\Http\Requests\Team\RoleAssignmentRequest;
-use App\Models\License;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Gate;
@@ -37,7 +36,6 @@ class TeamController extends Controller
     {
         Gate::authorize('viewAny', User::class);
 
-        $license = $this->license();
         $current = request()->user();
 
         return Inertia::render('settings/team/index', [
@@ -60,13 +58,7 @@ class TeamController extends Controller
             'roles' => Role::query()->orderBy('id')->pluck('name')->all(),
             'ownerRole' => self::OWNER_ROLE,
             'ownerCount' => $this->ownerCount(),
-            'seats' => [
-                // ponytail: sayac degil, canli sayim — `usage_counters` koltuk
-                // satiri kayit akisinda artirilmadigi icin ekranda 0 gosterirdi.
-                // Kota kapisi (InviteUser) sayaci gerceğe esitleyip oyle sorar.
-                'used' => InviteUser::occupiedSeats(),
-                'max' => $license?->limit(InviteUser::SEAT_METRIC),
-            ],
+            'seats' => ['used' => InviteUser::occupiedSeats()],
         ]);
     }
 
@@ -74,16 +66,7 @@ class TeamController extends Controller
     {
         Gate::authorize('create', User::class);
 
-        $license = $this->license();
-
-        if ($license === null) {
-            throw ValidationException::withMessages([
-                'email' => 'Aktif bir lisans olmadan kullanıcı eklenemez.',
-            ]);
-        }
-
         ($this->inviteUser)(
-            $license,
             (string) $request->validated('name'),
             (string) $request->validated('email'),
             (string) $request->validated('role'),
@@ -161,14 +144,5 @@ class TeamController extends Controller
         return User::query()
             ->whereHas('roles', fn ($query) => $query->where('name', self::OWNER_ROLE))
             ->count();
-    }
-
-    private function license(): ?License
-    {
-        $tenant = tenant();
-
-        return $tenant === null
-            ? null
-            : License::query()->with('plan')->where('tenant_id', $tenant->getTenantKey())->first();
     }
 }

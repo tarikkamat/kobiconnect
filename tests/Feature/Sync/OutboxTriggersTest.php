@@ -25,7 +25,6 @@ use App\Observers\PriceObserver;
 use Illuminate\Support\Facades\Queue;
 
 beforeEach(function (): void {
-    $this->grantActiveLicense();
 
     Queue::fake();
 

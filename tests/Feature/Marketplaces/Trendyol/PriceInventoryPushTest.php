@@ -15,7 +15,6 @@ use Illuminate\Support\Sleep;
 use Tests\Fixtures\Trendyol\Fixture;
 
 beforeEach(function (): void {
-    $this->grantActiveLicense();
 
     // config/marketplaces.php is not this wave's file; the three endpoints
     // added here are reported for it. An unmapped endpoint throws by design.

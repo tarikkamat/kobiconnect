@@ -21,7 +21,6 @@ beforeEach(function (): void {
     Queue::fake();
 
     $this->seed(TenantRoleSeeder::class);
-    $this->grantActiveLicense();
 
     $this->manager = User::factory()->create()->assignRole('Yönetici');
     $this->connection = ChannelConnection::factory()->create(['name' => 'Trendyol Ana']);

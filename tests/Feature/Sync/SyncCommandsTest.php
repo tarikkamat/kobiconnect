@@ -21,8 +21,6 @@ use Illuminate\Support\Sleep;
 use Tests\Fixtures\Trendyol\Fixture;
 
 beforeEach(function (): void {
-    $this->license = $this->grantActiveLicense();
-
     Queue::fake();
 
     $this->connection = ChannelConnection::factory()->create();
@@ -50,17 +48,18 @@ it('queues an order pull for a connection that has never been pulled', function 
     );
 });
 
-it('waits out the cadence the licence pays for', function (): void {
-    // The cheap plan syncs less often; this is the only place the plan touches
-    // the scheduler (BACKEND-PLAN 3.2).
-    $this->license->update(['limits' => ['sync.interval_minutes' => 60]]);
-    pulledAt($this->connection, '30 minutes');
+it('waits out the sync cadence', function (): void {
+    // SyncCommand::DEFAULT_INTERVAL_MINUTES = 15.
+    pulledAt($this->connection, '5 minutes');
 
     $this->artisan('sync:pull')->assertSuccessful();
 
     Queue::assertNotPushed(PullOrders::class);
 
-    $this->license->update(['limits' => ['sync.interval_minutes' => 15]]);
+    // Varsayilan aralik dolunca is kuyruga girer.
+    DB::table('sync_cursors')
+        ->where('connection_id', $this->connection->getKey())
+        ->update(['updated_at' => now()->subMinutes(30)]);
 
     $this->artisan('sync:pull')->assertSuccessful();
 
@@ -68,32 +67,11 @@ it('waits out the cadence the licence pays for', function (): void {
 });
 
 it('lets an operator override the cadence by hand', function (): void {
-    $this->license->update(['limits' => ['sync.interval_minutes' => 60]]);
     pulledAt($this->connection, '1 minute');
 
     $this->artisan('sync:pull', ['--force' => true])->assertSuccessful();
 
     Queue::assertPushed(PullOrders::class);
-});
-
-it('stops synchronising once the licence has lapsed', function (): void {
-    // Grace period is read only mode, and a sync is a write: it stops. The
-    // data stays exactly where it is (BACKEND-PLAN 3.2).
-    $this->license->update(['ends_at' => now()->subDay(), 'grace_until' => now()->addWeek()]);
-
-    ChannelOperation::factory()->create([
-        'connection_id' => $this->connection->getKey(),
-        'operation' => OperationType::StockUpdate->value,
-        'status' => SyncState::Pending,
-        'scheduled_at' => now()->subMinute(),
-    ]);
-
-    $this->artisan('sync:pull')->assertSuccessful();
-    $this->artisan('sync:drain')->assertSuccessful();
-
-    Queue::assertNothingPushed();
-
-    expect(ChannelOperation::query()->count())->toBe(1);
 });
 
 it('drains outbox rows nobody else picked up', function (): void {

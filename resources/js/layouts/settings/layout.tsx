@@ -6,7 +6,6 @@ import { Separator } from '@/components/ui/separator';
 import { useCurrentUrl } from '@/hooks/use-current-url';
 import { cn, toUrl } from '@/lib/utils';
 import { edit as editAppearance } from '@/routes/appearance';
-import { index as license } from '@/routes/license';
 import { edit as notificationPreferences } from '@/routes/notification-preferences';
 import { edit } from '@/routes/profile';
 import { edit as editSecurity } from '@/routes/security';
@@ -36,12 +35,6 @@ function sidebarNavItems(): (NavItem & { permission?: string })[] {
             title: 'Bildirim Tercihleri',
             href: notificationPreferences(),
             icon: null,
-        },
-        {
-            title: 'Lisans & Kullanım',
-            href: license(),
-            icon: null,
-            permission: 'billing.manage',
         },
     ];
 }

@@ -13,7 +13,6 @@ use Inertia\Testing\AssertableInertia;
 
 beforeEach(function (): void {
     $this->seed(TenantRoleSeeder::class);
-    $this->grantActiveLicense();
 
     $this->keeper = User::factory()->create()->assignRole('Depo');
     $this->main = Warehouse::factory()->create(['name' => 'Merkez', 'is_default' => true]);

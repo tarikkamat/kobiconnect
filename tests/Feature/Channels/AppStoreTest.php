@@ -3,7 +3,6 @@
 declare(strict_types=1);
 
 use App\Marketplaces\Support\MarketplaceManager;
-use App\Models\License;
 use App\Models\User;
 use Database\Seeders\TenantRoleSeeder;
 use Illuminate\Support\Facades\Http;
@@ -11,20 +10,11 @@ use Inertia\Testing\AssertableInertia;
 
 beforeEach(function (): void {
     $this->seed(TenantRoleSeeder::class);
-    $this->grantActiveLicense();
 
     $this->manager = User::factory()->create()->assignRole('Yönetici');
 
     Http::fake(['*' => Http::response(['brands' => []])]);
 });
-
-/**
- * @param  list<string>  $allowed
- */
-function allowChannels(array $allowed): void
-{
-    License::query()->where('tenant_id', tenant('id'))->update(['limits' => ['channels.allowed' => $allowed]]);
-}
 
 it('lists every app in the catalog and marks the ones without a driver as unavailable', function (): void {
     $response = $this->actingAs($this->manager)->get(route('apps.index'));
@@ -83,40 +73,7 @@ it('derives capability badges from the driver, not from a hardcoded list', funct
     ));
 });
 
-it('locks an app the license does not allow and refuses to install it', function (): void {
-    allowChannels(['trendyol']);
-
-    $apps = collect($this->actingAs($this->manager)->get(route('apps.index'))->viewData('page')['props']['apps'])
-        ->keyBy('code');
-
-    expect($apps['trendyol']['entitled'])->toBeTrue()
-        ->and($apps['hepsiburada']['entitled'])->toBeFalse();
-
-    // Arayuzdeki kilit yalnizca gostergedir; yaptirim sunucudadir.
-    $this->actingAs($this->manager)
-        ->post(route('connections.store'), [
-            'name' => 'HB mağaza',
-            'marketplace' => 'hepsiburada',
-            'merchant_id' => '3f1b2c8a-0d4e-4f6a-9b2c-7d8e9f0a1b2c',
-            'service_key' => 'hb-secret',
-            'integrator_user_agent' => 'kobiconnect',
-        ])
-        ->assertForbidden();
-});
-
-/**
- * License::limit() ile ayni konvansiyon: anahtar yoksa kisitlama da yok.
- * Aksi halde eski lisanslar bir gecede tum kanallarini kaybederdi.
- */
-it('treats a license without a channel list as unrestricted', function (): void {
-    $apps = collect($this->actingAs($this->manager)->get(route('apps.index'))->viewData('page')['props']['apps']);
-
-    expect($apps->pluck('entitled')->unique()->all())->toBe([true]);
-});
-
-it('shows an app with its own connections only', function (): void {
-    allowChannels(['trendyol', 'hepsiburada']);
-
+it('lists installed connections next to the storefront', function (): void {
     $this->actingAs($this->manager)->post(route('connections.store'), [
         'name' => 'Ana mağaza',
         'marketplace' => 'trendyol',

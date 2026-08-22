@@ -28,11 +28,7 @@ use Illuminate\Support\Facades\Route;
 Route::middleware(ConfigureTenantHost::class)->group(function (): void {
     Route::redirect('/', '/dashboard');
 
-    // `license` middleware'i panel route'larina uygulanir; auth ve ayar
-    // route'lari BILEREK disarida kalir — suresi dolmus musteri giris yapip
-    // sifresini degistirebilmeli ve (ileride) odeme yapabilmeli.
-    // Grace period'da okuma serbest, yazma 402 doner.
-    Route::middleware(['auth', 'verified', 'license'])->group(function (): void {
+    Route::middleware(['auth', 'verified'])->group(function (): void {
         // Alan bazli route dosyalari. Paralel calisan is kumelerinin ayni
         // dosyada carpismamasi icin bolundu; middleware yigini burada tanimli.
         require __DIR__.'/tenant/channels.php';
@@ -66,7 +62,6 @@ Route::middleware(ConfigureTenantHost::class)->group(function (): void {
     });
 
     Route::middleware(['auth'])->group(function (): void {
-        // Lisans korumasi BILEREK yok — bkz. routes/tenant/settings.php
         require __DIR__.'/tenant/settings.php';
 
         Route::redirect('settings', '/settings/profile');

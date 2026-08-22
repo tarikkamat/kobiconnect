@@ -7,7 +7,6 @@ namespace App\Console\Commands;
 use App\Enums\ConnectionStatus;
 use App\Jobs\Sync\PullOrders;
 use App\Models\ChannelConnection;
-use App\Models\License;
 use App\Models\SyncCursor;
 use App\Models\Tenant;
 use Carbon\CarbonInterface;
@@ -30,7 +29,7 @@ final class SyncPull extends SyncCommand
      */
     protected $signature = 'sync:pull
         {--tenant=* : Yalnizca bu tenant id leri}
-        {--force : Lisansin senkron araligini yoksay}';
+        {--force : Senkron araligini yoksay}';
 
     /**
      * @var string
@@ -41,8 +40,8 @@ final class SyncPull extends SyncCommand
     {
         $queued = 0;
 
-        $status = $this->forLicensedTenants(function (Tenant $tenant, License $license) use (&$queued): void {
-            $due = now()->subMinutes($this->intervalMinutes($license));
+        $status = $this->forEachTenant(function (Tenant $tenant) use (&$queued): void {
+            $due = now()->subMinutes($this->intervalMinutes());
 
             $connections = ChannelConnection::query()
                 ->where('status', ConnectionStatus::Active)

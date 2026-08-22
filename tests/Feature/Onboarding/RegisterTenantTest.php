@@ -3,10 +3,8 @@
 declare(strict_types=1);
 
 use App\Actions\Onboarding\RegisterTenant;
-use App\Models\License;
 use App\Models\Tenant;
 use App\Models\User;
-use Database\Seeders\PlanSeeder;
 use Illuminate\Support\Facades\DB;
 use Stancl\Tenancy\Exceptions\TenantDatabaseAlreadyExistsException;
 use Tests\TestCase;
@@ -28,7 +26,6 @@ function forgetOnboardingTenants(array $ids): void
         rescue(fn (): ?bool => Tenant::find($id)?->delete(), report: false);
 
         DB::connection('central')->statement('DROP SCHEMA IF EXISTS "tenant'.$id.'" CASCADE');
-        License::query()->where('tenant_id', $id)->delete();
         DB::connection('central')->table('tenants')->where('id', $id)->delete();
     }
 }
@@ -51,7 +48,6 @@ function forgetGeneratedTenants(): void
 beforeEach(function (): void {
     forgetGeneratedTenants();
 
-    $this->seed(PlanSeeder::class);
 });
 
 afterEach(fn () => forgetGeneratedTenants());
@@ -103,7 +99,7 @@ it('workspace adresini 1001 ve sonrasindan sirayla atar', function (): void {
     expect((int) $second->getTenantKey())->toBe((int) $first->getTenantKey() + 1);
 });
 
-it('tenant, lisans ve Sahip rollu kullanici yaratip panele yonlendirir', function (): void {
+it('tenant ve Sahip rollu kullanici yaratip panele yonlendirir', function (): void {
     $response = $this->post(route('onboarding.register.store'), onboardingPayload());
 
     $tenant = Tenant::query()->where('data->name', ONBOARDING_COMPANY)->sole();
@@ -111,18 +107,12 @@ it('tenant, lisans ve Sahip rollu kullanici yaratip panele yonlendirir', functio
     $response->assertRedirect(route('dashboard', ['tenant' => $tenant->getTenantKey()]));
     $this->assertAuthenticated();
 
-    $license = License::query()->where('tenant_id', $tenant->getTenantKey())->first();
-    expect($license)->not->toBeNull()
-        ->and($license->isActive())->toBeTrue()
-        ->and($license->limits->get('products.max'))->toBe(1000);
-
     $tenant->run(function (): void {
         $owner = User::query()->where('email', 'ayse@acme.test')->first();
 
         expect($owner)->not->toBeNull()
             ->and($owner->hasRole('Sahip'))->toBeTrue()
-            ->and($owner->hasVerifiedEmail())->toBeTrue()
-            ->and($owner->can('billing.manage'))->toBeTrue();
+            ->and($owner->hasVerifiedEmail())->toBeTrue();
     });
 });
 
@@ -141,11 +131,9 @@ it('kurulum yarida kalirsa tenant kaydini geride birakmaz', function (): void {
         'name' => 'Ali Veli',
         'email' => 'ali@yarim.test',
         'password' => 'password',
-        'plan' => 'starter',
     ]))->toThrow(TenantDatabaseAlreadyExistsException::class);
 
-    expect(Tenant::find((string) $nextId))->toBeNull()
-        ->and(License::query()->where('tenant_id', (string) $nextId)->exists())->toBeFalse();
+    expect(Tenant::find((string) $nextId))->toBeNull();
 
     DB::connection('central')->statement('DROP SCHEMA IF EXISTS "tenant'.$nextId.'" CASCADE');
 });

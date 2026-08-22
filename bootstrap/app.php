@@ -1,7 +1,6 @@
 <?php
 
 use App\Http\Middleware\EndTenancyAfterRequest;
-use App\Http\Middleware\EnsureLicenseIsActive;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Listeners\ConfigureTenantHost;
@@ -74,22 +73,13 @@ return Application::configure(basePath: dirname(__DIR__))
             AddLinkHeadersForPreloadedAssets::class,
         ]);
 
-        // Panel route gruplarina secici olarak uygulanir. Tenant grubunun
-        // TAMAMINA eklenmez: login/logout/sifre ve faturalama disarida kalmali,
-        // yoksa suresi dolmus musteri odeme yapmak icin giris bile yapamaz.
-        $middleware->alias(['license' => EnsureLicenseIsActive::class]);
-
         // Octane/RoadRunner sizinti korumasi — BACKEND-PLAN.md §2.3.
         // stancl/tenancy istek sonunda tenancy()->end() cagirmaz.
         $middleware->append(EndTenancyAfterRequest::class);
     })
     ->withSchedule(function (Schedule $schedule): void {
-        // Esikler tam tarih esledigi icin gunde bir kez yeterli; tekrar tetiklenmez.
-        $schedule->command('licenses:check-expiring')->dailyAt('09:00');
-
-        // Motorun kalp atisi. Tenant basina kadans LISANSTAN gelir
-        // (licenses.limits['sync.interval_minutes']), zamanlamadan degil —
-        // ucuz plan ikinci bir schedule satiri olmadan daha seyrek senkron olur.
+        // Motorun kalp atisi. Kadans komutun kendi araligindan gelir
+        // (SyncCommand::DEFAULT_INTERVAL_MINUTES), zamanlamadan degil.
         $schedule->command('sync:pull')->everyMinute()->withoutOverlapping();
 
         // Outbox'in altindaki emniyet agi: EnqueueOperation zaten drenaj

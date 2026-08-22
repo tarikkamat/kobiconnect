@@ -17,22 +17,13 @@ const ALLOWED: PermissionCheck = { allowed: true, reason: null };
  * Buradaki kontrol yalnizca UX icindir; gercek yaptirim Policy'lerdedir.
  */
 export function usePermission(): PermissionChecker {
-    const { permissions, license } = usePage().props;
+    const { permissions } = usePage().props;
 
     return (permission) => {
         if (!permissions.includes(permission)) {
             return {
                 allowed: false,
                 reason: 'Bu işlem için yetkiniz yok.',
-            };
-        }
-
-        // `.manage` ile biten izinler yazma iznidir; salt-okunur lisansta
-        // sunucu da 402 doner (EnsureLicenseIsActive).
-        if (license?.readOnly && permission.endsWith('.manage')) {
-            return {
-                allowed: false,
-                reason: 'Hesabınız salt-okunur modda. Verileriniz duruyor, ödemeniz tamamlandığında değişiklik yapabilirsiniz.',
             };
         }
 

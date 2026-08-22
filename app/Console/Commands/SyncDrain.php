@@ -9,7 +9,6 @@ use App\Jobs\Sync\DrainChannelOperations;
 use App\Marketplaces\Data\Enums\OperationType;
 use App\Marketplaces\Data\Enums\SyncState;
 use App\Models\ChannelOperation;
-use App\Models\License;
 use App\Models\Tenant;
 
 /**
@@ -41,7 +40,7 @@ final class SyncDrain extends SyncCommand
     {
         $queued = 0;
 
-        $status = $this->forLicensedTenants(function (Tenant $tenant, License $license) use (&$queued): void {
+        $status = $this->forEachTenant(function (Tenant $tenant) use (&$queued): void {
             $due = ChannelOperation::query()
                 ->join('channel_connections', 'channel_connections.id', '=', 'channel_operations.connection_id')
                 ->where('channel_connections.status', ConnectionStatus::Active)

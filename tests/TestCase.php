@@ -2,7 +2,6 @@
 
 namespace Tests;
 
-use App\Models\License;
 use App\Models\Tenant;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 use Illuminate\Support\Facades\DB;
@@ -63,25 +62,6 @@ abstract class TestCase extends BaseTestCase
         tenancy()->initialize($this->tenant);
 
         $this->truncateTenantTables();
-    }
-
-    /**
-     * Panel route'lari `license` middleware'i ile korunur; lisanssiz tenant 402
-     * alir. "Aktif lisansli tenant" normal durumdur, bu yuzden panel testleri
-     * bunu beforeEach'te cagirir.
-     *
-     * Bilerek OPT-IN: harness kosulsuz lisans yaratsaydi, lisansin YOKLUGUNU
-     * assert eden testleri (ve licenses.tenant_id unique kisitini) kirardi.
-     */
-    public function grantActiveLicense(): License
-    {
-        $existing = License::where('tenant_id', static::TENANT_ID)->first();
-
-        if ($existing !== null) {
-            return $existing;
-        }
-
-        return License::factory()->forTenant($this->tenant)->create();
     }
 
     /**

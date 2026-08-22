@@ -11,10 +11,6 @@ use Inertia\Testing\AssertableInertia;
 beforeEach(function (): void {
     $this->seed(TenantRoleSeeder::class);
 
-    // Koltuk kotasi lisanstan gelir; varsayilan fabrika limitsiz birakir.
-    $this->license = $this->grantActiveLicense();
-    $this->license->update(['limits' => ['seats.max' => 3]]);
-
     $this->owner = User::factory()->create(['name' => 'Sahibi'])->assignRole('Sahip');
 
     Notification::fake();
@@ -32,8 +28,7 @@ it('lists members with their role and whether they still have access', function 
             ->where('members.0.active', false)
             ->where('members.1.active', true)
             ->where('members.1.isSelf', true)
-            ->where('seats.used', 1)
-            ->where('seats.max', 3));
+            ->where('seats.used', 1));
 });
 
 it('creates the user and invites them to set their own password', function (): void {
@@ -52,24 +47,7 @@ it('creates the user and invites them to set their own password', function (): v
     Notification::assertSentTo($invited, ResetPassword::class);
 });
 
-it('stops the invite at the seat quota with a message that names the plan', function (): void {
-    User::factory()->create()->assignRole('Depo');
-    User::factory()->create()->assignRole('Muhasebe');
-
-    // Sahip + iki kullanici = 3 koltuk, limit dolu.
-    $response = $this->actingAs($this->owner)
-        ->post(route('team.store'), [
-            'name' => 'Dorduncu',
-            'email' => 'dort@example.com',
-            'role' => 'Depo',
-        ]);
-
-    $response->assertStatus(402);
-
-    expect(User::query()->where('email', 'dort@example.com')->exists())->toBeFalse();
-});
-
-it('counts only users who still hold a role against the seat quota', function (): void {
+it('frees the seat when a user loses their role', function (): void {
     User::factory()->create()->assignRole('Depo');
     $revoked = User::factory()->create()->assignRole('Muhasebe');
 

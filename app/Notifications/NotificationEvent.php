@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Route;
  * Olay basina AYRI bir sinif YOK, bilerek: 14 olayin tek farki metin, hedef
  * kitle ve susturma penceresi. Bunlar veridir, davranis degil — hepsi burada
  * durur ve tek bir `App\Events\NotificationEventOccurred` tasiyicisiyla
- * dagitilir. Lisans olaylari (`App\Events\License*`) zaten kendi siniflarina
+ * dagitilir. Bildirim olaylari kendi siniflarina
  * sahip; `eventType()` degerleri buradaki `value` ile birebir esler, bu yuzden
  * ayrica esleme tablosu gerekmez.
  *
@@ -32,9 +32,6 @@ enum NotificationEvent: string
     case QuestionReceived = 'question_received';
     case WebhookDeliveryFailing = 'webhook_delivery_failing';
     case WebhookDeactivated = 'webhook_deactivated';
-    case LicenseExpiring = 'license_expiring';
-    case QuotaWarning = 'quota_warning';
-    case QuotaExceeded = 'quota_exceeded';
     case ConnectionCredentialsInvalid = 'connection_credentials_invalid';
 
     /**
@@ -54,9 +51,6 @@ enum NotificationEvent: string
             self::QuestionReceived => 'Yeni müşteri sorusu',
             self::WebhookDeliveryFailing => 'Webhook teslimi bozuk',
             self::WebhookDeactivated => 'Webhook devre dışı bırakıldı',
-            self::LicenseExpiring => 'Lisans süresi doluyor',
-            self::QuotaWarning => 'Kota uyarısı',
-            self::QuotaExceeded => 'Kota doldu',
             self::ConnectionCredentialsInvalid => 'Bağlantı kimlik bilgisi geçersiz',
         };
     }
@@ -77,7 +71,6 @@ enum NotificationEvent: string
             self::SyncFailed, self::WebhookDeliveryFailing, self::WebhookDeactivated,
             self::ConnectionCredentialsInvalid => 'Operasyon',
 
-            self::LicenseExpiring, self::QuotaWarning, self::QuotaExceeded => 'Hesap',
         };
     }
 
@@ -94,8 +87,7 @@ enum NotificationEvent: string
     {
         return match ($this) {
             self::SyncFailed, self::ConnectionCredentialsInvalid, self::WebhookDeactivated,
-            self::ProductRejected, self::LicenseExpiring, self::QuotaWarning,
-            self::QuotaExceeded => [NotificationChannel::Database, NotificationChannel::Mail],
+            self::ProductRejected => [NotificationChannel::Database, NotificationChannel::Mail],
 
             default => [NotificationChannel::Database],
         };
@@ -111,8 +103,6 @@ enum NotificationEvent: string
     public function permission(): string
     {
         return match ($this) {
-            self::LicenseExpiring, self::QuotaWarning, self::QuotaExceeded => 'billing.manage',
-
             self::SyncFailed, self::WebhookDeliveryFailing, self::WebhookDeactivated,
             self::ConnectionCredentialsInvalid, self::ProductRejected,
             self::ProductApproved => 'channels.manage',
@@ -163,12 +153,6 @@ enum NotificationEvent: string
 
             self::ProductRejected => [$this->value.':'.$of('connection_id'), 21600],
 
-            // 7/3/1 gun esikleri ayri uyarilardir; gun basina bir kez.
-            self::LicenseExpiring => [$this->value.':'.$of('days_left'), 86400],
-
-            self::QuotaWarning => [$this->value.':'.$of('metric'), 86400],
-            self::QuotaExceeded => [$this->value.':'.$of('metric'), 3600],
-
             // Siparis, iade, soru, urun onayi ve webhook kapanmasi: her biri
             // tekil ve kendi basina anlamli bir olay, susturulmaz.
             default => null,
@@ -196,9 +180,6 @@ enum NotificationEvent: string
             self::QuestionReceived => 'Yeni müşteri sorusu',
             self::WebhookDeliveryFailing => 'Webhook teslimi başarısız oluyor',
             self::WebhookDeactivated => 'Webhook devre dışı bırakıldı',
-            self::LicenseExpiring => 'Lisansınızın süresi doluyor',
-            self::QuotaWarning => 'Kotanızın %80’i doldu',
-            self::QuotaExceeded => 'Kotanız doldu',
             self::ConnectionCredentialsInvalid => 'Bağlantı kimlik bilgisi geçersiz: '.$of('connection', '-'),
         };
     }
@@ -257,20 +238,8 @@ enum NotificationEvent: string
                 '%s webhook’u pazaryeri tarafından devre dışı bırakıldı. Sipariş akışı yalnızca zamanlanmış çekimle geliyor — yeniden etkinleştirin.',
                 $of('connection'),
             ),
-            self::LicenseExpiring => sprintf(
-                'Lisansınızın süresi %s gün sonra doluyor. Süre dolduğunda senkron durur, veriniz silinmez.',
-                $of('days_left'),
-            ),
-            self::QuotaWarning => sprintf(
-                '%s kotanızın %%80’i doldu (%s/%s). Limit dolduğunda yeni kayıt eklenemez.',
-                $of('metric'), $of('usage'), $of('limit'),
-            ),
-            self::QuotaExceeded => sprintf(
-                '%s kotanız doldu (%s/%s). Devam etmek için planınızı yükseltin.',
-                $of('metric'), $of('usage'), $of('limit'),
-            ),
             self::ConnectionCredentialsInvalid => sprintf(
-                '%s bağlantısı kimlik doğrulamayı geçemedi: %s. Kimlik bilgilerini Kanallar → Bağlantılar ekranından yenileyin.',
+                '%s bağlantısı kimlik doğrulamayı geçemedi: %s. Kimlik bilgilerini Uygulama Mağazası ekranından yenileyin.',
                 $of('connection'), $of('reason'),
             ),
         };
@@ -304,9 +273,7 @@ enum NotificationEvent: string
             self::ClaimOpened => ['orders.index', []],
 
             self::WebhookDeliveryFailing, self::WebhookDeactivated,
-            self::ConnectionCredentialsInvalid => ['connections.index', []],
-
-            self::LicenseExpiring, self::QuotaWarning, self::QuotaExceeded => ['license.index', []],
+            self::ConnectionCredentialsInvalid => ['apps.index', []],
 
             self::QuestionReceived => ['', []],
         };

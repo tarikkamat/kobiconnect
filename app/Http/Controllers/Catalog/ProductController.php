@@ -16,11 +16,9 @@ use App\Models\Category;
 use App\Models\ChannelConnection;
 use App\Models\ChannelListing;
 use App\Models\InventoryItem;
-use App\Models\License;
 use App\Models\Product;
 use App\Models\ProductImage;
 use App\Models\ProductVariant;
-use App\Models\UsageCounter;
 use App\Models\Warehouse;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
@@ -139,8 +137,7 @@ class ProductController extends Controller
         /** @var array{name: string, description?: string|null, brand_id?: int|null, category_id?: int|null, status: string, variants: list<array{sku: string, barcode?: string|null, list_price?: float|string|null, on_hand?: int|string|null}>} $data */
         $data = $request->validated();
 
-        // Kota kapisi Action'in icinde; middleware'de degil (BACKEND-PLAN §3.2).
-        $product = $createProduct($this->license(), $data);
+        $product = $createProduct($data);
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Ürün oluşturuldu.']);
 
@@ -222,12 +219,6 @@ class ProductController extends Controller
 
         $product->delete();
 
-        // Kota sayaci gercege yakin kalmali; aksi halde Lisans & Kullanim
-        // ekrani silinmis urunleri saymaya devam eder.
-        if (($license = $this->license(abortIfMissing: false)) !== null) {
-            UsageCounter::record($license->tenant_id, CreateProduct::PRODUCT_METRIC, -1);
-        }
-
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Ürün silindi.']);
 
         return to_route('products.index');
@@ -279,25 +270,6 @@ class ProductController extends Controller
         return ChannelListing::query()
             ->whereIn('variant_id', $product->variants()->select('id'))
             ->count();
-    }
-
-    /**
-     * Panel route'lari `license` middleware'i ile korunur, dolayisiyla buraya
-     * lisanssiz gelinmez; yine de sessizce devam etmek yerine 402 veriyoruz.
-     */
-    private function license(bool $abortIfMissing = true): ?License
-    {
-        $tenant = tenant();
-
-        $license = $tenant === null
-            ? null
-            : License::query()->with('plan')->where('tenant_id', $tenant->getTenantKey())->first();
-
-        if ($license === null && $abortIfMissing) {
-            abort(402, 'Aboneliğiniz aktif değil. Devam etmek için lütfen planınızı yenileyin.');
-        }
-
-        return $license;
     }
 
     /**

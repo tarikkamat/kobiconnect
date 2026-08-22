@@ -11,18 +11,17 @@ use Illuminate\Support\Facades\Route;
 
 /*
 | Kanal baglantilari — pazaryeri kimlik bilgileri, saglik durumu, webhook token.
-| `routes/tenant.php` icinden ['auth','verified','license'] grubunda yuklenir;
+| `routes/tenant.php` icinden ['auth','verified'] grubunda yuklenir;
 | burada middleware TEKRAR TANIMLANMAZ.
 */
 
 Route::prefix('channels')->group(function (): void {
     /*
-    | Uygulama magazasi — vitrin ve uygulama detayi. Baglantilarin OKUMA tarafi
-    | buradadir: musteri once uygulamayi secer, sonra kurar. Eski
-    | `channels/connections` adresi yer imlerini kirmamak icin vitrine dusuyor.
+    | Uygulama magazasi — tek ekran. Detay sayfasi yok: kart dogrudan kurulum
+    | cekmecesini acar. Eski `channels/connections` adresi yer imlerini
+    | kirmamak icin vitrine dusuyor.
     */
     Route::get('apps', [AppStoreController::class, 'index'])->name('apps.index');
-    Route::get('apps/{app}', [AppStoreController::class, 'show'])->name('apps.show');
     // `route()` sart: tenant path prefix'ini URL::defaults uretir, elle yazilan
     // '/channels/apps' tenant'i dusururdu.
     Route::get('connections', fn () => redirect()->route('apps.index'));

@@ -11,7 +11,6 @@ use Inertia\Testing\AssertableInertia;
 
 beforeEach(function (): void {
     $this->seed(TenantRoleSeeder::class);
-    $this->grantActiveLicense();
 
     $this->keeper = User::factory()->create()->assignRole('Depo');
 });

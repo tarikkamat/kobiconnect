@@ -10,7 +10,6 @@ use Inertia\Testing\AssertableInertia;
 
 beforeEach(function (): void {
     $this->seed(TenantRoleSeeder::class);
-    $this->grantActiveLicense();
 
     $this->user = User::factory()->create()->assignRole('Yönetici');
 });

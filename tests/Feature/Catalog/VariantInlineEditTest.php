@@ -11,7 +11,6 @@ use Database\Seeders\TenantRoleSeeder;
 
 beforeEach(function (): void {
     $this->seed(TenantRoleSeeder::class);
-    $this->grantActiveLicense();
 
     $this->variant = ProductVariant::factory()->create();
 });

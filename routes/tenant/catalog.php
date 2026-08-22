@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Route;
 
 /*
 | catalog route'lari.
-| `routes/tenant.php` icinden ['auth','verified','license'] grubunda yuklenir;
+| `routes/tenant.php` icinden ['auth','verified'] grubunda yuklenir;
 | burada middleware TEKRAR TANIMLANMAZ.
 |
 | Bu dosya `routes/tenant.php` icindeki `catalog` blogundan ONCE yuklenir, bu

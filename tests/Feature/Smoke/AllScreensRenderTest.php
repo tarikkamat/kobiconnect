@@ -24,7 +24,6 @@ it('her panel ekrani sahip rolu icin render oluyor', function (): void {
     Queue::fake();
 
     $this->seed(TenantRoleSeeder::class);
-    $this->grantActiveLicense();
 
     $owner = User::factory()->create();
     $owner->assignRole('Sahip');

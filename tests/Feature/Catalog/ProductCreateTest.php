@@ -20,7 +20,6 @@ beforeEach(function (): void {
     Queue::fake();
 
     $this->seed(TenantRoleSeeder::class);
-    $this->grantActiveLicense();
 });
 
 function productCreateUser(string $role = 'Yönetici'): User

@@ -8,20 +8,15 @@ use App\Marketplaces\Contracts\MarketplaceDriver;
 use App\Marketplaces\Support\Capability;
 use App\Marketplaces\Support\Exceptions\MarketplaceException;
 use App\Marketplaces\Support\MarketplaceManager;
-use App\Models\License;
 use Illuminate\Support\Arr;
 
 /**
  * Uygulama magazasinin vitrini — `config/apps.php` ile surucu kaydini
  * birlestirir.
  *
- * Uc soruyu TEK yerde cevaplar:
- *   - Bu uygulama var mi?      -> katalogda tanimli mi
- *   - Kurulabilir mi?          -> surucusu kayitli mi (yoksa "Yakinda")
- *   - Musteri kurabilir mi?    -> lisansi izin veriyor mu (entitled)
- *
- * Bu sinif tekil (singleton) olarak baglanmaz: lisans okumasi istek basinadir
- * ve Octane surecinde tenant'lar arasi sizmamalidir.
+ * Iki soruyu TEK yerde cevaplar:
+ *   - Bu uygulama var mi?  -> katalogda tanimli mi
+ *   - Kurulabilir mi?      -> surucusu kayitli mi (yoksa "Yakinda")
  */
 final class AppCatalog
 {
@@ -43,10 +38,6 @@ final class AppCatalog
         'brand_catalog' => 'Marka kataloğu',
         'webhooks' => 'Webhook',
     ];
-
-    private ?License $license = null;
-
-    private bool $licenseLoaded = false;
 
     public function __construct(private readonly MarketplaceManager $marketplaces) {}
 
@@ -83,23 +74,6 @@ final class AppCatalog
     }
 
     /**
-     * Musterinin lisansi bu uygulamaya izin veriyor mu?
-     *
-     * ponytail: bugun tek kaynak plan limitleridir. `channels.allowed` YOKSA
-     * kisitlama da yok — License::limit() ile ayni konvansiyon ("anahtar yoksa
-     * limitsiz"), boylece eski lisanslar kilitlenmez.
-     *
-     * App basina ucretlendirmeye gecildiginde degisecek TEK yer burasidir:
-     * once tenant'in app aboneligine bakilir, yoksa plan listesine dusulur.
-     */
-    public function entitled(string $code): bool
-    {
-        $allowed = $this->license()?->limits->get('channels.allowed');
-
-        return ! is_array($allowed) || in_array($code, $allowed, true);
-    }
-
-    /**
      * @return array<string, string>
      */
     public function categories(): array
@@ -120,47 +94,21 @@ final class AppCatalog
         /** @var array<string, mixed> $definition */
         $definition = $this->definitions()[$code];
 
-        $available = $this->isInstallable($code);
-        $entitled = $this->entitled($code);
-
         return [
             'code' => $code,
             'name' => (string) $definition['name'],
             'category' => (string) $definition['category'],
             'categoryLabel' => $this->categories()[$definition['category']] ?? (string) $definition['category'],
-            'summary' => (string) $definition['summary'],
             // Marka varliklari public/apps altinda durur; isim = uygulama kodu.
             'logo' => "/apps/{$code}.svg",
+            // Bazi markalar kendi tuvalinde kucuk cizilmis — bkz. config/apps.php.
+            'logoScale' => (float) ($definition['logo_scale'] ?? 1),
+            // Koyu wordmark'lar karanlik temada beyaza boyanir — bkz. config/apps.php.
+            'logoDarkInvert' => (bool) ($definition['logo_dark_invert'] ?? false),
             'capabilities' => $this->capabilities($code),
-            'available' => $available,
-            'entitled' => $entitled,
-            'price' => $this->price($code),
+            'available' => $this->isInstallable($code),
             'fields' => $this->credentialFields($code),
         ];
-    }
-
-    /**
-     * Fiyat sunucuda bicimlenir — FRONTEND-PLAN §7. `null` = plana dahil.
-     *
-     * @return array{monthly: string, yearly: string}|null
-     */
-    private function price(string $code): ?array
-    {
-        $price = Arr::get($this->definitions(), "{$code}.price");
-
-        if (! is_array($price)) {
-            return null;
-        }
-
-        return [
-            'monthly' => $this->money($price['monthly'] ?? 0).' / ay',
-            'yearly' => $this->money($price['yearly'] ?? 0).' / yıl',
-        ];
-    }
-
-    private function money(mixed $amount): string
-    {
-        return '₺'.number_format((float) $amount, 2, ',', '.');
     }
 
     /**
@@ -209,20 +157,6 @@ final class AppCatalog
         } catch (MarketplaceException) {
             return null;
         }
-    }
-
-    private function license(): ?License
-    {
-        if ($this->licenseLoaded) {
-            return $this->license;
-        }
-
-        $this->licenseLoaded = true;
-        $tenant = tenant();
-
-        return $this->license = $tenant === null
-            ? null
-            : License::query()->where('tenant_id', $tenant->getTenantKey())->first();
     }
 
     /**

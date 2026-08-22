@@ -19,7 +19,6 @@ beforeEach(function (): void {
     Queue::fake();
 
     $this->seed(TenantRoleSeeder::class);
-    $this->grantActiveLicense();
 
     $this->manager = User::factory()->create()->assignRole('Yönetici');
     $this->warehouseman = User::factory()->create()->assignRole('Depo');

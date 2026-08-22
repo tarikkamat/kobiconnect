@@ -13,7 +13,6 @@ use Illuminate\Support\Sleep;
 use Tests\Fixtures\Trendyol\Fixture;
 
 beforeEach(function (): void {
-    $this->grantActiveLicense();
 
     config()->set('marketplaces.trendyol.rate_limits.groups.order_read', [
         '50k' => 30, '75k' => 40, '150k' => 50, '500k' => 100, 'unlimited' => 100,

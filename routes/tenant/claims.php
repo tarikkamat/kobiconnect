@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Route;
 
 /*
 | claims route'lari.
-| `routes/tenant.php` icinden ['auth','verified','license'] grubunda yuklenir;
+| `routes/tenant.php` icinden ['auth','verified'] grubunda yuklenir;
 | burada middleware TEKRAR TANIMLANMAZ.
 |
 | Bu faz yalnizca OKUMA: iade onay/red pazaryerine yazma demektir ve outbox

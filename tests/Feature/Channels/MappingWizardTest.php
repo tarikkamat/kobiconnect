@@ -73,7 +73,6 @@ function mappingCategory(string $name = 'Atkı'): Category
 
 beforeEach(function (): void {
     $this->seed(TenantRoleSeeder::class);
-    $this->grantActiveLicense();
 
     $this->manager = User::factory()->create()->assignRole('Yönetici');
 

@@ -18,14 +18,8 @@ declare module '@inertiajs/core' {
             roles: string[];
             /** Central domain'de null. */
             tenant: { id: string; host: string } | null;
-            /** Lisans yoksa veya central domain'de null. */
-            license: {
-                status:
-                    'active' | 'grace' | 'expired' | 'suspended' | 'cancelled';
-                endsAt: string | null;
-                graceDaysLeft: number | null;
-                readOnly: boolean;
-            } | null;
+            /** Kisiye ozel tablo kolon gorunurlugu: {"orders.index": {hidden: [...]}} */
+            tablePreferences: Record<string, { hidden: string[] } | undefined>;
             [key: string]: unknown;
         };
     }

@@ -12,7 +12,6 @@ use Inertia\Testing\AssertableInertia;
 
 beforeEach(function (): void {
     $this->seed(TenantRoleSeeder::class);
-    $this->grantActiveLicense();
 });
 
 function claimUser(string $role = 'Yönetici'): User
