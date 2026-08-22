@@ -65,4 +65,14 @@ function CardFooter({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
-export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent }
+/** Kart basliginin metin sutunu — CardToolbar ile yan yana durur. */
+function CardHeading({ className, ...props }: React.ComponentProps<"div">) {
+  return <div data-slot="card-heading" className={cn("space-y-1", className)} {...props} />
+}
+
+/** Kart basliginin sag ucundaki aksiyonlar (filtre, donem secici...). */
+function CardToolbar({ className, ...props }: React.ComponentProps<"div">) {
+  return <div data-slot="card-toolbar" className={cn("flex items-center gap-2.5", className)} {...props} />
+}
+
+export { Card, CardHeader, CardHeading, CardToolbar, CardFooter, CardTitle, CardDescription, CardContent }
