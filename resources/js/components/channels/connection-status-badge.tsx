@@ -1,8 +1,8 @@
 import { Badge } from '@/components/ui/badge';
 
 const VARIANTS = {
-    active: 'default',
-    paused: 'secondary',
+    active: 'success',
+    paused: 'info',
     error: 'destructive',
 } as const;
 

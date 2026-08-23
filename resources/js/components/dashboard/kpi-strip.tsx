@@ -1,11 +1,14 @@
 import type { ApexOptions } from 'apexcharts';
 import { TrendingDown, TrendingUp } from 'lucide-react';
-import { Chart, useChartColors } from '@/components/dashboard/chart-kit';
+import {
+    Chart,
+    NEGATIVE_COLOR,
+    useChartColors,
+} from '@/components/dashboard/chart-kit';
 import type { ChartColors } from '@/components/dashboard/chart-kit';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { cn } from '@/lib/utils';
 
 export type Kpis = {
     demo: boolean;
@@ -24,8 +27,8 @@ export type Kpis = {
 
 /**
  * Sparkline: eksensiz, tooltipsiz mini alan grafigi — burada okunacak sey yon,
- * deger degil. Renk semantiktir: iyi giden `--chart-2` (yesil), kotu giden
- * `--chart-4` (kirmizi).
+ * deger degil. Renk semantiktir: iyi giden mint, kotu giden §7'nin hata rengi.
+ * Dolgu cizginin kendi rengini seyreltir, gradyan yok.
  */
 function sparkOptions(colors: ChartColors, positive: boolean): ApexOptions {
     return {
@@ -36,12 +39,9 @@ function sparkOptions(colors: ChartColors, positive: boolean): ApexOptions {
             animations: { enabled: false },
             parentHeightOffset: 0,
         },
-        colors: [positive ? colors.palette[1] : colors.palette[3]],
+        colors: [positive ? colors.palette[0] : NEGATIVE_COLOR],
         stroke: { curve: 'smooth', width: 1.5 },
-        fill: {
-            type: 'gradient',
-            gradient: { opacityFrom: 0.35, opacityTo: 0.02 },
-        },
+        fill: { type: 'solid', opacity: 0.14 },
         tooltip: { enabled: false },
     };
 }
@@ -64,13 +64,10 @@ export function KpiStrip({ kpis }: { kpis: Kpis }) {
                                 {item.label}
                             </p>
                             <Badge
-                                variant="outline"
-                                className={cn(
-                                    'tabular-nums',
-                                    item.positive
-                                        ? 'text-emerald-600 dark:text-emerald-400'
-                                        : 'text-rose-600 dark:text-rose-400',
-                                )}
+                                variant={
+                                    item.positive ? 'success' : 'destructive'
+                                }
+                                className="font-mono tabular-nums"
                             >
                                 {item.rising ? (
                                     <TrendingUp aria-hidden />
@@ -81,11 +78,11 @@ export function KpiStrip({ kpis }: { kpis: Kpis }) {
                             </Badge>
                         </div>
 
-                        <p className="mt-1.5 text-2xl font-semibold tabular-nums">
+                        <p className="mt-1.5 font-mono text-[28px] leading-none font-medium tabular-nums">
                             {item.value}
                         </p>
 
-                        <p className="mt-0.5 text-xs text-muted-foreground">
+                        <p className="mt-0.5 text-xs text-foreground/30">
                             önceki döneme göre
                             {kpis.demo && index === 0 && ' · örnek veri'}
                         </p>
@@ -124,7 +121,7 @@ export function KpiStripSkeleton() {
                             <Skeleton className="h-5 w-20" />
                             <Skeleton className="h-[22px] w-16 rounded-md" />
                         </div>
-                        <Skeleton className="mt-1.5 h-8 w-28" />
+                        <Skeleton className="mt-1.5 h-7 w-28" />
                         <Skeleton className="mt-0.5 h-4 w-32" />
                     </CardContent>
                     <Skeleton className="mt-3 h-14 w-full rounded-none" />

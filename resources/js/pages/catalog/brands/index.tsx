@@ -93,11 +93,11 @@ export default function BrandIndex({ brands }: { brands: BrandRow[] }) {
                 </Form>
 
                 {brands.length === 0 ? (
-                    <p className="rounded-xl border border-dashed p-8 text-center text-sm text-muted-foreground">
+                    <p className="rounded-lg border border-dashed border-border p-8 text-center font-serif text-2xl tracking-[-0.02em] text-muted-foreground">
                         Henüz marka eklenmemiş.
                     </p>
                 ) : (
-                    <div className="rounded-xl border">
+                    <div className="overflow-hidden rounded-lg border border-border">
                         <Table>
                             <TableHeader>
                                 <TableRow>
@@ -127,10 +127,10 @@ export default function BrandIndex({ brands }: { brands: BrandRow[] }) {
                                                 }
                                             />
                                         </TableCell>
-                                        <TableCell className="text-muted-foreground">
+                                        <TableCell className="font-mono text-muted-foreground tabular-nums">
                                             {brand.slug}
                                         </TableCell>
-                                        <TableCell className="text-right tabular-nums">
+                                        <TableCell className="text-right font-mono tabular-nums">
                                             {brand.productCount}
                                         </TableCell>
                                         <TableCell>

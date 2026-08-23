@@ -37,6 +37,7 @@ Route::middleware(ConfigureTenantHost::class)->group(function (): void {
         require __DIR__.'/tenant/inventory.php';
         require __DIR__.'/tenant/catalog.php';
         require __DIR__.'/tenant/claims.php';
+        require __DIR__.'/tenant/ai.php';
 
         Route::get('dashboard', DashboardController::class)->name('dashboard');
 
@@ -81,7 +82,6 @@ Route::middleware(ConfigureTenantHost::class)->group(function (): void {
             ->middleware('throttle:6,1')
             ->name('user-password.update');
 
-        Route::inertia('settings/appearance', 'settings/appearance')->name('appearance.edit');
     });
 
     // Passkey RP ID tenant subdomain'idir (§4.2), bu yuzden bu belge tenant

@@ -72,7 +72,7 @@ export function AttributeStep({
 
     if (attributes.length === 0) {
         return (
-            <p className="rounded-xl border border-dashed p-8 text-center text-sm text-muted-foreground">
+            <p className="rounded-lg border border-dashed border-border p-8 text-center font-serif text-2xl tracking-[-0.02em] text-muted-foreground">
                 Bu kategori için pazaryeri özellik listesi okunamadı ya da boş.
             </p>
         );
@@ -134,7 +134,11 @@ export function AttributeStep({
                     {varianterCount > 1 ? (
                         <p className="text-sm text-destructive">
                             Kategori başına yalnızca bir varyant belirleyici
-                            özellik eşlenebilir; {varianterCount} tane seçili.
+                            özellik eşlenebilir;{' '}
+                            <span className="font-mono tabular-nums">
+                                {varianterCount}
+                            </span>{' '}
+                            tane seçili.
                         </p>
                     ) : null}
 
@@ -192,7 +196,7 @@ function AttributeRow({
     );
 
     return (
-        <div className="flex flex-wrap items-start justify-between gap-3 rounded-xl border p-3">
+        <div className="flex flex-wrap items-start justify-between gap-3 rounded-lg border border-border p-3">
             <div className="grid gap-1">
                 <span className="font-medium">{attribute.name}</span>
                 <div className="flex flex-wrap gap-1">

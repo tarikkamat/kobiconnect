@@ -24,7 +24,7 @@ export default function Welcome() {
                     aria-hidden
                     className="pointer-events-none flex h-svh blur-[6px] select-none"
                 >
-                    <aside className="hidden w-64 shrink-0 flex-col gap-3 border-r border-sidebar-border/70 bg-sidebar p-4 md:flex">
+                    <aside className="hidden w-64 shrink-0 flex-col gap-3 border-r border-border bg-sidebar p-4 md:flex">
                         <div className="flex items-center gap-2">
                             <div className="size-8 rounded-md bg-muted" />
                             <div className="h-3 w-28 rounded bg-muted" />
@@ -40,7 +40,7 @@ export default function Welcome() {
                     </aside>
 
                     <div className="flex flex-1 flex-col">
-                        <header className="flex h-16 items-center gap-3 border-b border-sidebar-border/70 px-6">
+                        <header className="flex h-16 items-center gap-3 border-b border-border px-6">
                             <div className="h-3 w-40 rounded bg-muted" />
                             <div className="ml-auto size-8 rounded-full bg-muted" />
                         </header>
@@ -50,21 +50,21 @@ export default function Welcome() {
                                 {Array.from({ length: 3 }).map((_, index) => (
                                     <div
                                         key={index}
-                                        className="relative aspect-video overflow-hidden rounded-xl border border-sidebar-border/70"
+                                        className="relative aspect-video overflow-hidden rounded-[12px] border border-border"
                                     >
-                                        <PlaceholderPattern className="absolute inset-0 size-full stroke-neutral-900/20 dark:stroke-neutral-100/20" />
+                                        <PlaceholderPattern className="absolute inset-0 size-full stroke-foreground/20" />
                                     </div>
                                 ))}
                             </div>
-                            <div className="relative min-h-64 flex-1 overflow-hidden rounded-xl border border-sidebar-border/70">
-                                <PlaceholderPattern className="absolute inset-0 size-full stroke-neutral-900/20 dark:stroke-neutral-100/20" />
+                            <div className="relative min-h-64 flex-1 overflow-hidden rounded-[12px] border border-border">
+                                <PlaceholderPattern className="absolute inset-0 size-full stroke-foreground/20" />
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <div className="absolute inset-0 flex items-center justify-center bg-background/60 p-6 backdrop-blur-sm">
-                    <div className="flex w-full max-w-sm flex-col items-center gap-8 rounded-xl border bg-background/95 p-8 shadow-lg">
+                    <div className="flex w-full max-w-sm flex-col items-center gap-8 rounded-[12px] border border-border bg-card p-8">
                         <div className="flex flex-col items-center gap-3 text-center">
                             <AppLogoIcon className="size-10 fill-current text-foreground" />
                             <h1 className="text-2xl font-medium">

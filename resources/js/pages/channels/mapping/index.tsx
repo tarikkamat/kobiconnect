@@ -52,7 +52,7 @@ export default function MappingIndex({
                         title="Kanal Eşlemeleri"
                         description="Kategori, özellik ve marka eşlemeleri."
                     />
-                    <p className="rounded-xl border border-dashed p-8 text-center text-sm text-muted-foreground">
+                    <p className="rounded-lg border border-dashed border-border p-8 text-center font-serif text-2xl tracking-[-0.02em] text-muted-foreground">
                         Önce bir pazaryeri bağlantısı ekleyin; eşleme o
                         bağlantının kataloğuna göre yapılır.
                     </p>
@@ -103,12 +103,12 @@ export default function MappingIndex({
                 </div>
 
                 {categories.length === 0 ? (
-                    <p className="rounded-xl border border-dashed p-8 text-center text-sm text-muted-foreground">
+                    <p className="rounded-lg border border-dashed border-border p-8 text-center font-serif text-2xl tracking-[-0.02em] text-muted-foreground">
                         Henüz kategoriniz yok. Katalog → Kategoriler ekranından
                         ekleyin.
                     </p>
                 ) : (
-                    <div className="rounded-xl border">
+                    <div className="overflow-hidden rounded-lg border border-border">
                         <Table>
                             <TableHeader>
                                 <TableRow>
@@ -132,7 +132,7 @@ export default function MappingIndex({
                                                 {category.name}
                                             </span>
                                         </TableCell>
-                                        <TableCell className="text-sm text-muted-foreground">
+                                        <TableCell className="font-mono text-sm text-muted-foreground tabular-nums">
                                             {category.productCount}
                                         </TableCell>
                                         <TableCell className="text-sm">
@@ -142,7 +142,7 @@ export default function MappingIndex({
                                                 </span>
                                             )}
                                         </TableCell>
-                                        <TableCell className="text-sm text-muted-foreground">
+                                        <TableCell className="font-mono text-sm text-muted-foreground tabular-nums">
                                             {category.attributeCount}
                                         </TableCell>
                                         <TableCell>

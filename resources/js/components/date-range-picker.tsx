@@ -63,7 +63,7 @@ export function DateRangePicker({
                     variant="outline"
                     aria-label={label}
                     className={cn(
-                        'h-8 justify-start px-2.5 font-normal',
+                        'h-8 justify-start px-2.5 font-mono font-normal tabular-nums',
                         className,
                     )}
                 >
@@ -81,7 +81,7 @@ export function DateRangePicker({
                             format(selected.from, 'd MMM y', { locale: tr })
                         )
                     ) : (
-                        <span className="text-muted-foreground">
+                        <span className="font-sans text-foreground/30">
                             Tarih seçin
                         </span>
                     )}

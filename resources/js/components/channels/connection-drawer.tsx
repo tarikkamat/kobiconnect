@@ -105,9 +105,9 @@ export function ConnectionDrawer({
                     </SheetTitle>
 
                     {marketplace === null ? null : (
-                        // ponytail: cerceve yok. Koyu wordmark'lar karanlik
-                        // temada beyaza boyanir (config/apps.php:
-                        // logo_dark_invert), renkli logolar oldugu gibi kalir.
+                        // ponytail: cerceve yok. Koyu wordmark'lar beyaza
+                        // boyanir (config/apps.php: logo_dark_invert), renkli
+                        // logolar oldugu gibi kalir.
                         <div className="flex items-center justify-start">
                             <img
                                 src={marketplace.logo}
@@ -120,7 +120,7 @@ export function ConnectionDrawer({
                                 className={cn(
                                     'max-h-7 max-w-40 object-contain object-left',
                                     marketplace.logoDarkInvert &&
-                                        'dark:brightness-0 dark:invert',
+                                        'brightness-0 invert',
                                 )}
                             />
                         </div>

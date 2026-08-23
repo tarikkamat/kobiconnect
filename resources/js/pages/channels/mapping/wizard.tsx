@@ -76,7 +76,7 @@ export default function MappingWizard(props: WizardProps) {
 
                 <nav
                     aria-label="Sihirbaz adımları"
-                    className="flex flex-wrap gap-1 rounded-xl border p-1"
+                    className="flex flex-wrap gap-1 rounded-lg border border-border p-1"
                 >
                     {STEPS.map((label, position) => {
                         const disabled = position > 0 && !mapped;
@@ -95,7 +95,7 @@ export default function MappingWizard(props: WizardProps) {
                                 onClick={() => setStep(position)}
                                 className={cn('gap-2')}
                             >
-                                <span className="text-xs opacity-70">
+                                <span className="font-mono text-xs tabular-nums opacity-70">
                                     {position + 1}
                                 </span>
                                 {label}
@@ -130,7 +130,10 @@ export default function MappingWizard(props: WizardProps) {
                         ) : (
                             <>
                                 <AlertTriangle className="size-4" />
-                                {errorCount} eksik
+                                <span className="font-mono tabular-nums">
+                                    {errorCount}
+                                </span>{' '}
+                                eksik
                             </>
                         )}
                     </span>

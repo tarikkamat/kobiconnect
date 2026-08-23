@@ -102,8 +102,8 @@ export default function StockIndex({ variants, warehouses, filters }: Props) {
 
                 <div className="flex flex-col gap-4 p-4">
                     <Heading title="Stok Durumu" />
-                    <div className="rounded-xl border border-dashed p-8 text-center text-sm text-muted-foreground">
-                        <p>
+                    <div className="rounded-lg border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
+                        <p className="font-serif text-2xl tracking-[-0.02em] text-foreground">
                             Stok her zaman bir depoya yazılır; henüz depo
                             tanımlanmamış.
                         </p>
@@ -154,11 +154,11 @@ export default function StockIndex({ variants, warehouses, filters }: Props) {
                 </div>
 
                 {variants.data.length === 0 ? (
-                    <p className="rounded-xl border border-dashed p-8 text-center text-sm text-muted-foreground">
+                    <p className="rounded-lg border border-dashed border-border p-8 text-center font-serif text-2xl tracking-[-0.02em] text-muted-foreground">
                         Bu filtrelerle eşleşen varyant yok.
                     </p>
                 ) : (
-                    <div className="overflow-x-auto rounded-xl border">
+                    <div className="overflow-hidden rounded-lg border border-border">
                         {/* Sayfalama tiklamasi yok: <InfiniteScroll> sonraki sayfayi kendisi ekler. */}
                         <InfiniteScroll data="variants" buffer={300}>
                             <Table>
@@ -214,7 +214,7 @@ export default function StockIndex({ variants, warehouses, filters }: Props) {
                                 <TableBody>
                                     {variants.data.map((variant) => (
                                         <TableRow key={variant.id}>
-                                            <TableCell className="font-medium whitespace-nowrap">
+                                            <TableCell className="font-mono font-medium whitespace-nowrap tabular-nums">
                                                 {variant.sku}
                                             </TableCell>
                                             <TableCell className="text-muted-foreground">
@@ -234,7 +234,7 @@ export default function StockIndex({ variants, warehouses, filters }: Props) {
                                                                 }
                                                                 variant="ghost"
                                                                 size="sm"
-                                                                className="tabular-nums"
+                                                                className="font-mono tabular-nums"
                                                                 aria-label={`${variant.sku} · ${warehouses[cellIndex]?.name ?? ''} eldeki stoğu düzelt`}
                                                                 onClick={() =>
                                                                     setAdjusting(
@@ -296,7 +296,7 @@ export default function StockIndex({ variants, warehouses, filters }: Props) {
                                                                             0
                                                                         }
                                                                         className={cn(
-                                                                            'inline-flex items-center gap-1 tabular-nums',
+                                                                            'inline-flex items-center gap-1 font-mono tabular-nums',
                                                                             cell.low &&
                                                                                 'font-medium text-destructive',
                                                                         )}

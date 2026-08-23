@@ -116,15 +116,16 @@ export default function TeamSettings({
 
                 <p className="text-sm text-muted-foreground">
                     Aktif kullanıcı:{' '}
-                    <span className="tabular-nums">{seats.used}</span>. Erişimi
-                    kaldırılan kullanıcı yeniden rol atanana kadar sayılmaz.
+                    <span className="font-mono tabular-nums">{seats.used}</span>
+                    . Erişimi kaldırılan kullanıcı yeniden rol atanana kadar
+                    sayılmaz.
                 </p>
 
                 <Form
                     {...TeamController.store.form()}
                     options={{ preserveScroll: true }}
                     resetOnSuccess
-                    className="grid gap-3 rounded-xl border p-4"
+                    className="grid gap-3 rounded-lg border border-border p-4"
                 >
                     {({ processing, errors }) => (
                         <>
@@ -194,7 +195,7 @@ export default function TeamSettings({
                         return (
                             <div
                                 key={member.id}
-                                className="grid gap-3 rounded-xl border p-4"
+                                className="grid gap-3 rounded-lg border border-border p-4"
                             >
                                 <div className="flex flex-wrap items-start justify-between gap-2">
                                     <div className="min-w-0">

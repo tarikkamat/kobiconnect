@@ -19,7 +19,7 @@ export function NavFooter({
     return (
         <SidebarGroup
             {...props}
-            className={`group-data-[collapsible=icon]:p-0 ${className || ''}`}
+            className={`border-t border-border group-data-[collapsible=icon]:p-0 ${className || ''}`}
         >
             <SidebarGroupContent>
                 <SidebarMenu>
@@ -27,16 +27,14 @@ export function NavFooter({
                         <SidebarMenuItem key={item.title}>
                             <SidebarMenuButton
                                 asChild
-                                className="text-neutral-600 hover:text-neutral-800 dark:text-neutral-300 dark:hover:text-neutral-100"
+                                className="text-muted-foreground hover:text-foreground"
                             >
                                 <a
                                     href={toUrl(item.href)}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                 >
-                                    {item.icon && (
-                                        <item.icon className="h-5 w-5" />
-                                    )}
+                                    {item.icon && <item.icon />}
                                     <span>{item.title}</span>
                                 </a>
                             </SidebarMenuButton>

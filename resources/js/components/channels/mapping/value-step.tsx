@@ -76,7 +76,7 @@ export function ValueStep({
 
     if (mapped.length === 0) {
         return (
-            <p className="rounded-xl border border-dashed p-8 text-center text-sm text-muted-foreground">
+            <p className="rounded-lg border border-dashed border-border p-8 text-center font-serif text-2xl tracking-[-0.02em] text-muted-foreground">
                 Eşlenmiş özelliklerin hiçbirinde pazaryeri değer listesi yok.
                 Serbest metin kabul eden özelliklerde değer eşlemesi gerekmez;
                 bu adımı atlayabilirsiniz.
@@ -168,7 +168,7 @@ function AttributeValues({
     }
 
     return (
-        <section className="rounded-xl border p-4">
+        <section className="rounded-lg border border-border p-4">
             <h3 className="flex items-center gap-2 text-sm font-medium">
                 {local.name}
                 <span className="text-muted-foreground">→</span>

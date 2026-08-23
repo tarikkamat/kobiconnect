@@ -5,13 +5,55 @@
  * ortalamamizi saglar.
  */
 const CARDS = [
-    { slug: 'trendyol', x: 580, y: 130, canvas: [111, 45], content: [0, 10, 111, 25] },
-    { slug: 'shopify', x: 610, y: 240, canvas: [960, 302], content: [0, 9, 960, 276] },
-    { slug: 'ideasoft', x: 630, y: 350, canvas: [400, 222], content: [34, 76, 332, 68] },
-    { slug: 'ciceksepeti', x: 620, y: 460, canvas: [858, 518], content: [54, 186, 750, 146] },
-    { slug: 'hepsiburada', x: 600, y: 570, canvas: [282, 48], content: [0, 0, 282, 48] },
-    { slug: 'pttavm', x: 560, y: 680, canvas: [502, 127], content: [0, 0, 502, 127] },
-    { slug: 'amazon', x: 510, y: 790, canvas: [603, 182], content: [0, 0, 602, 181] },
+    {
+        slug: 'trendyol',
+        x: 580,
+        y: 130,
+        canvas: [111, 45],
+        content: [0, 10, 111, 25],
+    },
+    {
+        slug: 'shopify',
+        x: 610,
+        y: 240,
+        canvas: [960, 302],
+        content: [0, 9, 960, 276],
+    },
+    {
+        slug: 'ideasoft',
+        x: 630,
+        y: 350,
+        canvas: [400, 222],
+        content: [34, 76, 332, 68],
+    },
+    {
+        slug: 'ciceksepeti',
+        x: 620,
+        y: 460,
+        canvas: [858, 518],
+        content: [54, 186, 750, 146],
+    },
+    {
+        slug: 'hepsiburada',
+        x: 600,
+        y: 570,
+        canvas: [282, 48],
+        content: [0, 0, 282, 48],
+    },
+    {
+        slug: 'pttavm',
+        x: 560,
+        y: 680,
+        canvas: [502, 127],
+        content: [0, 0, 502, 127],
+    },
+    {
+        slug: 'amazon',
+        x: 510,
+        y: 790,
+        canvas: [603, 182],
+        content: [0, 0, 602, 181],
+    },
     { slug: 'n11', x: 460, y: 900, canvas: [100, 53], content: [1, 0, 99, 52] },
 ];
 

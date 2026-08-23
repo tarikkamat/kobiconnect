@@ -75,7 +75,7 @@ export default function PasskeyRegistration({ onSuccess }: Props) {
     return (
         <form
             onSubmit={handleSubmit}
-            className="space-y-4 rounded-lg border border-border bg-muted/50 p-4"
+            className="space-y-4 rounded-lg border border-border bg-muted p-4"
         >
             <div className="grid gap-2">
                 <Label htmlFor="passkey-name">Passkey name</Label>
@@ -85,7 +85,7 @@ export default function PasskeyRegistration({ onSuccess }: Props) {
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="e.g., MacBook Pro, iPhone"
-                    className="mt-1 block w-full border-foreground/20"
+                    className="mt-1 block w-full"
                     autoFocus
                 />
                 <p className="text-xs text-muted-foreground">

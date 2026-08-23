@@ -5,11 +5,8 @@ import { BulkEditDialog } from '@/components/catalog/bulk-edit-dialog';
 import { PermissionButton } from '@/components/catalog/permission-button';
 import { ProductStatusBadge } from '@/components/catalog/product-status-badge';
 import Heading from '@/components/heading';
-import {
-    
-    MarketplaceAvatarStack
-} from '@/components/marketplace-avatar';
-import type {MarketplaceChannel} from '@/components/marketplace-avatar';
+import { MarketplaceAvatarStack } from '@/components/marketplace-avatar';
+import type { MarketplaceChannel } from '@/components/marketplace-avatar';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
@@ -145,9 +142,12 @@ export default function ProductIndex({
                 </div>
 
                 {selected.length > 0 && (
-                    <div className="flex flex-wrap items-center gap-3 rounded-lg border bg-muted/40 px-4 py-2 text-sm">
+                    <div className="flex flex-wrap items-center gap-3 rounded-lg border border-border bg-muted px-4 py-2 text-sm">
                         <span className="font-medium">
-                            {selected.length} ürün seçildi
+                            <span className="font-mono tabular-nums">
+                                {selected.length}
+                            </span>{' '}
+                            ürün seçildi
                         </span>
                         <BulkEditDialog
                             productIds={selected}
@@ -252,8 +252,10 @@ export default function ProductIndex({
                 </div>
 
                 {products.data.length === 0 ? (
-                    <div className="rounded-xl border border-dashed p-8 text-center text-sm text-muted-foreground">
-                        <p>Bu filtrelerle eşleşen ürün yok.</p>
+                    <div className="rounded-lg border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
+                        <p className="font-serif text-2xl tracking-[-0.02em] text-foreground">
+                            Bu filtrelerle eşleşen ürün yok.
+                        </p>
                         <PermissionButton
                             check={canManage}
                             variant="outline"
@@ -265,7 +267,7 @@ export default function ProductIndex({
                         </PermissionButton>
                     </div>
                 ) : (
-                    <div className="rounded-xl border">
+                    <div className="overflow-hidden rounded-lg border border-border">
                         {/* Sayfalama tiklamasi yok: <InfiniteScroll> sonraki sayfayi kendisi ekler. */}
                         <InfiniteScroll data="products" buffer={300}>
                             <Table>
@@ -374,16 +376,16 @@ export default function ProductIndex({
                                                     channels={product.channels}
                                                 />
                                             </TableCell>
-                                            <TableCell className="text-right tabular-nums">
+                                            <TableCell className="text-right font-mono tabular-nums">
                                                 {product.variantCount}
                                             </TableCell>
-                                            <TableCell className="text-right tabular-nums">
+                                            <TableCell className="text-right font-mono tabular-nums">
                                                 {product.stock}
                                             </TableCell>
-                                            <TableCell className="text-right tabular-nums">
+                                            <TableCell className="text-right font-mono tabular-nums">
                                                 {product.price ?? '—'}
                                             </TableCell>
-                                            <TableCell className="text-muted-foreground">
+                                            <TableCell className="font-mono text-muted-foreground tabular-nums">
                                                 {product.createdAt ?? '—'}
                                             </TableCell>
                                         </TableRow>

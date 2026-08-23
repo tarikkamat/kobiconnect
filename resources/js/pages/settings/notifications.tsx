@@ -74,7 +74,7 @@ export default function NotificationPreferences({
                             {groups.map((group) => (
                                 <div
                                     key={group}
-                                    className="overflow-x-auto rounded-xl border"
+                                    className="overflow-hidden rounded-lg border border-border"
                                 >
                                     <Table>
                                         <TableHeader>

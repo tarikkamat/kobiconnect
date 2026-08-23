@@ -155,13 +155,15 @@ export default function ProductShow({
                                 <DialogTitle>Ürünü sil</DialogTitle>
                                 <DialogDescription>
                                     {product.listingCount > 0 ? (
-                                        <span className="flex items-start gap-2 text-amber-700 dark:text-amber-300">
+                                        <span className="flex items-start gap-2 text-warning">
                                             <TriangleAlert className="mt-0.5 size-4 shrink-0" />
                                             <span>
                                                 Bu ürünün{' '}
                                                 <strong>
-                                                    {product.listingCount} kanal
-                                                    listelemesi
+                                                    <span className="font-mono tabular-nums">
+                                                        {product.listingCount}
+                                                    </span>{' '}
+                                                    kanal listelemesi
                                                 </strong>{' '}
                                                 var; ürün şu anda pazaryerinde
                                                 yayında olabilir. Silmek
@@ -371,7 +373,7 @@ export default function ProductShow({
                 )}
 
                 {tab === 'varyantlar' && (
-                    <div className="rounded-xl border">
+                    <div className="overflow-hidden rounded-lg border border-border">
                         <Table>
                             <TableHeader>
                                 <TableRow>
@@ -391,10 +393,10 @@ export default function ProductShow({
                             <TableBody>
                                 {variants.map((variant) => (
                                     <TableRow key={variant.id}>
-                                        <TableCell className="font-medium">
+                                        <TableCell className="font-mono font-medium tabular-nums">
                                             {variant.sku}
                                         </TableCell>
-                                        <TableCell className="text-muted-foreground">
+                                        <TableCell className="font-mono text-muted-foreground tabular-nums">
                                             {variant.barcode ?? '—'}
                                         </TableCell>
                                         <TableCell className="w-36">
@@ -418,7 +420,7 @@ export default function ProductShow({
                                                 }
                                             />
                                         </TableCell>
-                                        <TableCell className="text-right tabular-nums">
+                                        <TableCell className="text-right font-mono tabular-nums">
                                             {variant.available}
                                         </TableCell>
                                         <TableCell className="w-40">
@@ -469,7 +471,7 @@ export default function ProductShow({
                         }
                     >
                         {images === undefined || images.length === 0 ? (
-                            <p className="rounded-xl border border-dashed p-8 text-center text-sm text-muted-foreground">
+                            <p className="rounded-lg border border-dashed border-border p-8 text-center font-serif text-2xl tracking-[-0.02em] text-muted-foreground">
                                 Bu ürüne ait görsel yok.
                             </p>
                         ) : (
@@ -480,7 +482,7 @@ export default function ProductShow({
                                         src={image.url}
                                         alt={`${product.name} görseli`}
                                         loading="lazy"
-                                        className="aspect-square w-full rounded-xl border object-cover"
+                                        className="aspect-square w-full rounded-lg border border-border object-cover"
                                     />
                                 ))}
                             </div>

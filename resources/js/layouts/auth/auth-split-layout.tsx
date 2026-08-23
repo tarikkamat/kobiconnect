@@ -32,7 +32,9 @@ export default function AuthSplitLayout({
                 <div className="flex flex-1 items-center justify-center">
                     <div className="w-full max-w-sm py-8">
                         <div className="mb-6 flex flex-col items-center gap-1 text-center">
-                            <h1 className="text-2xl font-bold">{title}</h1>
+                            <h1 className="font-serif text-2xl tracking-[-0.04em] text-white">
+                                {title}
+                            </h1>
                             <p className="text-sm text-balance text-muted-foreground">
                                 {description}
                             </p>
@@ -43,49 +45,41 @@ export default function AuthSplitLayout({
                 </div>
             </div>
 
-            <div className="relative hidden overflow-hidden bg-zinc-950 lg:block">
+            <div className="relative hidden overflow-hidden border-l border-border bg-background lg:block">
                 <MarketplaceMarquee className="absolute inset-0" />
 
                 {/* ponytail: marquee koyu zeminli, o yuzden metin acik tonlu. */}
-                <div className="absolute inset-x-0 bottom-0 flex flex-col gap-3 p-10 text-white">
-                    <div className="flex items-center gap-2 text-xs font-medium text-zinc-300">
+                <div className="absolute inset-x-0 bottom-0 flex flex-col gap-3 p-10 text-foreground">
+                    <div className="flex items-center gap-2 font-mono text-xs font-medium text-muted-foreground tabular-nums">
                         <span className="relative flex size-2">
-                            <span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-400/60 motion-reduce:hidden" />
-                            <span className="relative inline-flex size-2 rounded-full bg-emerald-400" />
+                            <span className="absolute inline-flex size-full animate-ping rounded-full bg-primary/60 motion-reduce:hidden" />
+                            <span className="relative inline-flex size-2 rounded-full bg-primary" />
                         </span>
                         12+ pazaryeri ve e-ticaret altyapısı
                     </div>
-                    <p className="text-3xl font-semibold text-balance">
+                    <p className="font-serif text-3xl tracking-[-0.04em] text-balance text-white">
                         Tüm satış kanallarınız, tek panel.
                     </p>
-                    <p className="max-w-md text-sm text-zinc-300">
+                    <p className="max-w-md text-sm text-muted-foreground">
                         Ürünlerinizi bir kez ekleyin; Trendyol&apos;dan
                         Amazon&apos;a her kanalda satın. Stok, fiyat ve
                         siparişler kendiliğinden senkronda kalır.
                     </p>
                     <div className="mt-2 flex items-center gap-3">
                         <div className="flex -space-x-2">
-                            {[
-                                ['AY', 'bg-emerald-900 text-emerald-200'],
-                                ['MK', 'bg-sky-900 text-sky-200'],
-                                ['EÖ', 'bg-amber-900 text-amber-200'],
-                                ['SD', 'bg-rose-900 text-rose-200'],
-                                ['ZT', 'bg-violet-900 text-violet-200'],
-                            ].map(([initials, color]) => (
+                            {['AY', 'MK', 'EÖ', 'SD', 'ZT'].map((initials) => (
                                 <Avatar
                                     key={initials}
-                                    className="size-9 ring-2 ring-zinc-950"
+                                    className="size-9 ring-2 ring-background"
                                 >
-                                    <AvatarFallback
-                                        className={`text-xs font-medium ${color}`}
-                                    >
+                                    <AvatarFallback className="bg-secondary text-xs font-medium text-muted-foreground">
                                         {initials}
                                     </AvatarFallback>
                                 </Avatar>
                             ))}
                         </div>
-                        <p className="text-sm text-zinc-300">
-                            <span className="font-semibold text-white">
+                        <p className="text-sm text-muted-foreground">
+                            <span className="font-mono font-medium text-foreground tabular-nums">
                                 1.000+ KOBİ
                             </span>{' '}
                             satışını KobiConnect ile yönetiyor

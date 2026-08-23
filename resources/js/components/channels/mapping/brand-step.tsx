@@ -55,7 +55,7 @@ export function BrandStep({
 
     if (brands.length === 0) {
         return (
-            <p className="rounded-xl border border-dashed p-8 text-center text-sm text-muted-foreground">
+            <p className="rounded-lg border border-dashed border-border p-8 text-center font-serif text-2xl tracking-[-0.02em] text-muted-foreground">
                 Bu kategoride markalı ürün yok, eşlenecek marka da yok.
             </p>
         );
@@ -63,7 +63,7 @@ export function BrandStep({
 
     return (
         <div className="grid gap-4 lg:grid-cols-2">
-            <section className="rounded-xl border p-4">
+            <section className="rounded-lg border border-border p-4">
                 <div className="grid gap-2">
                     <Label htmlFor="brand-search">Pazaryeri markası ara</Label>
                     <div className="flex gap-2">
@@ -107,12 +107,15 @@ export function BrandStep({
                         </AlertDescription>
                     </Alert>
                 ) : (
-                    <div className="mt-4 rounded-lg border p-3">
+                    <div className="mt-4 rounded-lg border border-border p-3">
                         <p className="text-sm font-medium">
                             {brandResult.brand.name}
                         </p>
                         <p className="text-xs text-muted-foreground">
-                            Pazaryeri no: {brandResult.brand.remoteId}
+                            Pazaryeri no:{' '}
+                            <span className="font-mono tabular-nums">
+                                {brandResult.brand.remoteId}
+                            </span>
                         </p>
                         <div className="mt-2 flex flex-wrap gap-1">
                             {brands.map((brand) => (
@@ -138,7 +141,7 @@ export function BrandStep({
                 )}
             </section>
 
-            <section className="rounded-xl border p-4">
+            <section className="rounded-lg border border-border p-4">
                 <Form
                     {...MappingController.storeBrands.form({
                         connection: connection.id,
@@ -184,7 +187,10 @@ export function BrandStep({
                                                 </Badge>
                                             ) : (
                                                 <Badge>
-                                                    Pazaryeri no: {assigned}
+                                                    Pazaryeri no:{' '}
+                                                    <span className="font-mono tabular-nums">
+                                                        {assigned}
+                                                    </span>
                                                 </Badge>
                                             )}
                                         </div>

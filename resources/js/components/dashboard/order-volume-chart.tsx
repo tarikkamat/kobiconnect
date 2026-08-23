@@ -9,6 +9,7 @@ import {
     formatCurrency,
     formatDay,
     formatFullDay,
+    NEGATIVE_COLOR,
     useChartColors,
 } from '@/components/dashboard/chart-kit';
 import { Badge } from '@/components/ui/badge';
@@ -30,11 +31,14 @@ export type OrderVolume = {
 
 type Metric = 'orders' | 'revenue' | 'returns';
 
-/** Iade "kotu" metriktir; kirmizi (`--chart-4`) ile ayrisir. */
-const CONFIG: Record<Metric, { label: string; paletteIndex: number }> = {
-    orders: { label: 'Sipariş', paletteIndex: 0 },
-    revenue: { label: 'Ciro', paletteIndex: 1 },
-    returns: { label: 'İade', paletteIndex: 3 },
+/**
+ * Iade "kotu" metriktir ve palet bastan sona yesil-sari; rengini paletten
+ * degil §7'nin hata renginden alir — `palette: null` bunu isaretler.
+ */
+const CONFIG: Record<Metric, { label: string; palette: number | null }> = {
+    orders: { label: 'Sipariş', palette: 0 },
+    revenue: { label: 'Ciro', palette: 1 },
+    returns: { label: 'İade', palette: null },
 };
 
 const METRICS: Metric[] = ['orders', 'revenue', 'returns'];
@@ -57,11 +61,12 @@ export function OrderVolumeChart({
     const options = useMemo<ApexOptions>(() => {
         const base = baseChartOptions(colors);
         const isRevenue = metric === 'revenue';
+        const slot = CONFIG[metric].palette;
 
         return {
             ...base,
             chart: { ...base.chart, type: 'bar' },
-            colors: [colors.palette[CONFIG[metric].paletteIndex]],
+            colors: [slot === null ? NEGATIVE_COLOR : colors.palette[slot]],
             plotOptions: {
                 bar: {
                     columnWidth: '55%',
@@ -93,6 +98,7 @@ export function OrderVolumeChart({
                 },
             },
             tooltip: {
+                ...base.tooltip,
                 x: { formatter: (value) => formatFullDay(String(value)) },
                 y: {
                     formatter: (value: number) =>
@@ -113,7 +119,7 @@ export function OrderVolumeChart({
     );
 
     return (
-        <Card className={className}>
+        <Card className={cn('gap-0 py-0', className)}>
             <div className="flex flex-col items-stretch border-b sm:flex-row">
                 <div className="flex flex-1 flex-col justify-center gap-1 px-5 pt-4 pb-3 sm:py-5">
                     <CardTitle className="flex items-center gap-2">
@@ -138,15 +144,15 @@ export function OrderVolumeChart({
                             data-active={metric === key}
                             onClick={() => setMetric(key)}
                             className={cn(
-                                'flex flex-1 flex-col justify-center gap-1 border-t px-4 py-3 text-left',
-                                'even:border-l data-[active=true]:bg-muted/50 sm:border-t-0 sm:border-l sm:px-5 sm:py-4',
+                                'flex flex-1 flex-col justify-center gap-1 border-t px-4 py-3 text-left transition-colors duration-200',
+                                'even:border-l data-[active=true]:bg-muted sm:border-t-0 sm:border-l sm:px-5 sm:py-4',
                                 'last:border-l',
                             )}
                         >
                             <span className="text-xs text-muted-foreground">
                                 {CONFIG[key].label}
                             </span>
-                            <span className="text-lg leading-none font-bold tabular-nums sm:text-2xl">
+                            <span className="font-mono text-lg leading-none font-medium tabular-nums sm:text-2xl">
                                 {volume.totals[key]}
                             </span>
                         </button>
@@ -175,7 +181,7 @@ export function OrderVolumeChart({
  */
 export function OrderVolumeSkeleton({ className }: { className?: string }) {
     return (
-        <Card className={className}>
+        <Card className={cn('gap-0 py-0', className)}>
             <div className="flex flex-col items-stretch border-b sm:flex-row">
                 <div className="flex flex-1 flex-col justify-center gap-1 px-5 pt-4 pb-3 sm:py-5">
                     <Skeleton className="h-6 w-32" />

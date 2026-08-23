@@ -35,7 +35,7 @@ export function NavMain({
     const { isCurrentUrl } = useCurrentUrl();
 
     return (
-        <SidebarGroup className="px-2 py-0">
+        <SidebarGroup className="py-0">
             <SidebarGroupLabel>Panel</SidebarGroupLabel>
             <SidebarMenu>
                 {items.map((item) => (

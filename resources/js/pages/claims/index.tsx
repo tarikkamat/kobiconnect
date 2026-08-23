@@ -86,7 +86,7 @@ export default function ClaimIndex({
 
                 {/* Onay/red BILEREK yok: pazaryerine yazma demek, bu fazda
                     kapsam disi. Kullanici neyi yapamayacagini bilmeli. */}
-                <div className="flex items-start gap-3 rounded-lg border px-4 py-3 text-sm text-muted-foreground">
+                <div className="flex items-start gap-3 rounded-lg border border-border px-4 py-3 text-sm text-muted-foreground">
                     <Info className="mt-0.5 size-4 shrink-0" />
                     <p>
                         Bu ekran yalnızca görünürlük sağlar. Talepleri onaylama
@@ -97,7 +97,10 @@ export default function ClaimIndex({
                                 {' '}
                                 Şu anda{' '}
                                 <strong>
-                                    {actionableTotal} talep aksiyon bekliyor
+                                    <span className="font-mono tabular-nums">
+                                        {actionableTotal}
+                                    </span>{' '}
+                                    talep aksiyon bekliyor
                                 </strong>
                                 .
                             </>
@@ -177,11 +180,11 @@ export default function ClaimIndex({
                 </div>
 
                 {claims.data.length === 0 ? (
-                    <p className="rounded-xl border border-dashed p-8 text-center text-sm text-muted-foreground">
+                    <p className="rounded-lg border border-dashed border-border p-8 text-center font-serif text-2xl tracking-[-0.02em] text-muted-foreground">
                         Bu filtrelerle eşleşen iade talebi yok.
                     </p>
                 ) : (
-                    <div className="rounded-xl border">
+                    <div className="overflow-hidden rounded-lg border border-border">
                         <InfiniteScroll data="claims" buffer={300}>
                             <Table>
                                 <TableHeader>
@@ -206,7 +209,7 @@ export default function ClaimIndex({
                                                         claim: claim.id,
                                                     })}
                                                     instant
-                                                    className="font-medium underline-offset-4 hover:underline"
+                                                    className="font-mono font-medium tabular-nums underline-offset-4 hover:underline"
                                                 >
                                                     {claim.remoteClaimId}
                                                 </Link>
@@ -216,7 +219,7 @@ export default function ClaimIndex({
                                                     href={orderShow({
                                                         order: claim.orderId,
                                                     })}
-                                                    className="underline-offset-4 hover:underline"
+                                                    className="font-mono tabular-nums underline-offset-4 hover:underline"
                                                 >
                                                     {claim.orderNumber}
                                                 </Link>
@@ -236,11 +239,11 @@ export default function ClaimIndex({
                                             <TableCell className="max-w-64 truncate text-muted-foreground">
                                                 {claim.reason ?? '—'}
                                             </TableCell>
-                                            <TableCell className="text-right tabular-nums">
+                                            <TableCell className="text-right font-mono tabular-nums">
                                                 {claim.itemCount} /{' '}
                                                 {claim.quantity}
                                             </TableCell>
-                                            <TableCell className="text-muted-foreground">
+                                            <TableCell className="font-mono text-muted-foreground tabular-nums">
                                                 {claim.openedAt ?? '—'}
                                             </TableCell>
                                         </TableRow>

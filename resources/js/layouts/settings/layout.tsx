@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { useCurrentUrl } from '@/hooks/use-current-url';
 import { cn, toUrl } from '@/lib/utils';
-import { edit as editAppearance } from '@/routes/appearance';
 import { edit as notificationPreferences } from '@/routes/notification-preferences';
 import { edit } from '@/routes/profile';
 import { edit as editSecurity } from '@/routes/security';
@@ -24,7 +23,6 @@ function sidebarNavItems(): (NavItem & { permission?: string })[] {
     return [
         { title: 'Profil', href: edit(), icon: null },
         { title: 'Güvenlik', href: editSecurity(), icon: null },
-        { title: 'Görünüm', href: editAppearance(), icon: null },
         {
             title: 'Ekip & Roller',
             href: team(),
@@ -67,8 +65,9 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
                                 size="sm"
                                 variant="ghost"
                                 asChild
-                                className={cn('w-full justify-start', {
-                                    'bg-muted': isCurrentOrParentUrl(item.href),
+                                className={cn('w-full justify-start text-xs', {
+                                    'bg-accent text-accent-foreground':
+                                        isCurrentOrParentUrl(item.href),
                                 })}
                             >
                                 <Link href={item.href}>

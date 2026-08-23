@@ -55,9 +55,12 @@ export function StockAdjustDialog({
                                 <DialogHeader>
                                     <DialogTitle>Stok düzeltme</DialogTitle>
                                     <DialogDescription>
-                                        {target.sku} · {target.warehouseName}.
-                                        Düzeltme kaydedilir: kim, ne zaman ve
-                                        neden değiştirdi.
+                                        <span className="font-mono">
+                                            {target.sku}
+                                        </span>{' '}
+                                        · {target.warehouseName}. Düzeltme
+                                        kaydedilir: kim, ne zaman ve neden
+                                        değiştirdi.
                                     </DialogDescription>
                                 </DialogHeader>
 
@@ -72,7 +75,7 @@ export function StockAdjustDialog({
                                         required
                                         autoFocus
                                         defaultValue={target.onHand}
-                                        className="tabular-nums"
+                                        className="font-mono tabular-nums"
                                     />
                                     <InputError message={errors.on_hand} />
                                 </div>

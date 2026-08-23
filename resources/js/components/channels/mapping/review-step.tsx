@@ -14,7 +14,7 @@ export function ReviewStep({ category, mapping, issues }: WizardProps) {
 
     return (
         <div className="grid gap-4">
-            <section className="rounded-xl border p-4">
+            <section className="rounded-lg border border-border p-4">
                 <h3 className="text-sm font-medium">Gönderilecek eşleme</h3>
                 <dl className="mt-3 grid gap-2 text-sm sm:grid-cols-[10rem_1fr]">
                     <dt className="text-muted-foreground">Kategori</dt>
@@ -24,7 +24,9 @@ export function ReviewStep({ category, mapping, issues }: WizardProps) {
                     </dt>
                     <dd>{mapping?.remotePath ?? '—'}</dd>
                     <dt className="text-muted-foreground">Etkilenen ürün</dt>
-                    <dd>{category.productCount}</dd>
+                    <dd className="font-mono tabular-nums">
+                        {category.productCount}
+                    </dd>
                 </dl>
             </section>
 
@@ -40,7 +42,10 @@ export function ReviewStep({ category, mapping, issues }: WizardProps) {
                 <Alert variant="destructive">
                     <AlertTriangle />
                     <AlertTitle>
-                        {errors.length} eksik giderilmeden gönderim yapılamaz
+                        <span className="font-mono tabular-nums">
+                            {errors.length}
+                        </span>{' '}
+                        eksik giderilmeden gönderim yapılamaz
                     </AlertTitle>
                     <AlertDescription>
                         <ul className="list-disc pl-4">

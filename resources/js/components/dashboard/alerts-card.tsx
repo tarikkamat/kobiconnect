@@ -45,7 +45,10 @@ export function AlertsCard({ alerts }: { alerts: Alert[] }) {
             title="Uyarılar & Bildirimler"
             badge={
                 active > 0 ? (
-                    <Badge variant="secondary" className="tabular-nums">
+                    <Badge
+                        variant="secondary"
+                        className="font-mono tabular-nums"
+                    >
                         {active} aktif
                     </Badge>
                 ) : null

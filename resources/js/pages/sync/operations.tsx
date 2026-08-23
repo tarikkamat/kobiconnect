@@ -63,16 +63,16 @@ const ALL = 'all';
 
 const statusVariant = (
     status: string,
-): 'default' | 'secondary' | 'destructive' | 'outline' => {
+): 'success' | 'info' | 'destructive' | 'outline' => {
     if (status === 'failed') {
         return 'destructive';
     }
 
     if (status === 'in_flight') {
-        return 'default';
+        return 'info';
     }
 
-    return status === 'completed' ? 'secondary' : 'outline';
+    return status === 'completed' ? 'success' : 'outline';
 };
 
 export default function OperationQueue({
@@ -189,7 +189,11 @@ export default function OperationQueue({
                         onClick={() => retryOperations(selected)}
                     >
                         <RotateCcw />
-                        Seçilenleri yeniden dene ({selected.length})
+                        Seçilenleri yeniden dene (
+                        <span className="font-mono tabular-nums">
+                            {selected.length}
+                        </span>
+                        )
                     </PermissionButton>
 
                     <PermissionButton
@@ -202,11 +206,11 @@ export default function OperationQueue({
                 </div>
 
                 {operations.data.length === 0 ? (
-                    <p className="rounded-xl border border-dashed p-8 text-center text-sm text-muted-foreground">
+                    <p className="rounded-lg border border-dashed border-border p-8 text-center font-serif text-2xl tracking-[-0.02em] text-muted-foreground">
                         Bu filtreye uyan işlem yok.
                     </p>
                 ) : (
-                    <div className="overflow-x-auto rounded-xl border">
+                    <div className="overflow-hidden rounded-lg border border-border">
                         <Table>
                             <TableHeader>
                                 <TableRow>
@@ -290,13 +294,13 @@ export default function OperationQueue({
                                                 </p>
                                             )}
                                         </TableCell>
-                                        <TableCell className="text-right tabular-nums">
+                                        <TableCell className="text-right font-mono tabular-nums">
                                             {row.attempts}
                                         </TableCell>
-                                        <TableCell className="max-w-40 truncate font-mono text-xs text-muted-foreground">
+                                        <TableCell className="max-w-40 truncate font-mono text-xs text-muted-foreground tabular-nums">
                                             {row.remoteBatchId ?? '—'}
                                         </TableCell>
-                                        <TableCell className="text-xs text-muted-foreground">
+                                        <TableCell className="font-mono text-xs text-muted-foreground tabular-nums">
                                             {row.completedAt ??
                                                 row.sentAt ??
                                                 row.scheduledAt}
@@ -309,7 +313,12 @@ export default function OperationQueue({
                 )}
 
                 <div className="flex items-center justify-between text-sm text-muted-foreground">
-                    <span>{operations.total} işlem</span>
+                    <span>
+                        <span className="font-mono tabular-nums">
+                            {operations.total}
+                        </span>{' '}
+                        işlem
+                    </span>
                     <span className="flex gap-2">
                         {operations.prev_page_url && (
                             <Link

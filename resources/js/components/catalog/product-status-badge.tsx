@@ -2,7 +2,7 @@ import { Badge } from '@/components/ui/badge';
 
 const VARIANTS = {
     draft: 'secondary',
-    active: 'default',
+    active: 'success',
     archived: 'outline',
 } as const;
 

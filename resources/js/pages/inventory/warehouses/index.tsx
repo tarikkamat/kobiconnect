@@ -70,7 +70,7 @@ export default function WarehouseIndex({
                     {...WarehouseController.store.form()}
                     options={{ preserveScroll: true }}
                     resetOnSuccess
-                    className="grid max-w-3xl gap-3 rounded-xl border p-4"
+                    className="grid max-w-3xl gap-3 rounded-lg border border-border p-4"
                 >
                     {({ processing, errors }) => (
                         <>
@@ -89,6 +89,7 @@ export default function WarehouseIndex({
                                         name="code"
                                         required
                                         placeholder="WH-01"
+                                        className="font-mono tabular-nums"
                                     />
                                     <InputError message={errors.code} />
                                 </div>
@@ -114,12 +115,12 @@ export default function WarehouseIndex({
                 </Form>
 
                 {warehouses.length === 0 ? (
-                    <p className="rounded-xl border border-dashed p-8 text-center text-sm text-muted-foreground">
+                    <p className="rounded-lg border border-dashed border-border p-8 text-center font-serif text-2xl tracking-[-0.02em] text-muted-foreground">
                         Henüz depo tanımlanmamış. Stok girebilmek için en az bir
                         depo gerekir.
                     </p>
                 ) : (
-                    <div className="rounded-xl border">
+                    <div className="overflow-hidden rounded-lg border border-border">
                         <Table>
                             <TableHeader>
                                 <TableRow>
@@ -149,7 +150,7 @@ export default function WarehouseIndex({
                                                 )}
                                             </span>
                                         </TableCell>
-                                        <TableCell className="text-muted-foreground">
+                                        <TableCell className="font-mono text-muted-foreground tabular-nums">
                                             {warehouse.code}
                                         </TableCell>
                                         <TableCell className="text-muted-foreground">
@@ -161,10 +162,10 @@ export default function WarehouseIndex({
                                                 .filter(Boolean)
                                                 .join(', ') || '—'}
                                         </TableCell>
-                                        <TableCell className="text-right tabular-nums">
+                                        <TableCell className="text-right font-mono tabular-nums">
                                             {warehouse.itemCount}
                                         </TableCell>
-                                        <TableCell className="text-right tabular-nums">
+                                        <TableCell className="text-right font-mono tabular-nums">
                                             {warehouse.onHandTotal}
                                         </TableCell>
                                         <TableCell>
@@ -250,6 +251,7 @@ export default function WarehouseIndex({
                                             name="code"
                                             required
                                             defaultValue={editing.code}
+                                            className="font-mono tabular-nums"
                                         />
                                         <InputError message={errors.code} />
                                     </div>
@@ -315,8 +317,11 @@ export default function WarehouseIndex({
                         <DialogTitle>Depo silinsin mi?</DialogTitle>
                         <DialogDescription>
                             {pendingDelete?.name} silinecek. Bu depodaki{' '}
-                            {pendingDelete?.itemCount ?? 0} envanter satırı da
-                            silinir; stoğu olan depo silinemez.
+                            <span className="font-mono tabular-nums">
+                                {pendingDelete?.itemCount ?? 0}
+                            </span>{' '}
+                            envanter satırı da silinir; stoğu olan depo
+                            silinemez.
                         </DialogDescription>
                     </DialogHeader>
                     <DialogFooter>

@@ -5,6 +5,7 @@ Before planning or editing, find the row whose globs match the file's path and r
 | Applies to | Rule file |
 | --- | --- |
 | app/Console/Commands/** | .ai/rules/commands.md |
+| resources/css/app.css | .ai/rules/css.md |
 | resources/js/** | .ai/rules/js.md |
 | app/Marketplaces/** | .ai/rules/marketplaces.md |
 | app/Actions/Onboarding/** | .ai/rules/onboarding.md |
@@ -15,3 +16,4 @@ Before planning or editing, find the row whose globs match the file's path and r
 | database/migrations/tenant/** | .ai/rules/tenant.md |
 | tests/** | .ai/rules/tests.md |
 | app/Marketplaces/Trendyol/** | .ai/rules/trendyol.md |
+| resources/js/components/ui/table.tsx | .ai/rules/ui.md |

@@ -52,7 +52,7 @@ function LogoStrip({ offset }: { offset: number }) {
             {rotated(offset).map(({ slug, h }) => (
                 <div
                     key={slug}
-                    className="flex h-24 w-52 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white shadow-lg ring-1 ring-white/10"
+                    className="flex h-24 w-52 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white ring-1 ring-border"
                 >
                     <img
                         src={`/apps/${slug}.svg`}
@@ -72,9 +72,9 @@ export function MarketplaceMarquee({ className }: { className?: string }) {
         <div className={className} aria-hidden="true">
             <style>{STYLES}</style>
 
-            <div className="absolute inset-0 overflow-hidden bg-zinc-950">
-                {/* Hafif renk derinligi icin sabit koyu zemin uzerine glow. */}
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(120,113,108,0.25),transparent_60%)]" />
+            <div className="absolute inset-0 overflow-hidden bg-background">
+                {/* Hafif renk derinligi icin koyu zemin uzerine mint glow. */}
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(24,226,153,0.14),transparent_60%)]" />
 
                 <div className="absolute top-1/2 left-1/2 flex w-[200%] -translate-x-1/2 -translate-y-1/2 -rotate-12 flex-col gap-6">
                     {ROWS.map(({ offset, speed, reverse }) => (
@@ -95,8 +95,8 @@ export function MarketplaceMarquee({ className }: { className?: string }) {
                 </div>
 
                 {/* Kenar karartmalari: ustte/altta yumusak gecis, metin icin taban. */}
-                <div className="absolute inset-x-0 top-0 h-1/4 bg-gradient-to-b from-zinc-950 to-transparent" />
-                <div className="absolute inset-x-0 bottom-0 h-3/5 bg-gradient-to-t from-zinc-950 from-35% via-zinc-950/85 to-transparent" />
+                <div className="absolute inset-x-0 top-0 h-1/4 bg-gradient-to-b from-background to-transparent" />
+                <div className="absolute inset-x-0 bottom-0 h-3/5 bg-gradient-to-t from-background from-35% via-background/85 to-transparent" />
             </div>
         </div>
     );

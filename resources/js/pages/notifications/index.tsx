@@ -125,7 +125,7 @@ export default function Notifications({
                 </div>
 
                 {notifications.data.length === 0 ? (
-                    <p className="rounded-xl border border-dashed p-8 text-center text-sm text-muted-foreground">
+                    <p className="rounded-lg border border-dashed border-border p-8 text-center font-serif text-2xl tracking-[-0.02em] text-muted-foreground">
                         Bu filtreye uyan bildirim yok.
                     </p>
                 ) : (
@@ -136,8 +136,8 @@ export default function Notifications({
                                     key={item.id}
                                     className={
                                         item.read
-                                            ? 'rounded-xl border p-4'
-                                            : 'rounded-xl border border-primary/40 bg-primary/5 p-4'
+                                            ? 'rounded-lg border border-border p-4'
+                                            : 'rounded-lg border border-primary/25 bg-primary/10 p-4'
                                     }
                                 >
                                     <div className="flex flex-wrap items-start justify-between gap-3">
@@ -155,7 +155,7 @@ export default function Notifications({
                                                 {item.group !== null && (
                                                     <span>{item.group}</span>
                                                 )}
-                                                <span>
+                                                <span className="font-mono tabular-nums">
                                                     {item.createdAt ?? '—'}
                                                 </span>
                                             </p>

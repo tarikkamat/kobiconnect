@@ -75,7 +75,6 @@ return [
         ],
 
         'shopify' => [
-            'logo_dark_invert' => true,
             'name' => 'Shopify',
             'category' => 'ecommerce',
         ],

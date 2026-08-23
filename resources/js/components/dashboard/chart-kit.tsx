@@ -15,7 +15,6 @@ import {
     CardToolbar,
 } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useAppearance } from '@/hooks/use-appearance';
 import { cn } from '@/lib/utils';
 
 /** Backend'in her grafik prop'unda gonderdigi seri meta'si. */
@@ -33,15 +32,13 @@ const LazyApexChart = lazy(() => import('react-apexcharts'));
 
 /**
  * Tum grafiklerin girdigi tek kapi. Apex, SVG'ye cozumlenmis renk yazar ve CSS
- * degiskeni okuyamaz; tema degisince `key={resolvedAppearance}` ile remount
- * edilir ki `useChartColors`'in yeniden cozdugu renkler bastan cizilsin.
+ * degiskeni okuyamaz; panel tek yonlu koyu tema oldugu icin renkler bir kez
+ * cozulur, remount gerekmez.
  */
 export function Chart(props: ComponentProps<typeof LazyApexChart>) {
-    const { resolvedAppearance } = useAppearance();
-
     return (
         <Suspense fallback={null}>
-            <LazyApexChart key={resolvedAppearance} {...props} />
+            <LazyApexChart {...props} />
         </Suspense>
     );
 }
@@ -55,12 +52,31 @@ export type ChartColors = {
     foreground: string;
 };
 
+/* Panel tek yonlu koyu; fallback da koyu temanin degerlerini tasir. */
 const FALLBACK_COLORS: ChartColors = {
-    palette: ['#3b82f6', '#22c55e', '#eab308', '#ef4444', '#a855f7'],
-    border: '#e4e4e7',
-    muted: '#f4f4f5',
-    mutedForeground: '#71717a',
-    foreground: '#09090b',
+    palette: ['#18e299', '#24d94a', '#4ee23a', '#82e83d', '#b6ee45'],
+    border: '#1e1f21',
+    muted: '#111216',
+    mutedForeground: '#cfcdca',
+    foreground: '#faf8f5',
+};
+
+/**
+ * Palet bastan sona yesil-sari bir tel demeti; "kotu giden" seriyi (iade,
+ * dusen KPI) hicbir basamagi tasiyamaz. §7'nin hata rengi Apex'e sabit
+ * gider — Apex CSS degiskeni okuyamaz.
+ */
+export const NEGATIVE_COLOR = '#f04438';
+
+/**
+ * Alan dolgusu DESIGN.md §5: hero'nun radial glow'uyla ayni mint sis, gradyan
+ * degil. Seri kimligi dolgudan degil cizgi renginden ve logolu legend'den
+ * okunur, o yuzden tek renk tum serilere yeter.
+ */
+export const AREA_FILL: ApexOptions['fill'] = {
+    type: 'solid',
+    colors: ['rgba(24,226,153,.07)'],
+    opacity: 1,
 };
 
 /**
@@ -74,15 +90,11 @@ export function paletteColor(colors: ChartColors, index: number): string {
 }
 
 /**
- * Token'lar oklch tanimli; Apex gradyan/golge hesaplari icin rengi parse etmek
- * zorunda ve oklch'i anlamaz. Canvas `fillStyle` her CSS rengini hex/rgb'ye
- * serilestirir — cozumleme oradan yapilir. Tema degisince (`.dark` sinifi
- * coktan uygulanmistir) renkler yeniden cozulur, grafikler `Chart` icindeki
- * key ile remount olur.
+ * Token'lar hex/hsl tanimli ama Apex gradyan/golge hesaplari icin rengi parse
+ * etmek zorunda ve her formati anlamaz. Canvas `fillStyle` her CSS rengini
+ * hex/rgb'ye serilestirir — cozumleme oradan yapilir.
  */
 export function useChartColors(): ChartColors {
-    const { resolvedAppearance } = useAppearance();
-
     return useMemo(() => {
         if (typeof document === 'undefined') {
             return FALLBACK_COLORS;
@@ -126,21 +138,27 @@ export function useChartColors(): ChartColors {
             ),
             foreground: resolve('--foreground', FALLBACK_COLORS.foreground),
         };
-    }, [resolvedAppearance]);
+    }, []);
 }
 
 /** Eksen etiketlerinin ortak stili — Apex `labels.style` alanlarina gider. */
 export function axisLabelStyle(colors: ChartColors): {
     colors: string;
     fontSize: string;
+    fontFamily: string;
 } {
-    return { colors: colors.mutedForeground, fontSize: '12px' };
+    return {
+        colors: colors.mutedForeground,
+        fontSize: '10px',
+        fontFamily: 'var(--font-mono)',
+    };
 }
 
 /**
  * Ortak Apex tabani: font kart fontunu miras alir, toolbar/zoom yok, grid
- * cizgileri `--border` tonunda kesikli. Eksen/tooltip her grafik kendi veri
- * tipine gore tanimlar.
+ * cizgileri `--border` tonunda kesikli. Eksen/tooltip icerigini her grafik
+ * kendi veri tipine gore tanimlar ama `tooltip`'i EZMEDEN yayar
+ * (`...base.tooltip`), yoksa koyu tema kilidi kaybolur.
  */
 export function baseChartOptions(colors: ChartColors): ApexOptions {
     return {
@@ -153,6 +171,7 @@ export function baseChartOptions(colors: ChartColors): ApexOptions {
         },
         dataLabels: { enabled: false },
         legend: { show: false },
+        tooltip: { theme: 'dark' },
         grid: {
             borderColor: colors.border,
             strokeDashArray: 4,
@@ -255,7 +274,7 @@ export function ChartCard({
         // Card'in kendi `py-6`+`gap-6`'si sifirlanir: dikey bosluk artik
         // basliga ve govdeye ait, yoksa grafigin altinda 36px beyaz kalir.
         <Card className={cn('gap-0 py-0', className)}>
-            <CardHeader className="flex-row items-center justify-between gap-2 border-b py-4">
+            <CardHeader className="flex-row items-center justify-between gap-2 border-b border-border py-4">
                 <CardHeading>
                     <CardTitle className="flex items-center gap-2">
                         {href ? (

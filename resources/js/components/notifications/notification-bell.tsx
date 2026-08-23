@@ -73,7 +73,7 @@ export function NotificationBell() {
                 >
                     <Bell />
                     {state.unreadCount > 0 && (
-                        <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] leading-none font-medium text-white">
+                        <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 font-mono text-[10px] leading-none font-medium text-primary-foreground tabular-nums">
                             {state.unreadCount > 99 ? '99+' : state.unreadCount}
                         </span>
                     )}
@@ -145,12 +145,15 @@ function BellRow({ item }: { item: NotificationItem }) {
                 {item.body}
             </span>
             <span className="mt-0.5 block text-xs text-muted-foreground">
-                {item.eventLabel ?? '—'} · {item.createdAt ?? '—'}
+                {item.eventLabel ?? '—'} ·{' '}
+                <span className="font-mono tabular-nums">
+                    {item.createdAt ?? '—'}
+                </span>
             </span>
         </>
     );
 
-    const className = 'block px-3 py-2 hover:bg-accent';
+    const className = 'block px-3 py-2 transition-colors hover:bg-secondary';
 
     if (item.url === null) {
         return <span className={className}>{body}</span>;

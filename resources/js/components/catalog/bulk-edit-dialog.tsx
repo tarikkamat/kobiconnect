@@ -194,6 +194,7 @@ export function BulkEditDialog({
                             id="bulk-value"
                             type="number"
                             step={data.field === 'price' ? '0.01' : '1'}
+                            className="font-mono tabular-nums"
                             value={data.value}
                             onChange={(event) => {
                                 setData('value', event.target.value);
@@ -213,7 +214,7 @@ export function BulkEditDialog({
                     </Button>
 
                     {preview !== null && (
-                        <div className="rounded-lg border p-3">
+                        <div className="rounded-lg border border-border p-3">
                             <p className="text-sm font-medium">
                                 {preview.affected} varyant etkilenecek.
                             </p>
@@ -234,13 +235,13 @@ export function BulkEditDialog({
                                     <TableBody>
                                         {preview.samples.map((sample) => (
                                             <TableRow key={sample.sku}>
-                                                <TableCell>
+                                                <TableCell className="font-mono tabular-nums">
                                                     {sample.sku}
                                                 </TableCell>
-                                                <TableCell className="tabular-nums">
+                                                <TableCell className="font-mono text-muted-foreground tabular-nums">
                                                     {sample.current}
                                                 </TableCell>
-                                                <TableCell className="font-medium tabular-nums">
+                                                <TableCell className="font-mono font-medium tabular-nums">
                                                     {sample.next}
                                                 </TableCell>
                                             </TableRow>

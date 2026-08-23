@@ -45,11 +45,22 @@ type Props = {
     }[];
 };
 
-function Field({ label, children }: { label: string; children: string }) {
+/** `mono`: sayisal/kimlik degerler mono ile hizalanir — DESIGN.md §2. */
+function Field({
+    label,
+    children,
+    mono = false,
+}: {
+    label: string;
+    children: string;
+    mono?: boolean;
+}) {
     return (
         <div>
             <dt className="text-xs text-muted-foreground">{label}</dt>
-            <dd className="text-sm">{children}</dd>
+            <dd className={mono ? 'font-mono text-sm tabular-nums' : 'text-sm'}>
+                {children}
+            </dd>
         </div>
     );
 }
@@ -68,7 +79,7 @@ export default function ClaimShow({ claim, order, items }: Props) {
                     />
                 </div>
 
-                <div className="flex items-start gap-3 rounded-lg border px-4 py-3 text-sm text-muted-foreground">
+                <div className="flex items-start gap-3 rounded-lg border border-border px-4 py-3 text-sm text-muted-foreground">
                     <Info className="mt-0.5 size-4 shrink-0" />
                     <p>
                         Onay ve red pazaryeri panelinden yapılır; bu ekran
@@ -86,7 +97,7 @@ export default function ClaimShow({ claim, order, items }: Props) {
                                 <Field label="Pazaryeri durumu">
                                     {claim.externalStatus}
                                 </Field>
-                                <Field label="Açılma">
+                                <Field label="Açılma" mono>
                                     {claim.openedAt ?? '—'}
                                 </Field>
                                 <div className="col-span-2">
@@ -117,17 +128,19 @@ export default function ClaimShow({ claim, order, items }: Props) {
                                                 order: order.id,
                                             })}
                                             instant
-                                            className="underline underline-offset-4"
+                                            className="font-mono tabular-nums underline underline-offset-4"
                                         >
                                             {order.orderNumber}
                                         </Link>
                                     </dd>
                                 </div>
-                                <Field label="Paket">{order.packageId}</Field>
+                                <Field label="Paket" mono>
+                                    {order.packageId}
+                                </Field>
                                 <Field label="Kanal">
                                     {order.connection ?? '—'}
                                 </Field>
-                                <Field label="Sipariş tarihi">
+                                <Field label="Sipariş tarihi" mono>
                                     {order.placedAt ?? '—'}
                                 </Field>
                             </dl>
@@ -135,7 +148,7 @@ export default function ClaimShow({ claim, order, items }: Props) {
                     </Card>
                 </div>
 
-                <div className="rounded-xl border">
+                <div className="overflow-hidden rounded-lg border border-border">
                     <Table>
                         <TableHeader>
                             <TableRow>
@@ -155,18 +168,20 @@ export default function ClaimShow({ claim, order, items }: Props) {
                         <TableBody>
                             {items.map((item) => (
                                 <TableRow key={item.id}>
-                                    <TableCell className="font-medium">
+                                    <TableCell className="font-mono font-medium tabular-nums">
                                         {item.remoteItemId}
                                     </TableCell>
                                     {/* Siparis satiri eslesmemis olabilir; talep yine de gorunur. */}
-                                    <TableCell>{item.sku ?? '—'}</TableCell>
-                                    <TableCell className="text-muted-foreground">
+                                    <TableCell className="font-mono tabular-nums">
+                                        {item.sku ?? '—'}
+                                    </TableCell>
+                                    <TableCell className="font-mono text-muted-foreground tabular-nums">
                                         {item.barcode ?? '—'}
                                     </TableCell>
-                                    <TableCell className="text-right tabular-nums">
+                                    <TableCell className="text-right font-mono tabular-nums">
                                         {item.quantity}
                                     </TableCell>
-                                    <TableCell className="text-right tabular-nums">
+                                    <TableCell className="text-right font-mono tabular-nums">
                                         {item.unitPrice ?? '—'}
                                     </TableCell>
                                     <TableCell>

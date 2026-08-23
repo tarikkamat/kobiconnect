@@ -201,7 +201,7 @@ export default function ProductCreate({ brands, categories, statuses }: Props) {
                                 />
                                 <InputError message={errors.variants} />
 
-                                <div className="rounded-xl border">
+                                <div className="overflow-hidden rounded-lg border border-border">
                                     <Table>
                                         <TableHeader>
                                             <TableRow>
@@ -221,6 +221,7 @@ export default function ProductCreate({ brands, categories, statuses }: Props) {
                                                         <Input
                                                             name={`variants[${position}][sku]`}
                                                             required
+                                                            className="font-mono tabular-nums"
                                                             aria-label={`${position + 1}. varyant SKU`}
                                                         />
                                                         <InputError
@@ -234,6 +235,7 @@ export default function ProductCreate({ brands, categories, statuses }: Props) {
                                                     <TableCell>
                                                         <Input
                                                             name={`variants[${position}][barcode]`}
+                                                            className="font-mono tabular-nums"
                                                             aria-label={`${position + 1}. varyant barkod`}
                                                         />
                                                         <InputError
@@ -250,6 +252,7 @@ export default function ProductCreate({ brands, categories, statuses }: Props) {
                                                             step="0.01"
                                                             min="0"
                                                             name={`variants[${position}][list_price]`}
+                                                            className="font-mono tabular-nums"
                                                             aria-label={`${position + 1}. varyant fiyat`}
                                                         />
                                                         <InputError
@@ -265,6 +268,7 @@ export default function ProductCreate({ brands, categories, statuses }: Props) {
                                                             type="number"
                                                             min="0"
                                                             name={`variants[${position}][on_hand]`}
+                                                            className="font-mono tabular-nums"
                                                             aria-label={`${position + 1}. varyant stok`}
                                                         />
                                                         <InputError

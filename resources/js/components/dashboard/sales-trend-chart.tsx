@@ -1,6 +1,7 @@
 import type { ApexOptions } from 'apexcharts';
 import { useMemo } from 'react';
 import {
+    AREA_FILL,
     axisLabelStyle,
     baseChartOptions,
     Chart,
@@ -57,10 +58,7 @@ export function SalesTrendChart({
                 (_, index) => colors.palette[index % colors.palette.length],
             ),
             stroke: { curve: 'smooth', width: 2 },
-            fill: {
-                type: 'gradient',
-                gradient: { opacityFrom: 0.5, opacityTo: 0.05 },
-            },
+            fill: AREA_FILL,
             xaxis: {
                 categories: trend.rows.map((row) => String(row.date)),
                 axisBorder: { show: false },
@@ -80,6 +78,7 @@ export function SalesTrendChart({
                 },
             },
             tooltip: {
+                ...base.tooltip,
                 shared: true,
                 intersect: false,
                 /* Kategori ekseninde `value` ISO tarihin kendisidir. */

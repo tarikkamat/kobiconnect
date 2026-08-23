@@ -238,7 +238,9 @@ export default function Dashboard({
                 {pending.length > 0 && (
                     <Card>
                         <CardHeader>
-                            <CardTitle>
+                            {/* Onboarding, Petrona'nin serbest oldugu az
+                                sayidaki yuzeyden biri — DESIGN.md §2. */}
+                            <CardTitle className="font-serif text-2xl font-normal tracking-tight">
                                 {started
                                     ? 'Kurulumu tamamlayın'
                                     : 'Henüz başlamadınız'}
@@ -251,7 +253,7 @@ export default function Dashboard({
                                     className="flex items-start gap-3"
                                 >
                                     {step.done ? (
-                                        <CircleCheck className="mt-0.5 size-5 shrink-0 text-emerald-600" />
+                                        <CircleCheck className="mt-0.5 size-5 shrink-0 text-success" />
                                     ) : (
                                         <CircleDashed className="mt-0.5 size-5 shrink-0 text-muted-foreground" />
                                     )}
@@ -395,7 +397,7 @@ export default function Dashboard({
                                         (criticalStock?.count ?? 0) > 0 ? (
                                             <Badge
                                                 variant="secondary"
-                                                className="tabular-nums"
+                                                className="font-mono tabular-nums"
                                             >
                                                 {criticalStock?.count} varyant
                                             </Badge>
@@ -493,7 +495,7 @@ export default function Dashboard({
                                         (connections?.errored ?? 0) > 0 ? (
                                             <Badge
                                                 variant="secondary"
-                                                className="tabular-nums"
+                                                className="font-mono tabular-nums"
                                             >
                                                 {connections?.errored} hatalı
                                             </Badge>

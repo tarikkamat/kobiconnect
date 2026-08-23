@@ -14,16 +14,16 @@ export type RowTone = 'warn' | 'alert' | undefined;
  */
 const TONE = {
     warn: {
-        bar: 'border-l-amber-500',
-        row: 'bg-amber-500/5',
-        icon: 'text-amber-600 dark:text-amber-500',
-        pill: 'bg-amber-500 text-white',
+        bar: 'border-l-warning',
+        row: 'bg-warning/10',
+        icon: 'text-warning',
+        pill: 'bg-warning text-warning-foreground',
     },
     alert: {
         bar: 'border-l-destructive',
-        row: 'bg-destructive/5',
+        row: 'bg-destructive/10',
         icon: 'text-destructive',
-        pill: 'bg-destructive text-white',
+        pill: 'bg-destructive text-destructive-foreground',
     },
 } as const;
 
@@ -109,7 +109,7 @@ export function ListRow({
                 <Link
                     href={href}
                     prefetch
-                    className="block transition-colors hover:brightness-95"
+                    className="block transition-colors duration-200 hover:bg-secondary"
                 >
                     {row}
                 </Link>
@@ -133,7 +133,7 @@ export function RowPill({
     return (
         <span
             className={cn(
-                'ml-auto shrink-0 rounded-full px-2 py-0.5 text-center text-xs font-semibold tabular-nums',
+                'ml-auto shrink-0 rounded-full px-2 py-0.5 text-center font-mono text-xs font-medium tabular-nums',
                 tone ? TONE[tone].pill : 'text-muted-foreground',
                 className,
             )}

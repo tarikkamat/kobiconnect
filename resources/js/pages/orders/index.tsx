@@ -7,8 +7,8 @@ import {
     PENDING_PAYMENT,
 } from '@/components/orders/order-status-badge';
 import { Badge } from '@/components/ui/badge';
-import { DataTable  } from '@/components/ui/data-table';
-import type {DataTableColumns} from '@/components/ui/data-table';
+import { DataTable } from '@/components/ui/data-table';
+import type { DataTableColumns } from '@/components/ui/data-table';
 import { Input } from '@/components/ui/input';
 import {
     Select,
@@ -83,12 +83,15 @@ const COLUMNS: DataTableColumns<OrderRow> = [
                 <Link
                     href={show({ order: row.original.id })}
                     instant
-                    className="font-medium underline-offset-4 hover:underline"
+                    className="font-mono font-medium tabular-nums underline-offset-4 hover:underline"
                 >
                     {row.original.orderNumber}
                 </Link>
                 <span className="block text-xs text-muted-foreground">
-                    Paket {row.original.packageId}
+                    Paket{' '}
+                    <span className="font-mono tabular-nums">
+                        {row.original.packageId}
+                    </span>
                     {row.original.connection
                         ? ` · ${row.original.connection}`
                         : ''}
@@ -121,7 +124,7 @@ const COLUMNS: DataTableColumns<OrderRow> = [
     {
         id: 'lines',
         header: 'Kalem',
-        meta: { className: 'text-right tabular-nums' },
+        meta: { className: 'text-right font-mono tabular-nums' },
         cell: ({ row }) => (
             <>
                 {row.original.lineCount}
@@ -136,13 +139,13 @@ const COLUMNS: DataTableColumns<OrderRow> = [
     {
         id: 'total',
         header: 'Tutar',
-        meta: { className: 'text-right tabular-nums' },
+        meta: { className: 'text-right font-mono tabular-nums' },
         cell: ({ row }) => row.original.total ?? '—',
     },
     {
         id: 'placedAt',
         header: 'Sipariş tarihi',
-        meta: { className: 'text-muted-foreground' },
+        meta: { className: 'font-mono tabular-nums text-muted-foreground' },
         cell: ({ row }) => row.original.placedAt ?? '—',
     },
 ];
@@ -184,7 +187,7 @@ export default function OrderIndex({
                 />
 
                 {hasPendingPayment && (
-                    <div className="flex items-start gap-3 rounded-lg border border-amber-500 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:bg-amber-950 dark:text-amber-100">
+                    <div className="flex items-start gap-3 rounded-lg border border-warning/25 bg-warning/10 px-4 py-3 text-sm text-warning">
                         <TriangleAlert className="mt-0.5 size-4 shrink-0" />
                         <p>
                             <span className="font-medium">
@@ -281,7 +284,10 @@ export default function OrderIndex({
                         <Unlink className="size-4" />
                         Eşleşmemiş satırlar
                         {unmatchedTotal > 0 && (
-                            <Badge variant="destructive">
+                            <Badge
+                                variant="destructive"
+                                className="font-mono tabular-nums"
+                            >
                                 {unmatchedTotal}
                             </Badge>
                         )}
@@ -289,11 +295,11 @@ export default function OrderIndex({
                 </div>
 
                 {orders.data.length === 0 ? (
-                    <p className="rounded-xl border border-dashed p-8 text-center text-sm text-muted-foreground">
+                    <p className="rounded-lg border border-dashed border-border p-8 text-center font-serif text-2xl tracking-[-0.02em] text-muted-foreground">
                         Bu filtrelerle eşleşen sipariş yok.
                     </p>
                 ) : (
-                    <div className="rounded-xl border">
+                    <div className="overflow-hidden rounded-lg border border-border">
                         {/* Sayfalama tiklamasi yok: <InfiniteScroll> sonraki sayfayi kendisi ekler. */}
                         <InfiniteScroll data="orders" buffer={300}>
                             <DataTable
@@ -302,7 +308,7 @@ export default function OrderIndex({
                                 getRowId={(order) => String(order.id)}
                                 rowClassName={(order) =>
                                     order.status === PENDING_PAYMENT
-                                        ? 'bg-amber-50/60 dark:bg-amber-950/30'
+                                        ? 'bg-warning/10'
                                         : undefined
                                 }
                             />

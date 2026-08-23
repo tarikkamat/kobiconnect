@@ -11,9 +11,24 @@ export default defineConfig({
         laravel({
             input: ['resources/css/app.css', 'resources/js/app.tsx'],
             refresh: true,
+            // latin-ext ZORUNLU: Turkce ğ/Ğ ve ş/Ş yalniz latin altkumesinde yok,
+            // eksik olunca o iki harf sistem fontuna duser ve satir zipliyor.
             fonts: [
-                bunny('Instrument Sans', {
+                bunny('Inter', {
                     weights: [400, 500, 600],
+                    subsets: ['latin', 'latin-ext'],
+                    preload: [{ weight: 400 }, { weight: 500 }],
+                }),
+                // Sadece bos durum/onboarding basliklarinda — on yukleme israfi.
+                bunny('Petrona', {
+                    weights: [400],
+                    subsets: ['latin', 'latin-ext'],
+                    preload: false,
+                }),
+                bunny('Geist Mono', {
+                    weights: [400, 500],
+                    subsets: ['latin', 'latin-ext'],
+                    preload: false,
                 }),
             ],
         }),

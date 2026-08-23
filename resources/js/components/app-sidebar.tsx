@@ -25,10 +25,10 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
+import { index as apps } from '@/routes/apps';
 import { index as brands } from '@/routes/brands';
 import { index as categories } from '@/routes/categories';
 import { index as claims } from '@/routes/claims';
-import { index as apps } from '@/routes/apps';
 import { index as listings } from '@/routes/listings';
 import { index as mapping } from '@/routes/mapping';
 import { index as matches } from '@/routes/matches';
@@ -129,7 +129,7 @@ const footerNavItems: NavItem[] = [
 
 export function AppSidebar() {
     return (
-        <Sidebar collapsible="icon" variant="inset">
+        <Sidebar collapsible="icon">
             <SidebarHeader>
                 <SidebarMenu>
                     <SidebarMenuItem>

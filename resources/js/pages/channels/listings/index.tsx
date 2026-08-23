@@ -59,14 +59,12 @@ type Props = {
 /** Radix Select bos deger kabul etmez; "hepsi" secenegi bu sabitle temsil edilir. */
 const ALL = 'all';
 
-const syncVariant = (
-    state: string,
-): 'default' | 'secondary' | 'destructive' | 'outline' => {
+const syncVariant = (state: string): 'success' | 'destructive' | 'outline' => {
     if (state === 'failed') {
         return 'destructive';
     }
 
-    return state === 'synced' ? 'secondary' : 'outline';
+    return state === 'synced' ? 'success' : 'outline';
 };
 
 /**
@@ -157,8 +155,10 @@ export default function ChannelListings({
                     <Alert variant="destructive">
                         <TriangleAlert />
                         <AlertTitle>
-                            {degradedCount} listeleme 0 fiyat / 0 stok ile
-                            yayında
+                            <span className="font-mono tabular-nums">
+                                {degradedCount}
+                            </span>{' '}
+                            listeleme 0 fiyat / 0 stok ile yayında
                         </AlertTitle>
                         <AlertDescription>
                             Pazaryeri bu ürünleri kabul etti ama fiyatı geçersiz
@@ -226,11 +226,11 @@ export default function ChannelListings({
                 </div>
 
                 {listings.data.length === 0 ? (
-                    <p className="rounded-xl border border-dashed p-8 text-center text-sm text-muted-foreground">
+                    <p className="rounded-lg border border-dashed border-border p-8 text-center font-serif text-2xl tracking-[-0.02em] text-muted-foreground">
                         Bu filtreye uyan listeleme yok.
                     </p>
                 ) : (
-                    <div className="overflow-x-auto rounded-xl border">
+                    <div className="overflow-hidden rounded-lg border border-border">
                         {/* Sayfalama tiklamasi yok: <InfiniteScroll> sonraki sayfayi kendisi ekler. */}
                         <InfiniteScroll data="listings" buffer={300}>
                             <Table>
@@ -253,7 +253,7 @@ export default function ChannelListings({
                                                 key={row.id}
                                                 className={
                                                     row.degraded
-                                                        ? 'bg-destructive/5'
+                                                        ? 'bg-destructive/10'
                                                         : undefined
                                                 }
                                             >
@@ -268,7 +268,7 @@ export default function ChannelListings({
                                                     >
                                                         {row.product}
                                                     </Link>
-                                                    <span className="block font-mono text-xs text-muted-foreground">
+                                                    <span className="block font-mono text-xs text-muted-foreground tabular-nums">
                                                         {row.sku}
                                                     </span>
                                                 </TableCell>
@@ -313,10 +313,10 @@ export default function ChannelListings({
                                                         {row.syncStateLabel}
                                                     </Badge>
                                                 </TableCell>
-                                                <TableCell className="text-xs text-muted-foreground">
+                                                <TableCell className="font-mono text-xs text-muted-foreground tabular-nums">
                                                     {row.lastPushedAt ?? '—'}
                                                 </TableCell>
-                                                <TableCell className="max-w-40 truncate font-mono text-xs text-muted-foreground">
+                                                <TableCell className="max-w-40 truncate font-mono text-xs text-muted-foreground tabular-nums">
                                                     {row.remoteId ?? '—'}
                                                 </TableCell>
                                             </TableRow>

@@ -58,10 +58,12 @@ export function ChannelShareChart({
                                 fontSize: '13px',
                                 color: colors.mutedForeground,
                             },
+                            /* Halkanin ortasindaki her sey sayidir: mono. */
                             value: {
                                 show: true,
+                                fontFamily: 'var(--font-mono)',
                                 fontSize: '16px',
-                                fontWeight: 600,
+                                fontWeight: 500,
                                 color: colors.foreground,
                                 formatter: (value) =>
                                     formatCurrency(Number(value)),
@@ -79,6 +81,7 @@ export function ChannelShareChart({
                 },
             },
             tooltip: {
+                ...base.tooltip,
                 y: {
                     formatter: (_value, opts) =>
                         share.items[opts?.seriesIndex ?? 0]?.formatted ?? '',
@@ -119,7 +122,7 @@ export function ChannelShareChart({
                             />
                             <span className="truncate">{item.label}</span>
                         </span>
-                        <span className="shrink-0 tabular-nums">
+                        <span className="shrink-0 font-mono tabular-nums">
                             {item.formatted}
                             <span className="ml-2 text-muted-foreground">
                                 {item.share}

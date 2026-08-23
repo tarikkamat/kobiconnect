@@ -44,11 +44,13 @@ function Side({
     }
 
     return (
-        <div className={tone === 'proposed' ? 'bg-muted/40 p-4' : 'p-4'}>
+        <div className={tone === 'proposed' ? 'bg-muted p-4' : 'p-4'}>
             <p className="text-xs font-medium text-muted-foreground uppercase">
                 {title}
             </p>
-            <p className="text-xs text-muted-foreground">{subtitle}</p>
+            <p className="font-mono text-xs text-muted-foreground tabular-nums">
+                {subtitle}
+            </p>
 
             {side.images.length > 0 && (
                 <div className="mt-3 flex gap-2">
@@ -58,7 +60,7 @@ function Side({
                             src={url}
                             alt=""
                             loading="lazy"
-                            className="size-16 rounded-md border object-cover"
+                            className="size-16 rounded-md border border-border object-cover"
                         />
                     ))}
                 </div>
@@ -100,8 +102,8 @@ export function ProposalCard({
     const decision = { connection: connectionId };
 
     return (
-        <article className="rounded-xl border">
-            <header className="flex flex-wrap items-center justify-between gap-3 border-b px-4 py-3">
+        <article className="overflow-hidden rounded-[12px] border border-border">
+            <header className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-4 py-3">
                 <label className="flex items-center gap-2 text-sm font-medium">
                     <Checkbox
                         checked={selected}
@@ -110,7 +112,9 @@ export function ProposalCard({
                         }
                         aria-label={`${proposal.reference} önerisini seç`}
                     />
-                    <span className="font-mono">{proposal.reference}</span>
+                    <span className="font-mono tabular-nums">
+                        {proposal.reference}
+                    </span>
                 </label>
 
                 <div className="flex gap-2">

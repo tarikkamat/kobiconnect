@@ -114,7 +114,7 @@ export default function OrderShow({ order, lines, packages, history }: Props) {
                     Bu siparişin iade taleplerini gör
                 </Link>
                 {order.status === PENDING_PAYMENT && (
-                    <div className="flex items-start gap-3 rounded-lg border border-amber-500 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:bg-amber-950 dark:text-amber-100">
+                    <div className="flex items-start gap-3 rounded-lg border border-warning/25 bg-warning/10 px-4 py-3 text-sm text-warning">
                         <TriangleAlert className="mt-0.5 size-4 shrink-0" />
                         <p>
                             <span className="font-medium">
@@ -129,12 +129,15 @@ export default function OrderShow({ order, lines, packages, history }: Props) {
                 )}
 
                 {unmatched > 0 && (
-                    <div className="flex items-start gap-3 rounded-lg border border-dashed px-4 py-3 text-sm text-muted-foreground">
+                    <div className="flex items-start gap-3 rounded-lg border border-dashed border-border px-4 py-3 text-sm text-muted-foreground">
                         <Unlink className="mt-0.5 size-4 shrink-0" />
                         <p>
-                            {unmatched} satır katalogdaki bir varyantla
-                            eşleşmedi. Sipariş eksiksiz kaydedildi; eşleştirme
-                            yapılana kadar stok bu satırlar için düşülemez.
+                            <span className="font-mono tabular-nums">
+                                {unmatched}
+                            </span>{' '}
+                            satır katalogdaki bir varyantla eşleşmedi. Sipariş
+                            eksiksiz kaydedildi; eşleştirme yapılana kadar stok
+                            bu satırlar için düşülemez.
                         </p>
                     </div>
                 )}
@@ -153,10 +156,16 @@ export default function OrderShow({ order, lines, packages, history }: Props) {
                                 Pazaryeri durumu: {order.externalStatus || '—'}
                             </p>
                             <p className="text-muted-foreground">
-                                Sipariş tarihi: {order.placedAt ?? '—'}
+                                Sipariş tarihi:{' '}
+                                <span className="font-mono tabular-nums">
+                                    {order.placedAt ?? '—'}
+                                </span>
                             </p>
                             <p className="text-muted-foreground">
-                                Son güncelleme: {order.lastModifiedAt ?? '—'}
+                                Son güncelleme:{' '}
+                                <span className="font-mono tabular-nums">
+                                    {order.lastModifiedAt ?? '—'}
+                                </span>
                             </p>
                         </CardContent>
                     </Card>
@@ -178,7 +187,7 @@ export default function OrderShow({ order, lines, packages, history }: Props) {
                                             <span className="text-muted-foreground">
                                                 {TOTAL_LABELS[key] ?? key}
                                             </span>
-                                            <span className="tabular-nums">
+                                            <span className="font-mono tabular-nums">
                                                 {value}
                                             </span>
                                         </p>
@@ -237,15 +246,21 @@ export default function OrderShow({ order, lines, packages, history }: Props) {
                                 {lines.map((line) => (
                                     <TableRow key={line.id}>
                                         <TableCell>
-                                            <span className="font-medium">
+                                            <span className="font-mono font-medium tabular-nums">
                                                 {line.sku || '—'}
                                             </span>
                                             <span className="block text-xs text-muted-foreground">
-                                                Barkod: {line.barcode ?? '—'}
+                                                Barkod:{' '}
+                                                <span className="font-mono tabular-nums">
+                                                    {line.barcode ?? '—'}
+                                                </span>
                                             </span>
                                             {line.matched ? (
                                                 <span className="block text-xs text-muted-foreground">
-                                                    Katalog: {line.variantSku}
+                                                    Katalog:{' '}
+                                                    <span className="font-mono tabular-nums">
+                                                        {line.variantSku}
+                                                    </span>
                                                 </span>
                                             ) : (
                                                 <Badge
@@ -265,13 +280,13 @@ export default function OrderShow({ order, lines, packages, history }: Props) {
                                                 {line.externalStatus}
                                             </span>
                                         </TableCell>
-                                        <TableCell className="text-right tabular-nums">
+                                        <TableCell className="text-right font-mono tabular-nums">
                                             {line.quantity}
                                         </TableCell>
-                                        <TableCell className="text-right tabular-nums">
+                                        <TableCell className="text-right font-mono tabular-nums">
                                             {line.unitPrice}
                                         </TableCell>
-                                        <TableCell className="text-right text-muted-foreground tabular-nums">
+                                        <TableCell className="text-right font-mono text-muted-foreground tabular-nums">
                                             {line.vatRate ?? '—'} /{' '}
                                             {line.commission ?? '—'}
                                         </TableCell>
@@ -296,14 +311,14 @@ export default function OrderShow({ order, lines, packages, history }: Props) {
                                 packages.map((shipment) => (
                                     <div
                                         key={shipment.id}
-                                        className="space-y-1 rounded-lg border p-3"
+                                        className="space-y-1 rounded-lg border border-border p-3"
                                     >
                                         <div className="flex items-center gap-2">
                                             <OrderStatusBadge
                                                 status={shipment.status}
                                                 label={shipment.statusLabel}
                                             />
-                                            <span className="text-xs text-muted-foreground">
+                                            <span className="font-mono text-xs text-muted-foreground tabular-nums">
                                                 {shipment.remotePackageId}
                                             </span>
                                         </div>
@@ -312,7 +327,7 @@ export default function OrderShow({ order, lines, packages, history }: Props) {
                                         </p>
                                         {/* Kargo takip numarasi int64'u asar,
                                             uctan uca string tasinir. */}
-                                        <p className="font-mono text-xs break-all">
+                                        <p className="font-mono text-xs break-all tabular-nums">
                                             {shipment.trackingNumber ?? '—'}
                                         </p>
                                         {shipment.trackingLink && (
@@ -328,9 +343,13 @@ export default function OrderShow({ order, lines, packages, history }: Props) {
                                         )}
                                         <p className="text-xs text-muted-foreground">
                                             Kargoya veriliş:{' '}
-                                            {shipment.shippedAt ?? '—'} ·
-                                            Teslim:{' '}
-                                            {shipment.deliveredAt ?? '—'}
+                                            <span className="font-mono tabular-nums">
+                                                {shipment.shippedAt ?? '—'}
+                                            </span>{' '}
+                                            · Teslim:{' '}
+                                            <span className="font-mono tabular-nums">
+                                                {shipment.deliveredAt ?? '—'}
+                                            </span>
                                         </p>
                                     </div>
                                 ))
@@ -352,14 +371,14 @@ export default function OrderShow({ order, lines, packages, history }: Props) {
                                     {history.map((entry) => (
                                         <li
                                             key={entry.id}
-                                            className="flex justify-between gap-4 border-b pb-2 last:border-0"
+                                            className="flex justify-between gap-4 border-b border-border pb-2 last:border-0"
                                         >
                                             <span>
                                                 {entry.fromStatus
                                                     ? `${entry.fromStatus} → ${entry.toStatus}`
                                                     : entry.toStatus}
                                             </span>
-                                            <span className="text-muted-foreground">
+                                            <span className="font-mono text-muted-foreground tabular-nums">
                                                 {entry.occurredAt ?? '—'}
                                             </span>
                                         </li>

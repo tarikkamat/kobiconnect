@@ -51,14 +51,12 @@ const LEDGER_LABELS: Record<string, string> = {
     failed: 'Başarısız',
 };
 
-const statusVariant = (
-    status: string,
-): 'default' | 'secondary' | 'destructive' | 'outline' => {
+const statusVariant = (status: string): 'success' | 'info' | 'destructive' => {
     if (status === 'failed') {
         return 'destructive';
     }
 
-    return status === 'running' ? 'default' : 'secondary';
+    return status === 'running' ? 'info' : 'success';
 };
 
 export default function SyncMonitor({ runs, ledger, failedRuns }: Props) {
@@ -80,14 +78,18 @@ export default function SyncMonitor({ runs, ledger, failedRuns }: Props) {
                     description="Kanal ve kaynak bazında son senkron çalışmaları. Sayfa açıkken kendini yeniler."
                 />
 
+                {/* Rakam ustte, etiket dipte — DESIGN.md §5 bento kurali. */}
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                     {Object.entries(LEDGER_LABELS).map(([key, label]) => (
-                        <div key={key} className="rounded-xl border p-4">
-                            <p className="text-sm text-muted-foreground">
-                                {label}
-                            </p>
-                            <p className="text-2xl font-semibold tabular-nums">
+                        <div
+                            key={key}
+                            className="rounded-[12px] border border-border p-4"
+                        >
+                            <p className="font-mono text-3xl font-medium tabular-nums">
                                 {ledger[key] ?? 0}
+                            </p>
+                            <p className="mt-2 text-sm text-muted-foreground">
+                                {label}
                             </p>
                         </div>
                     ))}
@@ -106,11 +108,11 @@ export default function SyncMonitor({ runs, ledger, failedRuns }: Props) {
                 </p>
 
                 {runs.length === 0 ? (
-                    <p className="rounded-xl border border-dashed p-8 text-center text-sm text-muted-foreground">
+                    <p className="rounded-lg border border-dashed border-border p-8 text-center font-serif text-2xl tracking-[-0.02em] text-muted-foreground">
                         Henüz senkron çalışması yok.
                     </p>
                 ) : (
-                    <div className="overflow-x-auto rounded-xl border">
+                    <div className="overflow-hidden rounded-lg border border-border">
                         <Table>
                             <TableHeader>
                                 <TableRow>
@@ -148,18 +150,18 @@ export default function SyncMonitor({ runs, ledger, failedRuns }: Props) {
                                                 </p>
                                             )}
                                         </TableCell>
-                                        <TableCell className="text-muted-foreground">
+                                        <TableCell className="font-mono text-muted-foreground tabular-nums">
                                             {run.startedAt ?? '—'}
                                         </TableCell>
-                                        <TableCell className="text-right tabular-nums">
+                                        <TableCell className="text-right font-mono tabular-nums">
                                             {run.durationSeconds === null
                                                 ? '—'
                                                 : `${run.durationSeconds} sn`}
                                         </TableCell>
-                                        <TableCell className="text-right tabular-nums">
+                                        <TableCell className="text-right font-mono tabular-nums">
                                             {run.items}
                                         </TableCell>
-                                        <TableCell className="text-muted-foreground">
+                                        <TableCell className="font-mono text-muted-foreground tabular-nums">
                                             {run.watermark ?? '—'}
                                         </TableCell>
                                     </TableRow>
@@ -170,7 +172,7 @@ export default function SyncMonitor({ runs, ledger, failedRuns }: Props) {
                 )}
 
                 {failedRuns.length > 0 && (
-                    <div className="rounded-xl border border-destructive/40 p-4">
+                    <div className="rounded-lg border border-destructive/25 bg-destructive/10 p-4">
                         <h2 className="text-sm font-medium">
                             Son başarısız çalışmalar
                         </h2>
@@ -180,7 +182,10 @@ export default function SyncMonitor({ runs, ledger, failedRuns }: Props) {
                                     <span className="text-foreground">
                                         {run.connection} · {run.resource}
                                     </span>{' '}
-                                    {run.startedAt} — {run.message ?? 'Hata'}
+                                    <span className="font-mono tabular-nums">
+                                        {run.startedAt}
+                                    </span>{' '}
+                                    — {run.message ?? 'Hata'}
                                 </li>
                             ))}
                         </ul>

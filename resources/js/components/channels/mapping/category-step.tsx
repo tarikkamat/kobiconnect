@@ -67,13 +67,17 @@ export function CategoryStep({
 
     return (
         <div className="grid gap-4 lg:grid-cols-2">
-            <section className="rounded-xl border p-4">
+            <section className="rounded-lg border border-border p-4">
                 <h3 className="text-sm font-medium">Kendi kategoriniz</h3>
                 <p className="mt-2 text-lg">{category.name}</p>
                 <p className="text-sm text-muted-foreground">{category.path}</p>
                 <p className="mt-4 text-sm text-muted-foreground">
-                    Bu kategorideki {category.productCount} ürün, seçtiğiniz
-                    pazaryeri kategorisinin kurallarına göre gönderilecek.
+                    Bu kategorideki{' '}
+                    <span className="font-mono tabular-nums">
+                        {category.productCount}
+                    </span>{' '}
+                    ürün, seçtiğiniz pazaryeri kategorisinin kurallarına göre
+                    gönderilecek.
                 </p>
 
                 {mapping === null ? null : (
@@ -86,7 +90,7 @@ export function CategoryStep({
                 )}
             </section>
 
-            <section className="rounded-xl border p-4">
+            <section className="rounded-lg border border-border p-4">
                 <Form
                     {...MappingController.storeCategory.form({
                         connection: connection.id,
@@ -236,15 +240,20 @@ function CategoryOption({
                     : 'Bu kategorinin alt kategorileri var; pazaryeri üst kategoriye ürün kabul etmiyor.'
             }
             className={cn(
-                'flex w-full items-center justify-between gap-2 rounded-lg border px-3 py-2 text-left text-sm',
-                selected && 'border-primary bg-primary/5',
+                'flex w-full items-center justify-between gap-2 rounded-lg border border-border px-3 py-2 text-left text-sm transition-colors',
+                selected && 'border-primary bg-primary/10',
                 blocked && 'cursor-not-allowed opacity-50',
             )}
         >
             <span>{path}</span>
             <span className="flex shrink-0 items-center gap-1">
                 {badge === undefined ? null : (
-                    <Badge variant="secondary">{badge}</Badge>
+                    <Badge
+                        variant="secondary"
+                        className="font-mono tabular-nums"
+                    >
+                        {badge}
+                    </Badge>
                 )}
                 {isLeaf ? null : <Badge variant="outline">Üst kategori</Badge>}
             </span>

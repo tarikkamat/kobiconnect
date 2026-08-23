@@ -56,10 +56,12 @@ export function SalesTargetChart({
                             fontSize: '13px',
                             color: colors.mutedForeground,
                         },
+                        /* Halkanin ortasindaki yuzde sayidir: mono. */
                         value: {
                             show: true,
+                            fontFamily: 'var(--font-mono)',
                             fontSize: '16px',
-                            fontWeight: 600,
+                            fontWeight: 500,
                             color: colors.foreground,
                             formatter: (value) => `%${Math.round(value)}`,
                         },
@@ -104,7 +106,7 @@ export function SalesTargetChart({
                         className="flex items-center justify-between gap-2"
                     >
                         <span className="truncate">{item.label}</span>
-                        <span className="shrink-0 tabular-nums">
+                        <span className="shrink-0 font-mono tabular-nums">
                             {item.achieved}
                             <span className="ml-2 text-muted-foreground">
                                 / {item.target}

@@ -105,7 +105,7 @@ export default function MatchInbox({
                 )}
 
                 {connectionId === null ? (
-                    <p className="rounded-xl border border-dashed p-8 text-center text-sm text-muted-foreground">
+                    <p className="rounded-lg border border-dashed border-border p-8 text-center font-serif text-2xl tracking-[-0.02em] text-muted-foreground">
                         Bağlı pazaryerlerinizin hiçbiri ön eşleşme akışı
                         sunmuyor. Bu ekran yalnızca ürünlerinizi kendi
                         kataloğuyla eşleştirmeyi öneren pazaryerleri için
@@ -130,12 +130,12 @@ export default function MatchInbox({
                         </Alert>
 
                         {proposals.length === 0 ? (
-                            <p className="rounded-xl border border-dashed p-8 text-center text-sm text-muted-foreground">
+                            <p className="rounded-lg border border-dashed border-border p-8 text-center font-serif text-2xl tracking-[-0.02em] text-muted-foreground">
                                 Bekleyen ön eşleşme önerisi yok.
                             </p>
                         ) : (
                             <>
-                                <div className="flex flex-wrap items-center gap-3 rounded-xl border px-4 py-3">
+                                <div className="flex flex-wrap items-center gap-3 rounded-lg border border-border px-4 py-3">
                                     <label className="flex items-center gap-2 text-sm">
                                         <Checkbox
                                             checked={
@@ -154,7 +154,11 @@ export default function MatchInbox({
                                             }
                                             aria-label="Görünen önerilerin hepsini seç"
                                         />
-                                        Görünen {proposals.length} öneriyi seç
+                                        Görünen{' '}
+                                        <span className="font-mono tabular-nums">
+                                            {proposals.length}
+                                        </span>{' '}
+                                        öneriyi seç
                                     </label>
 
                                     {/* Toplu karar da tekil karar da AYNI ucu
@@ -182,7 +186,10 @@ export default function MatchInbox({
                                         >
                                             <Check />
                                             Seçilenleri onayla (
-                                            {selected.length})
+                                            <span className="font-mono tabular-nums">
+                                                {selected.length}
+                                            </span>
+                                            )
                                         </PermissionButton>
                                     </Form>
 
@@ -209,7 +216,10 @@ export default function MatchInbox({
                                         >
                                             <X />
                                             Seçilenleri reddet (
-                                            {selected.length})
+                                            <span className="font-mono tabular-nums">
+                                                {selected.length}
+                                            </span>
+                                            )
                                         </PermissionButton>
                                     </Form>
                                 </div>

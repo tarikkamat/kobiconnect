@@ -1,5 +1,4 @@
 import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
 
 /**
  * Kanonik iade durumlari — pazaryerinin ham durumlari degil.
@@ -7,18 +6,18 @@ import { cn } from '@/lib/utils';
  */
 const VARIANTS: Record<
     string,
-    'default' | 'secondary' | 'destructive' | 'outline'
+    'success' | 'warning' | 'destructive' | 'info' | 'outline'
 > = {
-    created: 'outline',
-    waiting_action: 'default',
-    under_review: 'secondary',
-    accepted: 'secondary',
+    created: 'info',
+    waiting_action: 'warning',
+    under_review: 'info',
+    accepted: 'success',
     rejected: 'destructive',
     cancelled: 'outline',
     unresolved: 'destructive',
 };
 
-/** Operatorun aksiyon beklediginin tek isareti; gorsel olarak da ayrisir. */
+/** Operatorun aksiyon beklediginin tek isareti; uyari renginde ayrisir. */
 export const WAITING_ACTION = 'waiting_action';
 
 export function ClaimStatusBadge({
@@ -31,14 +30,7 @@ export function ClaimStatusBadge({
     className?: string;
 }) {
     return (
-        <Badge
-            variant={VARIANTS[status] ?? 'outline'}
-            className={cn(
-                status === WAITING_ACTION &&
-                    'border-amber-500 bg-amber-50 text-amber-900 dark:bg-amber-950 dark:text-amber-100',
-                className,
-            )}
-        >
+        <Badge variant={VARIANTS[status] ?? 'outline'} className={className}>
             {label}
         </Badge>
     );
