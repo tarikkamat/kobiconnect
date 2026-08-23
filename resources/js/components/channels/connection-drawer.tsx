@@ -120,7 +120,7 @@ export function ConnectionDrawer({
                                 className={cn(
                                     'max-h-7 max-w-40 object-contain object-left',
                                     marketplace.logoDarkInvert &&
-                                        'brightness-0 invert',
+                                        'dark:brightness-0 dark:invert',
                                 )}
                             />
                         </div>

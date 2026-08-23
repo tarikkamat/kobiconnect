@@ -1,6 +1,16 @@
-import { Check, Plus } from 'lucide-react';
+import { Check, Plus, Store } from 'lucide-react';
 import { PermissionButton } from '@/components/catalog/permission-button';
-import type { CredentialField } from '@/components/channels/connection-drawer';
+import type {
+    ConnectionRow,
+    CredentialField,
+} from '@/components/channels/connection-drawer';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import type { PermissionCheck } from '@/hooks/use-permission';
 import { cn } from '@/lib/utils';
 
@@ -23,6 +33,7 @@ export type StoreApp = {
     available: boolean;
     fields: CredentialField[];
     installed: number;
+    connections?: ConnectionRow[];
 };
 
 /**
@@ -63,7 +74,7 @@ export function AppIcon({
                 }
                 className={cn(
                     'max-h-full max-w-full object-contain',
-                    app.logoDarkInvert && 'brightness-0 invert',
+                    app.logoDarkInvert && 'dark:brightness-0 dark:invert',
                     imageClassName,
                 )}
             />
@@ -75,105 +86,107 @@ export function AppCard({
     app,
     canManage,
     onInstall,
+    onManage,
 }: {
     app: StoreApp;
     canManage: PermissionCheck;
     onInstall: (app: StoreApp) => void;
+    onManage?: (app: StoreApp) => void;
 }) {
     const check: PermissionCheck = app.available
         ? canManage
         : { allowed: false, reason: 'Bu uygulama henüz yayında değil.' };
 
-    return (
-        <div className="flex flex-col justify-between gap-5 rounded-xl border border-border bg-card/70 p-5 transition-colors duration-150 hover:border-white/20 hover:bg-card">
-            <div className="flex flex-col gap-3.5">
-                <div className="flex items-start justify-between gap-3">
-                    <div className="flex size-12 shrink-0 items-center justify-center rounded-lg border border-border bg-secondary/80 p-2">
+    if (app.installed > 0) {
+        return (
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <button
+                        type="button"
+                        className="group relative flex h-24 w-full cursor-pointer items-center justify-center rounded-xl border border-border bg-transparent p-0 transition-colors hover:border-foreground/30 hover:bg-secondary focus-visible:outline-none"
+                        title={`${app.name} — bağlantıları yönet`}
+                    >
                         <AppIcon
                             app={app}
-                            className="size-full bg-transparent"
-                            imageClassName="max-h-7"
+                            className="size-full rounded-xl px-8 bg-transparent"
+                            imageClassName="max-h-9"
                         />
-                    </div>
 
-                    {app.installed > 0 ? (
                         <span
                             title={
                                 app.installed > 1
                                     ? `${app.installed} bağlantı kurulu`
-                                    : 'Bağlantı kurulu'
+                                    : 'Kurulu'
                             }
-                            className="inline-flex items-center gap-1 rounded-full border border-primary/20 bg-primary/10 px-2.5 py-0.5 font-mono text-[11px] font-medium text-primary"
+                            className="absolute top-2 right-2 flex size-6 items-center justify-center rounded-full bg-primary text-primary-foreground font-mono text-[11px] font-medium"
                         >
-                            <Check className="size-3" />
-                            <span className="tabular-nums">
-                                {app.installed > 1
-                                    ? `${app.installed} Bağlantı`
-                                    : 'Bağlı'}
-                            </span>
+                            {app.installed > 1 ? (
+                                <span className="tabular-nums">{app.installed}</span>
+                            ) : (
+                                <Check className="size-3.5" />
+                            )}
                         </span>
-                    ) : app.available ? (
-                        <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-white/[0.04] px-2.5 py-0.5 text-[11px] font-medium text-muted-foreground">
-                            <span className="size-1.5 rounded-full bg-primary" />
-                            Hazır
-                        </span>
-                    ) : (
-                        <span className="rounded-full border border-border bg-secondary px-2.5 py-0.5 text-[11px] font-medium text-foreground/40">
-                            Yakında
-                        </span>
-                    )}
-                </div>
+                    </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuItem
+                        onClick={() => onManage?.(app)}
+                        className="cursor-pointer gap-2 py-2"
+                    >
+                        <Store className="size-4 text-primary" />
+                        <div>
+                            <p className="text-xs font-medium">
+                                Mevcut Bağlantıları Görüntüle
+                            </p>
+                            <p className="font-mono text-[10px] text-muted-foreground tabular-nums">
+                                {app.installed} mağaza hesabı kayıtlı
+                            </p>
+                        </div>
+                    </DropdownMenuItem>
 
-                <div className="space-y-0.5">
-                    <h3 className="text-base font-semibold tracking-tight text-foreground">
-                        {app.name}
-                    </h3>
-                    <p className="text-xs text-muted-foreground">
-                        {app.categoryLabel}
-                    </p>
-                </div>
+                    <DropdownMenuSeparator />
 
-                {app.capabilities.length > 0 ? (
-                    <div className="flex flex-wrap gap-1 pt-0.5">
-                        {app.capabilities.map((capability) => (
-                            <span
-                                key={capability.value}
-                                className="inline-flex h-5 items-center rounded border border-white/5 bg-white/[0.03] px-1.5 font-mono text-[10px] text-muted-foreground"
-                            >
-                                {capability.label}
-                            </span>
-                        ))}
-                    </div>
-                ) : (
-                    <p className="text-xs leading-relaxed text-muted-foreground/60">
-                        Entegrasyon sürücüsü geliştirme aşamasındadır.
-                    </p>
-                )}
-            </div>
-
-            <div className="pt-2">
-                {app.available ? (
-                    <PermissionButton
-                        check={check}
-                        variant={app.installed > 0 ? 'outline' : 'default'}
-                        size="sm"
-                        className="w-full justify-center gap-1.5 text-xs font-medium"
+                    <DropdownMenuItem
                         onClick={() => onInstall(app)}
+                        disabled={!canManage.allowed}
+                        className="cursor-pointer gap-2 py-2"
                     >
-                        <Plus className="size-3.5" />
-                        {app.installed > 0
-                            ? 'Yeni Bağlantı Ekle'
-                            : 'Bağlantı Kur'}
-                    </PermissionButton>
-                ) : (
-                    <span
-                        aria-disabled="true"
-                        className="flex h-[34px] w-full cursor-not-allowed items-center justify-center rounded-md border border-dashed border-border bg-secondary/50 text-xs font-medium text-muted-foreground/50"
-                    >
-                        Yakında
-                    </span>
-                )}
-            </div>
-        </div>
+                        <Plus className="size-4" />
+                        <span className="text-xs font-medium">
+                            Yeni Bağlantı / Mağaza Ekle
+                        </span>
+                    </DropdownMenuItem>
+                </DropdownMenuContent>
+            </DropdownMenu>
+        );
+    }
+
+    return (
+        <PermissionButton
+            check={check}
+            variant="outline"
+            className="relative h-24 w-full rounded-xl bg-transparent p-0 hover:border-foreground/30 hover:bg-secondary disabled:opacity-100 transition-colors"
+            title={app.name}
+            aria-label={`${app.name} aktifleştir`}
+            onClick={() => onInstall(app)}
+        >
+            <AppIcon
+                app={app}
+                className="size-full rounded-xl px-8 bg-transparent"
+                imageClassName="max-h-9"
+            />
+
+            {app.available ? (
+                <span className="absolute top-2 right-2 flex size-6 items-center justify-center rounded-full bg-secondary text-muted-foreground">
+                    <Plus className="size-3.5" />
+                </span>
+            ) : (
+                <span className="absolute top-2 right-2 rounded-full bg-secondary px-2 py-0.5 text-[11px] font-medium text-foreground/30">
+                    Yakında
+                </span>
+            )}
+        </PermissionButton>
     );
 }
+
+

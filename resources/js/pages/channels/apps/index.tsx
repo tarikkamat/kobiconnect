@@ -1,4 +1,4 @@
-import { Head } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import { Search, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { AppCard } from '@/components/channels/app-card';
@@ -9,7 +9,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { usePermission } from '@/hooks/use-permission';
 import { cn } from '@/lib/utils';
-import { index } from '@/routes/apps';
+import { index as appsRoute } from '@/routes/apps';
+import { index as connectionsRoute } from '@/routes/connections';
 
 type Props = {
     apps: StoreApp[];
@@ -94,6 +95,18 @@ export default function AppStoreIndex({ apps, categories }: Props) {
         setSelectedStatus('all');
     };
 
+    const handleOpenInstall = (app: StoreApp) => {
+        setSetup(app);
+    };
+
+    const handleOpenManage = (app: StoreApp) => {
+        router.visit(
+            connectionsRoute.url(undefined, {
+                query: { marketplace: app.code },
+            }),
+        );
+    };
+
     return (
         <>
             <Head title="Uygulama Mağazası" />
@@ -106,7 +119,7 @@ export default function AppStoreIndex({ apps, categories }: Props) {
                     />
 
                     <div className="flex items-center gap-2 self-start md:self-auto">
-                        <div className="flex items-center gap-1.5 rounded-lg border border-border bg-secondary/60 px-3 py-1.5 font-mono text-xs">
+                        <div className="flex items-center gap-1.5 rounded-lg border border-border bg-secondary/60 px-3 py-1.5 text-xs">
                             <span className="size-2 rounded-full bg-primary" />
                             <span className="text-foreground">
                                 <span className="font-semibold tabular-nums">
@@ -116,7 +129,7 @@ export default function AppStoreIndex({ apps, categories }: Props) {
                             </span>
                         </div>
 
-                        <div className="flex items-center gap-1.5 rounded-lg border border-border bg-secondary/60 px-3 py-1.5 font-mono text-xs text-muted-foreground">
+                        <div className="flex items-center gap-1.5 rounded-lg border border-border bg-secondary/60 px-3 py-1.5 text-xs text-muted-foreground">
                             <span className="text-foreground">
                                 <span className="font-semibold tabular-nums">
                                     {stats.available}
@@ -125,7 +138,7 @@ export default function AppStoreIndex({ apps, categories }: Props) {
                             </span>
                         </div>
 
-                        <div className="flex items-center gap-1.5 rounded-lg border border-border bg-secondary/60 px-3 py-1.5 font-mono text-xs text-muted-foreground">
+                        <div className="flex items-center gap-1.5 rounded-lg border border-border bg-secondary/60 px-3 py-1.5 text-xs text-muted-foreground">
                             <span className="tabular-nums">
                                 {stats.total} Toplam
                             </span>
@@ -260,41 +273,46 @@ export default function AppStoreIndex({ apps, categories }: Props) {
                                 </span>
                             </div>
 
-                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
                                 {filteredApps.map((app) => (
                                     <AppCard
                                         key={app.code}
                                         app={app}
                                         canManage={canManage}
-                                        onInstall={setSetup}
+                                        onInstall={handleOpenInstall}
+                                        onManage={handleOpenManage}
                                     />
                                 ))}
                             </div>
                         </div>
                     )
                 ) : (
-                    <div className="flex flex-col gap-8">
+                    <div className="flex flex-col gap-6">
                         {groups.map((group) => (
                             <section
                                 key={group.value}
-                                className="flex flex-col gap-3.5"
+                                className="flex flex-col gap-3"
                             >
-                                <div className="flex items-baseline gap-2 border-b border-border/60 pb-2">
-                                    <h2 className="text-base font-semibold tracking-tight text-foreground">
+                                <div className="flex items-baseline gap-2">
+                                    <h2 className="text-base font-semibold">
                                         {group.label}
                                     </h2>
-                                    <span className="font-mono text-xs text-muted-foreground tabular-nums">
-                                        ({group.apps.length})
+                                    <span className="text-xs text-muted-foreground">
+                                        <span className="font-mono tabular-nums">
+                                            {group.apps.length}
+                                        </span>{' '}
+                                        uygulama
                                     </span>
                                 </div>
 
-                                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
                                     {group.apps.map((app) => (
                                         <AppCard
                                             key={app.code}
                                             app={app}
                                             canManage={canManage}
-                                            onInstall={setSetup}
+                                            onInstall={handleOpenInstall}
+                                            onManage={handleOpenManage}
                                         />
                                     ))}
                                 </div>
@@ -304,6 +322,7 @@ export default function AppStoreIndex({ apps, categories }: Props) {
                 )}
             </div>
 
+            {/* Bağlantı Kurulum Çekmecesi */}
             <ConnectionDrawer
                 marketplace={
                     setup === null
@@ -331,8 +350,10 @@ AppStoreIndex.layout = {
     breadcrumbs: [
         {
             title: 'Uygulama Mağazası',
-            href: index(),
+            href: appsRoute(),
         },
     ],
 };
+
+
 

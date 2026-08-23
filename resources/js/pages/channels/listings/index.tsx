@@ -155,7 +155,7 @@ export default function ChannelListings({
                     <Alert variant="destructive">
                         <TriangleAlert />
                         <AlertTitle>
-                            <span className="font-mono tabular-nums">
+                            <span className="tabular-nums">
                                 {degradedCount}
                             </span>{' '}
                             listeleme 0 fiyat / 0 stok ile yayında
@@ -268,7 +268,7 @@ export default function ChannelListings({
                                                     >
                                                         {row.product}
                                                     </Link>
-                                                    <span className="block font-mono text-xs text-muted-foreground tabular-nums">
+                                                    <span className="block text-xs text-muted-foreground tabular-nums">
                                                         {row.sku}
                                                     </span>
                                                 </TableCell>
@@ -313,10 +313,10 @@ export default function ChannelListings({
                                                         {row.syncStateLabel}
                                                     </Badge>
                                                 </TableCell>
-                                                <TableCell className="font-mono text-xs text-muted-foreground tabular-nums">
+                                                <TableCell className="text-xs text-muted-foreground tabular-nums">
                                                     {row.lastPushedAt ?? '—'}
                                                 </TableCell>
-                                                <TableCell className="max-w-40 truncate font-mono text-xs text-muted-foreground tabular-nums">
+                                                <TableCell className="max-w-40 truncate text-xs text-muted-foreground tabular-nums">
                                                     {row.remoteId ?? '—'}
                                                 </TableCell>
                                             </TableRow>

@@ -157,13 +157,13 @@ export default function OrderShow({ order, lines, packages, history }: Props) {
                             </p>
                             <p className="text-muted-foreground">
                                 Sipariş tarihi:{' '}
-                                <span className="font-mono tabular-nums">
+                                <span className="tabular-nums">
                                     {order.placedAt ?? '—'}
                                 </span>
                             </p>
                             <p className="text-muted-foreground">
                                 Son güncelleme:{' '}
-                                <span className="font-mono tabular-nums">
+                                <span className="tabular-nums">
                                     {order.lastModifiedAt ?? '—'}
                                 </span>
                             </p>
@@ -187,7 +187,7 @@ export default function OrderShow({ order, lines, packages, history }: Props) {
                                             <span className="text-muted-foreground">
                                                 {TOTAL_LABELS[key] ?? key}
                                             </span>
-                                            <span className="font-mono tabular-nums">
+                                            <span className="tabular-nums">
                                                 {value}
                                             </span>
                                         </p>
@@ -246,19 +246,19 @@ export default function OrderShow({ order, lines, packages, history }: Props) {
                                 {lines.map((line) => (
                                     <TableRow key={line.id}>
                                         <TableCell>
-                                            <span className="font-mono font-medium tabular-nums">
+                                            <span className="font-medium tabular-nums">
                                                 {line.sku || '—'}
                                             </span>
                                             <span className="block text-xs text-muted-foreground">
                                                 Barkod:{' '}
-                                                <span className="font-mono tabular-nums">
+                                                <span className="tabular-nums">
                                                     {line.barcode ?? '—'}
                                                 </span>
                                             </span>
                                             {line.matched ? (
                                                 <span className="block text-xs text-muted-foreground">
                                                     Katalog:{' '}
-                                                    <span className="font-mono tabular-nums">
+                                                    <span className="tabular-nums">
                                                         {line.variantSku}
                                                     </span>
                                                 </span>
@@ -280,13 +280,13 @@ export default function OrderShow({ order, lines, packages, history }: Props) {
                                                 {line.externalStatus}
                                             </span>
                                         </TableCell>
-                                        <TableCell className="text-right font-mono tabular-nums">
+                                        <TableCell className="text-right tabular-nums">
                                             {line.quantity}
                                         </TableCell>
-                                        <TableCell className="text-right font-mono tabular-nums">
+                                        <TableCell className="text-right tabular-nums">
                                             {line.unitPrice}
                                         </TableCell>
-                                        <TableCell className="text-right font-mono text-muted-foreground tabular-nums">
+                                        <TableCell className="text-right text-muted-foreground tabular-nums">
                                             {line.vatRate ?? '—'} /{' '}
                                             {line.commission ?? '—'}
                                         </TableCell>
@@ -318,7 +318,7 @@ export default function OrderShow({ order, lines, packages, history }: Props) {
                                                 status={shipment.status}
                                                 label={shipment.statusLabel}
                                             />
-                                            <span className="font-mono text-xs text-muted-foreground tabular-nums">
+                                            <span className="text-xs text-muted-foreground tabular-nums">
                                                 {shipment.remotePackageId}
                                             </span>
                                         </div>
@@ -327,7 +327,7 @@ export default function OrderShow({ order, lines, packages, history }: Props) {
                                         </p>
                                         {/* Kargo takip numarasi int64'u asar,
                                             uctan uca string tasinir. */}
-                                        <p className="font-mono text-xs break-all tabular-nums">
+                                        <p className="text-xs break-all tabular-nums">
                                             {shipment.trackingNumber ?? '—'}
                                         </p>
                                         {shipment.trackingLink && (
@@ -343,11 +343,11 @@ export default function OrderShow({ order, lines, packages, history }: Props) {
                                         )}
                                         <p className="text-xs text-muted-foreground">
                                             Kargoya veriliş:{' '}
-                                            <span className="font-mono tabular-nums">
+                                            <span className="tabular-nums">
                                                 {shipment.shippedAt ?? '—'}
                                             </span>{' '}
                                             · Teslim:{' '}
-                                            <span className="font-mono tabular-nums">
+                                            <span className="tabular-nums">
                                                 {shipment.deliveredAt ?? '—'}
                                             </span>
                                         </p>

@@ -235,13 +235,13 @@ export function BulkEditDialog({
                                     <TableBody>
                                         {preview.samples.map((sample) => (
                                             <TableRow key={sample.sku}>
-                                                <TableCell className="font-mono tabular-nums">
+                                                <TableCell className="tabular-nums">
                                                     {sample.sku}
                                                 </TableCell>
-                                                <TableCell className="font-mono text-muted-foreground tabular-nums">
+                                                <TableCell className="text-muted-foreground tabular-nums">
                                                     {sample.current}
                                                 </TableCell>
-                                                <TableCell className="font-mono font-medium tabular-nums">
+                                                <TableCell className="font-medium tabular-nums">
                                                     {sample.next}
                                                 </TableCell>
                                             </TableRow>

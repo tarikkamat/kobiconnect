@@ -294,13 +294,13 @@ export default function OperationQueue({
                                                 </p>
                                             )}
                                         </TableCell>
-                                        <TableCell className="text-right font-mono tabular-nums">
+                                        <TableCell className="text-right tabular-nums">
                                             {row.attempts}
                                         </TableCell>
-                                        <TableCell className="max-w-40 truncate font-mono text-xs text-muted-foreground tabular-nums">
+                                        <TableCell className="max-w-40 truncate text-xs text-muted-foreground tabular-nums">
                                             {row.remoteBatchId ?? '—'}
                                         </TableCell>
-                                        <TableCell className="font-mono text-xs text-muted-foreground tabular-nums">
+                                        <TableCell className="text-xs text-muted-foreground tabular-nums">
                                             {row.completedAt ??
                                                 row.sentAt ??
                                                 row.scheduledAt}
@@ -314,7 +314,7 @@ export default function OperationQueue({
 
                 <div className="flex items-center justify-between text-sm text-muted-foreground">
                     <span>
-                        <span className="font-mono tabular-nums">
+                        <span className="tabular-nums">
                             {operations.total}
                         </span>{' '}
                         işlem

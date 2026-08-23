@@ -22,9 +22,7 @@ Route::prefix('channels')->group(function (): void {
     | kirmamak icin vitrine dusuyor.
     */
     Route::get('apps', [AppStoreController::class, 'index'])->name('apps.index');
-    // `route()` sart: tenant path prefix'ini URL::defaults uretir, elle yazilan
-    // '/channels/apps' tenant'i dusururdu.
-    Route::get('connections', fn () => redirect()->route('apps.index'));
+    Route::get('connections', [ConnectionController::class, 'index'])->name('connections.index');
 
     Route::post('connections', [ConnectionController::class, 'store'])->name('connections.store');
     Route::patch('connections/{connection}', [ConnectionController::class, 'update'])->name('connections.update');

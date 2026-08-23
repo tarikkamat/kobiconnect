@@ -144,7 +144,7 @@ export default function ProductIndex({
                 {selected.length > 0 && (
                     <div className="flex flex-wrap items-center gap-3 rounded-lg border border-border bg-muted px-4 py-2 text-sm">
                         <span className="font-medium">
-                            <span className="font-mono tabular-nums">
+                            <span className="tabular-nums">
                                 {selected.length}
                             </span>{' '}
                             ürün seçildi
@@ -376,16 +376,16 @@ export default function ProductIndex({
                                                     channels={product.channels}
                                                 />
                                             </TableCell>
-                                            <TableCell className="text-right font-mono tabular-nums">
+                                            <TableCell className="text-right tabular-nums">
                                                 {product.variantCount}
                                             </TableCell>
-                                            <TableCell className="text-right font-mono tabular-nums">
+                                            <TableCell className="text-right tabular-nums">
                                                 {product.stock}
                                             </TableCell>
-                                            <TableCell className="text-right font-mono tabular-nums">
+                                            <TableCell className="text-right tabular-nums">
                                                 {product.price ?? '—'}
                                             </TableCell>
-                                            <TableCell className="font-mono text-muted-foreground tabular-nums">
+                                            <TableCell className="text-muted-foreground tabular-nums">
                                                 {product.createdAt ?? '—'}
                                             </TableCell>
                                         </TableRow>

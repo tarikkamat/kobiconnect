@@ -160,7 +160,7 @@ export default function ProductShow({
                                             <span>
                                                 Bu ürünün{' '}
                                                 <strong>
-                                                    <span className="font-mono tabular-nums">
+                                                    <span className="tabular-nums">
                                                         {product.listingCount}
                                                     </span>{' '}
                                                     kanal listelemesi
@@ -393,10 +393,10 @@ export default function ProductShow({
                             <TableBody>
                                 {variants.map((variant) => (
                                     <TableRow key={variant.id}>
-                                        <TableCell className="font-mono font-medium tabular-nums">
+                                        <TableCell className="font-medium tabular-nums">
                                             {variant.sku}
                                         </TableCell>
-                                        <TableCell className="font-mono text-muted-foreground tabular-nums">
+                                        <TableCell className="text-muted-foreground tabular-nums">
                                             {variant.barcode ?? '—'}
                                         </TableCell>
                                         <TableCell className="w-36">
@@ -420,7 +420,7 @@ export default function ProductShow({
                                                 }
                                             />
                                         </TableCell>
-                                        <TableCell className="text-right font-mono tabular-nums">
+                                        <TableCell className="text-right tabular-nums">
                                             {variant.available}
                                         </TableCell>
                                         <TableCell className="w-40">

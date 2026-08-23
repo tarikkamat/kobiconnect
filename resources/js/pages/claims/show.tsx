@@ -58,7 +58,7 @@ function Field({
     return (
         <div>
             <dt className="text-xs text-muted-foreground">{label}</dt>
-            <dd className={mono ? 'font-mono text-sm tabular-nums' : 'text-sm'}>
+            <dd className={mono ? 'text-sm tabular-nums' : 'text-sm'}>
                 {children}
             </dd>
         </div>
@@ -128,7 +128,7 @@ export default function ClaimShow({ claim, order, items }: Props) {
                                                 order: order.id,
                                             })}
                                             instant
-                                            className="font-mono tabular-nums underline underline-offset-4"
+                                            className="tabular-nums underline underline-offset-4"
                                         >
                                             {order.orderNumber}
                                         </Link>
@@ -168,20 +168,20 @@ export default function ClaimShow({ claim, order, items }: Props) {
                         <TableBody>
                             {items.map((item) => (
                                 <TableRow key={item.id}>
-                                    <TableCell className="font-mono font-medium tabular-nums">
+                                    <TableCell className="font-medium tabular-nums">
                                         {item.remoteItemId}
                                     </TableCell>
                                     {/* Siparis satiri eslesmemis olabilir; talep yine de gorunur. */}
-                                    <TableCell className="font-mono tabular-nums">
+                                    <TableCell className="tabular-nums">
                                         {item.sku ?? '—'}
                                     </TableCell>
-                                    <TableCell className="font-mono text-muted-foreground tabular-nums">
+                                    <TableCell className="text-muted-foreground tabular-nums">
                                         {item.barcode ?? '—'}
                                     </TableCell>
-                                    <TableCell className="text-right font-mono tabular-nums">
+                                    <TableCell className="text-right tabular-nums">
                                         {item.quantity}
                                     </TableCell>
-                                    <TableCell className="text-right font-mono tabular-nums">
+                                    <TableCell className="text-right tabular-nums">
                                         {item.unitPrice ?? '—'}
                                     </TableCell>
                                     <TableCell>

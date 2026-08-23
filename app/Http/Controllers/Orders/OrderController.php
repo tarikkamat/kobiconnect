@@ -9,6 +9,7 @@ use App\Marketplaces\Data\Enums\CanonicalOrderStatus;
 use App\Models\ChannelConnection;
 use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Database\Query\Builder;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Crypt;
@@ -119,6 +120,7 @@ class OrderController extends Controller
                 // ayni kaynak, bkz. AppCatalog::present().
                 'marketplace' => $order->marketplace,
                 'customer' => $this->maskedName($order->customer),
+                'customerLocation' => $this->maskedLocation($order->customer),
                 'total' => $this->money($order->totals, (string) $order->currency),
                 'placedAt' => $this->dateTime($order->placed_at),
                 'lineCount' => (int) $order->line_count,
@@ -139,21 +141,21 @@ class OrderController extends Controller
         ]);
     }
 
-    public function show(int $order): Response
+    public function show(int $order, Request $request): Response|JsonResponse
     {
         Gate::authorize('orders.view');
 
         $row = DB::table('orders')
             ->leftJoin('channel_connections', 'channel_connections.id', '=', 'orders.connection_id')
             ->where('orders.id', $order)
-            ->select(['orders.*', 'channel_connections.name as connection_name'])
+            ->select(['orders.*', 'channel_connections.name as connection_name', 'channel_connections.marketplace'])
             ->first();
 
         abort_if($row === null, 404);
 
         $customer = $this->customer($row->customer);
 
-        return Inertia::render('orders/show', [
+        $data = [
             'order' => [
                 'id' => (int) $row->id,
                 'orderNumber' => (string) $row->remote_order_number,
@@ -162,6 +164,7 @@ class OrderController extends Controller
                 'statusLabel' => $this->statusLabel((string) $row->status),
                 'externalStatus' => (string) $row->external_status,
                 'connection' => $row->connection_name,
+                'marketplace' => $row->marketplace,
                 'currency' => (string) $row->currency,
                 'placedAt' => $this->dateTime($row->placed_at),
                 'lastModifiedAt' => $this->dateTime($row->remote_last_modified_at),
@@ -179,7 +182,13 @@ class OrderController extends Controller
             'lines' => $this->lines($order),
             'packages' => $this->packages($order),
             'history' => $this->history($order),
-        ]);
+        ];
+
+        if ($request->wantsJson() && ! $request->header('X-Inertia')) {
+            return response()->json($data);
+        }
+
+        return Inertia::render('orders/show', $data);
     }
 
     /**
@@ -293,6 +302,19 @@ class OrderController extends Controller
     private function maskedName(mixed $encrypted): ?string
     {
         return $this->mask($this->customer($encrypted));
+    }
+
+    private function maskedLocation(mixed $encrypted): ?string
+    {
+        $customer = $this->customer($encrypted);
+        $city = $this->addressPart($customer, 'city');
+        $district = $this->addressPart($customer, 'district');
+
+        if ($city === null && $district === null) {
+            return null;
+        }
+
+        return implode(', ', array_filter([$city, $district]));
     }
 
     /**

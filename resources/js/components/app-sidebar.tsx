@@ -29,6 +29,7 @@ import { index as apps } from '@/routes/apps';
 import { index as brands } from '@/routes/brands';
 import { index as categories } from '@/routes/categories';
 import { index as claims } from '@/routes/claims';
+import { index as connections } from '@/routes/connections';
 import { index as listings } from '@/routes/listings';
 import { index as mapping } from '@/routes/mapping';
 import { index as matches } from '@/routes/matches';
@@ -98,6 +99,7 @@ function navGroups(): NavGroup[] {
             title: 'Kanallar',
             icon: Plug,
             items: [
+                { title: 'Bağlantılarım', href: connections() },
                 { title: 'Eşlemeler', href: mapping() },
                 { title: 'Listelemeler', href: listings() },
                 { title: 'Ön Eşleşme', href: matches() },

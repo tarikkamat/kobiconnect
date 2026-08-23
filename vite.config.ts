@@ -14,10 +14,15 @@ export default defineConfig({
             // latin-ext ZORUNLU: Turkce ğ/Ğ ve ş/Ş yalniz latin altkumesinde yok,
             // eksik olunca o iki harf sistem fontuna duser ve satir zipliyor.
             fonts: [
+                bunny('Poppins', {
+                    weights: [400, 500, 600, 700],
+                    subsets: ['latin', 'latin-ext'],
+                    preload: [{ weight: 400 }, { weight: 500 }, { weight: 600 }],
+                }),
                 bunny('Inter', {
                     weights: [400, 500, 600],
                     subsets: ['latin', 'latin-ext'],
-                    preload: [{ weight: 400 }, { weight: 500 }],
+                    preload: false,
                 }),
                 // Sadece bos durum/onboarding basliklarinda — on yukleme israfi.
                 bunny('Petrona', {

@@ -150,7 +150,7 @@ export default function WarehouseIndex({
                                                 )}
                                             </span>
                                         </TableCell>
-                                        <TableCell className="font-mono text-muted-foreground tabular-nums">
+                                        <TableCell className="text-muted-foreground tabular-nums">
                                             {warehouse.code}
                                         </TableCell>
                                         <TableCell className="text-muted-foreground">
@@ -162,10 +162,10 @@ export default function WarehouseIndex({
                                                 .filter(Boolean)
                                                 .join(', ') || '—'}
                                         </TableCell>
-                                        <TableCell className="text-right font-mono tabular-nums">
+                                        <TableCell className="text-right tabular-nums">
                                             {warehouse.itemCount}
                                         </TableCell>
-                                        <TableCell className="text-right font-mono tabular-nums">
+                                        <TableCell className="text-right tabular-nums">
                                             {warehouse.onHandTotal}
                                         </TableCell>
                                         <TableCell>

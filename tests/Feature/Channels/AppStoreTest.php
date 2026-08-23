@@ -102,8 +102,25 @@ it('counts installed connections on the card without leaking credentials', funct
     expect($trendyol['installed'])->toBe(1);
 });
 
-it('redirects the old connections screen to the store', function (): void {
+it('renders the connections datatable page without leaking credentials', function (): void {
+    $this->actingAs($this->manager)->post(route('connections.store'), [
+        'name' => 'Ana mağaza',
+        'marketplace' => 'trendyol',
+        'seller_id' => '123456',
+        'api_key' => 'public-key',
+        'api_secret' => 'top-secret-value',
+        'integrator' => 'SelfIntegration',
+        'listing_tier' => '50k',
+        'stage' => '0',
+    ])->assertRedirect();
+
     $this->actingAs($this->manager)
-        ->get(str_replace('/channels/apps', '/channels/connections', route('apps.index')))
-        ->assertRedirect(route('apps.index'));
+        ->get(route('connections.index'))
+        ->assertDontSee('top-secret-value')
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->component('channels/connections/index')
+            ->has('connections', 1)
+            ->where('connections.0.name', 'Ana mağaza')
+            ->where('connections.0.marketplace', 'trendyol')
+        );
 });

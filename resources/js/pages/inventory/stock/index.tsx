@@ -214,7 +214,7 @@ export default function StockIndex({ variants, warehouses, filters }: Props) {
                                 <TableBody>
                                     {variants.data.map((variant) => (
                                         <TableRow key={variant.id}>
-                                            <TableCell className="font-mono font-medium whitespace-nowrap tabular-nums">
+                                            <TableCell className="font-medium whitespace-nowrap tabular-nums">
                                                 {variant.sku}
                                             </TableCell>
                                             <TableCell className="text-muted-foreground">
@@ -234,7 +234,7 @@ export default function StockIndex({ variants, warehouses, filters }: Props) {
                                                                 }
                                                                 variant="ghost"
                                                                 size="sm"
-                                                                className="font-mono tabular-nums"
+                                                                className="tabular-nums"
                                                                 aria-label={`${variant.sku} · ${warehouses[cellIndex]?.name ?? ''} eldeki stoğu düzelt`}
                                                                 onClick={() =>
                                                                     setAdjusting(
@@ -296,7 +296,7 @@ export default function StockIndex({ variants, warehouses, filters }: Props) {
                                                                             0
                                                                         }
                                                                         className={cn(
-                                                                            'inline-flex items-center gap-1 font-mono tabular-nums',
+                                                                            'inline-flex items-center gap-1 tabular-nums',
                                                                             cell.low &&
                                                                                 'font-medium text-destructive',
                                                                         )}

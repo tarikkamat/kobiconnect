@@ -209,7 +209,7 @@ export default function ClaimIndex({
                                                         claim: claim.id,
                                                     })}
                                                     instant
-                                                    className="font-mono font-medium tabular-nums underline-offset-4 hover:underline"
+                                                    className="font-medium tabular-nums underline-offset-4 hover:underline"
                                                 >
                                                     {claim.remoteClaimId}
                                                 </Link>
@@ -219,7 +219,7 @@ export default function ClaimIndex({
                                                     href={orderShow({
                                                         order: claim.orderId,
                                                     })}
-                                                    className="font-mono tabular-nums underline-offset-4 hover:underline"
+                                                    className="tabular-nums underline-offset-4 hover:underline"
                                                 >
                                                     {claim.orderNumber}
                                                 </Link>
@@ -239,11 +239,11 @@ export default function ClaimIndex({
                                             <TableCell className="max-w-64 truncate text-muted-foreground">
                                                 {claim.reason ?? '—'}
                                             </TableCell>
-                                            <TableCell className="text-right font-mono tabular-nums">
+                                            <TableCell className="text-right tabular-nums">
                                                 {claim.itemCount} /{' '}
                                                 {claim.quantity}
                                             </TableCell>
-                                            <TableCell className="font-mono text-muted-foreground tabular-nums">
+                                            <TableCell className="text-muted-foreground tabular-nums">
                                                 {claim.openedAt ?? '—'}
                                             </TableCell>
                                         </TableRow>

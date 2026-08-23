@@ -52,7 +52,7 @@ export function InlineNumberCell({
                 disabled={!check.allowed}
                 onClick={() => setEditing(true)}
                 className={cn(
-                    'w-full rounded-md px-2 py-1 text-left font-mono tabular-nums transition-colors',
+                    'w-full rounded-md px-2 py-1 text-left tabular-nums transition-colors',
                     check.allowed
                         ? 'hover:bg-secondary'
                         : 'cursor-not-allowed text-foreground/25',
@@ -84,7 +84,7 @@ export function InlineNumberCell({
             aria-label={label}
             autoFocus
             defaultValue={value ?? ''}
-            className="h-8 w-28 rounded-md font-mono tabular-nums"
+            className="h-8 w-28 rounded-md tabular-nums"
             onBlur={(event) => commit(event.currentTarget.value)}
             onKeyDown={(event) => {
                 if (event.key === 'Enter') {

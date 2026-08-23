@@ -127,10 +127,10 @@ export default function BrandIndex({ brands }: { brands: BrandRow[] }) {
                                                 }
                                             />
                                         </TableCell>
-                                        <TableCell className="font-mono text-muted-foreground tabular-nums">
+                                        <TableCell className="text-muted-foreground tabular-nums">
                                             {brand.slug}
                                         </TableCell>
-                                        <TableCell className="text-right font-mono tabular-nums">
+                                        <TableCell className="text-right tabular-nums">
                                             {brand.productCount}
                                         </TableCell>
                                         <TableCell>

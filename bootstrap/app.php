@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\EndTenancyAfterRequest;
+use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Listeners\ConfigureTenantHost;
 use App\Models\SyncRun;
@@ -64,9 +65,10 @@ return Application::configure(basePath: dirname(__DIR__))
         // TrustProxies::at(config('app.trusted_proxies')) — orada config hazir.
         $middleware->trustProxies(at: '*');
 
-        $middleware->encryptCookies(except: ['sidebar_state']);
+        $middleware->encryptCookies(except: ['appearance', 'sidebar_state']);
 
         $middleware->web(append: [
+            HandleAppearance::class,
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,
         ]);

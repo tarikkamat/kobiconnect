@@ -150,18 +150,18 @@ export default function SyncMonitor({ runs, ledger, failedRuns }: Props) {
                                                 </p>
                                             )}
                                         </TableCell>
-                                        <TableCell className="font-mono text-muted-foreground tabular-nums">
+                                        <TableCell className="text-muted-foreground tabular-nums">
                                             {run.startedAt ?? '—'}
                                         </TableCell>
-                                        <TableCell className="text-right font-mono tabular-nums">
+                                        <TableCell className="text-right tabular-nums">
                                             {run.durationSeconds === null
                                                 ? '—'
                                                 : `${run.durationSeconds} sn`}
                                         </TableCell>
-                                        <TableCell className="text-right font-mono tabular-nums">
+                                        <TableCell className="text-right tabular-nums">
                                             {run.items}
                                         </TableCell>
-                                        <TableCell className="font-mono text-muted-foreground tabular-nums">
+                                        <TableCell className="text-muted-foreground tabular-nums">
                                             {run.watermark ?? '—'}
                                         </TableCell>
                                     </TableRow>
@@ -182,7 +182,7 @@ export default function SyncMonitor({ runs, ledger, failedRuns }: Props) {
                                     <span className="text-foreground">
                                         {run.connection} · {run.resource}
                                     </span>{' '}
-                                    <span className="font-mono tabular-nums">
+                                    <span className="tabular-nums">
                                         {run.startedAt}
                                     </span>{' '}
                                     — {run.message ?? 'Hata'}

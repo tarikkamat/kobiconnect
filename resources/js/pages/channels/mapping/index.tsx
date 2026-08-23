@@ -132,7 +132,7 @@ export default function MappingIndex({
                                                 {category.name}
                                             </span>
                                         </TableCell>
-                                        <TableCell className="font-mono text-sm text-muted-foreground tabular-nums">
+                                        <TableCell className="text-sm text-muted-foreground tabular-nums">
                                             {category.productCount}
                                         </TableCell>
                                         <TableCell className="text-sm">
@@ -142,7 +142,7 @@ export default function MappingIndex({
                                                 </span>
                                             )}
                                         </TableCell>
-                                        <TableCell className="font-mono text-sm text-muted-foreground tabular-nums">
+                                        <TableCell className="text-sm text-muted-foreground tabular-nums">
                                             {category.attributeCount}
                                         </TableCell>
                                         <TableCell>
