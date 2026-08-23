@@ -1,5 +1,6 @@
 import { Form, Head, InfiniteScroll, Link, router } from '@inertiajs/react';
-import { CheckCheck } from 'lucide-react';
+import { BellOff, CheckCheck } from 'lucide-react';
+import { EmptyState } from '@/components/empty-state';
 import Heading from '@/components/heading';
 import type { NotificationItem } from '@/components/notifications/types';
 import { Badge } from '@/components/ui/badge';
@@ -60,7 +61,7 @@ export default function Notifications({
         <>
             <Head title="Bildirimler" />
 
-            <div className="flex flex-col gap-4 p-4">
+            <div className="flex flex-col gap-6 p-4 sm:p-6 lg:p-8">
                 <div className="flex flex-wrap items-start justify-between gap-4">
                     <Heading
                         title="Bildirimler"
@@ -125,9 +126,19 @@ export default function Notifications({
                 </div>
 
                 {notifications.data.length === 0 ? (
-                    <p className="rounded-lg border border-dashed border-border p-8 text-center font-serif text-2xl tracking-[-0.02em] text-muted-foreground">
-                        Bu filtreye uyan bildirim yok.
-                    </p>
+                    <EmptyState
+                        icon={BellOff}
+                        title={
+                            filters.unread
+                                ? 'Okunmamış bildiriminiz yok'
+                                : 'Henüz bildiriminiz yok'
+                        }
+                        description={
+                            filters.unread
+                                ? 'Tüm bildirimlerinizi okudunuz.'
+                                : 'Siparişler, stok uyarıları ve senkronizasyon bildirimleri burada görüntülenir.'
+                        }
+                    />
                 ) : (
                     <InfiniteScroll data="notifications" buffer={300}>
                         <ul className="flex flex-col gap-2">

@@ -19,6 +19,8 @@ use Illuminate\Support\Facades\Route;
 Route::prefix('catalog')->group(function (): void {
     Route::get('products/create', [ProductController::class, 'create'])->name('products.create');
     Route::post('products', [ProductController::class, 'store'])->name('products.store');
+    Route::post('products/images/upload', [ProductController::class, 'uploadImage'])->name('products.images.upload');
+    Route::post('products/pull', [ProductController::class, 'pull'])->name('products.pull');
 
     // Toplu islem uclari `{product}` route'undan once gelmeli.
     // `preview` sayfa gezinmesi olmadan cagrilir (useHttp) ve JSON doner.

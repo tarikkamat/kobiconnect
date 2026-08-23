@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Models\Brand;
+use App\Models\ChannelConnection;
 use App\Models\ChannelListing;
 use App\Models\InventoryItem;
 use App\Models\Price;
@@ -11,8 +12,11 @@ use App\Models\ProductVariant;
 use App\Models\User;
 use App\Models\Warehouse;
 use Database\Seeders\TenantRoleSeeder;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Testing\AssertableInertia;
+use Laravel\Ai\Image;
 
 beforeEach(function (): void {
     // Listeleme yaratmak outbox tetikleyicisini calistirir; push kuyrugu bu
@@ -176,4 +180,116 @@ it('does not let a warehouse worker bulk edit prices', function (): void {
             'value' => 1,
         ])
         ->assertForbidden();
+});
+
+it('creates a product with images attached', function (): void {
+    $this->actingAs(productCreateUser())
+        ->post(route('products.store'), [
+            'name' => 'Fotoğraflı Ürün',
+            'status' => 'active',
+            'variants' => [
+                ['sku' => 'IMG-PRD-1', 'list_price' => '250.00'],
+            ],
+            'images' => [
+                ['url' => 'https://example.com/photo1.jpg', 'position' => 0],
+                ['url' => 'https://example.com/photo2.jpg', 'position' => 1],
+            ],
+        ])
+        ->assertRedirect();
+
+    $product = Product::query()->where('name', 'Fotoğraflı Ürün')->firstOrFail();
+
+    expect($product->images()->count())->toBe(2)
+        ->and($product->images()->orderBy('position')->first()->url)->toBe('https://example.com/photo1.jpg');
+});
+
+it('uploads product image successfully', function (): void {
+    Storage::fake('public');
+    $file = UploadedFile::fake()->image('sample.jpg', 600, 600);
+
+    $response = $this->actingAs(productCreateUser())
+        ->post(route('products.images.upload'), [
+            'image' => $file,
+        ])
+        ->assertOk();
+
+    expect($response->json('url'))->not->toBeEmpty();
+});
+
+it('creates a product with attribute variants, variant images and channel listings', function (): void {
+    $connection = ChannelConnection::factory()->create();
+
+    $this->actingAs(productCreateUser())
+        ->post(route('products.store'), [
+            'name' => 'Tişört',
+            'status' => 'active',
+            'channel_ids' => [$connection->getKey()],
+            'variants' => [
+                [
+                    'sku' => 'TSH-S-BLK',
+                    'barcode' => '8690001',
+                    'list_price' => '299.90',
+                    'on_hand' => 20,
+                    'attributes' => ['Beden' => 'S', 'Renk' => 'Siyah'],
+                    'image_url' => 'https://example.com/s-blk.jpg',
+                ],
+                [
+                    'sku' => 'TSH-M-BLK',
+                    'barcode' => '8690002',
+                    'list_price' => '299.90',
+                    'on_hand' => 15,
+                    'attributes' => ['Beden' => 'M', 'Renk' => 'Siyah'],
+                    'image_url' => 'https://example.com/m-blk.jpg',
+                ],
+            ],
+            'images' => [
+                ['url' => 'https://example.com/cover.jpg', 'position' => 0],
+            ],
+        ])
+        ->assertRedirect();
+
+    $product = Product::query()->where('name', 'Tişört')->firstOrFail();
+    expect($product->variants()->count())->toBe(2);
+
+    $v1 = $product->variants()->where('sku', 'TSH-S-BLK')->firstOrFail();
+    expect($v1->attributes)->toEqual(['Beden' => 'S', 'Renk' => 'Siyah'])
+        ->and($v1->listings()->count())->toBe(1)
+        ->and($v1->images()->count())->toBe(1);
+});
+
+it('refactors image via AI endpoint successfully', function (): void {
+    Image::fake();
+
+    $response = $this->actingAs(productCreateUser())
+        ->postJson(route('ai.catalog.generate-image'), [
+            'name' => 'Premium Kol Saati',
+            'image_url' => 'https://example.com/original-watch.jpg',
+            'instruction' => 'Saf Beyaz Stüdyo',
+        ])
+        ->assertOk();
+
+    expect($response->json('success'))->toBeTrue()
+        ->and($response->json('image.original_url'))->toBe('https://example.com/original-watch.jpg');
+});
+
+it('updates product basic details, images and channels on update route', function (): void {
+    $product = Product::factory()->create(['name' => 'Eski Ad']);
+    $variant = ProductVariant::factory()->for($product)->create();
+    $connection = ChannelConnection::factory()->create();
+
+    $this->actingAs(productCreateUser())
+        ->patch(route('products.update', ['product' => $product->getKey()]), [
+            'name' => 'Yeni Ad',
+            'status' => 'active',
+            'channel_ids' => [$connection->getKey()],
+            'images' => [
+                ['url' => 'https://example.com/updated-photo.jpg', 'position' => 0],
+            ],
+        ])
+        ->assertRedirect();
+
+    $product->refresh();
+    expect($product->name)->toBe('Yeni Ad')
+        ->and($product->images()->count())->toBe(1)
+        ->and($variant->listings()->count())->toBe(1);
 });

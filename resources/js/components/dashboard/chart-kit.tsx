@@ -274,7 +274,7 @@ export function ChartCard({
         // Card'in kendi `py-6`+`gap-6`'si sifirlanir: dikey bosluk artik
         // basliga ve govdeye ait, yoksa grafigin altinda 36px beyaz kalir.
         <Card className={cn('gap-0 py-0', className)}>
-            <CardHeader className="flex-row items-center justify-between gap-2 border-b border-border py-4">
+            <CardHeader className="flex-row items-center justify-between gap-2 border-b border-border px-4 py-3 sm:px-5">
                 <CardHeading>
                     <CardTitle className="flex items-center gap-2">
                         {href ? (
@@ -313,7 +313,7 @@ export function ChartCard({
 
 /**
  * Grafik kartinin iskeleti. Baslik satirlari `ChartCard`'in gercek satir
- * yukseklikleriyle (16px baslik, 20px aciklama) birebir ayni; govde yuksekligi
+ * yukseklikleriyle (14px baslik, 16px aciklama) birebir ayni; govde yuksekligi
  * grafigin sabit yuksekligine, `rows` grafik altindaki listeye karsilik
  * gelir — veri gelince sayfa kaymaz.
  */
@@ -328,10 +328,10 @@ export function ChartSkeleton({
 }) {
     return (
         <Card className={cn('gap-0 py-0', className)}>
-            <CardHeader className="border-b py-4">
+            <CardHeader className="border-b px-4 py-3 sm:px-5">
                 <div className="space-y-1">
                     <Skeleton className="h-4 w-40" />
-                    <Skeleton className="h-5 w-56" />
+                    <Skeleton className="h-3.5 w-56" />
                 </div>
             </CardHeader>
             <CardContent className="px-2.5 py-4 sm:px-5">

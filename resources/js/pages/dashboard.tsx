@@ -47,8 +47,6 @@ import { index as connectionsRoute } from '@/routes/apps';
 import { index as ordersRoute } from '@/routes/orders';
 import { create as productCreateRoute } from '@/routes/products';
 import { index as stockRoute } from '@/routes/stock';
-import { monitor as monitorRoute } from '@/routes/sync';
-import { index as operationsRoute } from '@/routes/sync/operations';
 
 type Range = { from: string; to: string };
 
@@ -214,8 +212,8 @@ export default function Dashboard({
             done: setup.hasOrders,
             title: 'İlk senkronu çalıştırın',
             description:
-                'Siparişler otomatik çekilir. Senkron monitöründen ilk koşuyu izleyebilirsiniz.',
-            href: monitorRoute().url,
+                'Siparişler otomatik çekilir. Siparişler sayfasından gelen siparişleri takip edebilirsiniz.',
+            href: ordersRoute().url,
         },
     ];
 
@@ -226,7 +224,7 @@ export default function Dashboard({
         <>
             <Head title="Gösterge Paneli" />
 
-            <div className="flex flex-col gap-4 p-4">
+            <div className="flex flex-col gap-6 p-4 sm:p-6 lg:p-8">
                 <div className="flex flex-wrap items-end justify-between gap-3">
                     <Heading
                         title="Gösterge Paneli"
@@ -238,9 +236,7 @@ export default function Dashboard({
                 {pending.length > 0 && (
                     <Card>
                         <CardHeader>
-                            {/* Onboarding, Petrona'nin serbest oldugu az
-                                sayidaki yuzeyden biri — DESIGN.md §2. */}
-                            <CardTitle className="font-serif text-2xl font-normal tracking-tight">
+                            <CardTitle className="text-2xl font-semibold tracking-tight">
                                 {started
                                     ? 'Kurulumu tamamlayın'
                                     : 'Henüz başlamadınız'}
@@ -332,7 +328,6 @@ export default function Dashboard({
                                                 0,
                                             icon: CircleAlert,
                                             tone: 'alert',
-                                            href: operationsRoute().url,
                                         },
                                         {
                                             key: 'stock',

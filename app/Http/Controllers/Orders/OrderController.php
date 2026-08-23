@@ -154,6 +154,10 @@ class OrderController extends Controller
         abort_if($row === null, 404);
 
         $customer = $this->customer($row->customer);
+        $lines = $this->lines($order);
+        $packages = $this->packages($order);
+        $history = $this->history($order);
+        $financials = $this->calculateFinancials($row->totals, (string) $row->currency, $lines);
 
         $data = [
             'order' => [
@@ -169,6 +173,7 @@ class OrderController extends Controller
                 'placedAt' => $this->dateTime($row->placed_at),
                 'lastModifiedAt' => $this->dateTime($row->remote_last_modified_at),
                 'totals' => $this->totals($row->totals, (string) $row->currency),
+                'financials' => $financials,
                 // Yalnizca maskelenmis alanlar; TCKN, tam adres, koordinat ve
                 // ham payload bu sinirdan gecmez.
                 'customer' => [
@@ -179,9 +184,9 @@ class OrderController extends Controller
                     'district' => $this->addressPart($customer, 'district'),
                 ],
             ],
-            'lines' => $this->lines($order),
-            'packages' => $this->packages($order),
-            'history' => $this->history($order),
+            'lines' => $lines,
+            'packages' => $packages,
+            'history' => $history,
         ];
 
         if ($request->wantsJson() && ! $request->header('X-Inertia')) {
@@ -198,6 +203,8 @@ class OrderController extends Controller
     {
         return array_values(DB::table('order_lines')
             ->leftJoin('product_variants', 'product_variants.id', '=', 'order_lines.variant_id')
+            ->leftJoin('products', 'products.id', '=', 'product_variants.product_id')
+            ->leftJoin('prices', 'prices.variant_id', '=', 'product_variants.id')
             ->where('order_lines.order_id', $orderId)
             ->orderBy('order_lines.id')
             ->select([
@@ -205,24 +212,39 @@ class OrderController extends Controller
                 'order_lines.quantity', 'order_lines.unit_price', 'order_lines.status',
                 'order_lines.external_status', 'order_lines.vat_rate', 'order_lines.commission',
                 'order_lines.variant_id', 'product_variants.sku as variant_sku',
+                'products.name as product_name', 'prices.cost as variant_cost',
             ])
             ->get()
-            ->map(fn (stdClass $line): array => [
-                'id' => (int) $line->id,
-                'remoteLineId' => (string) $line->remote_line_id,
-                'sku' => (string) $line->sku,
-                'barcode' => $line->barcode,
-                'quantity' => (int) $line->quantity,
-                'unitPrice' => (string) Number::currency((float) $line->unit_price, 'TRY', 'tr'),
-                'status' => (string) $line->status,
-                'statusLabel' => $this->statusLabel((string) $line->status),
-                'externalStatus' => (string) $line->external_status,
-                'vatRate' => $line->vat_rate,
-                'commission' => $line->commission,
-                // Eşleşmemiş satır: sipariş yine de tam olarak kaydedildi.
-                'matched' => $line->variant_id !== null,
-                'variantSku' => $line->variant_sku,
-            ])
+            ->map(function (stdClass $line): array {
+                $qty = (int) $line->quantity;
+                $unitPrice = (float) $line->unit_price;
+                $lineTotal = $qty * $unitPrice;
+                $cost = $line->variant_cost !== null ? ((float) $line->variant_cost * $qty) : null;
+                $commissionRate = is_numeric($line->commission) ? (float) $line->commission : null;
+                $commissionAmount = $commissionRate !== null ? ($lineTotal * ($commissionRate > 1 ? $commissionRate / 100 : $commissionRate)) : null;
+
+                return [
+                    'id' => (int) $line->id,
+                    'remoteLineId' => (string) $line->remote_line_id,
+                    'sku' => (string) $line->sku,
+                    'productName' => $line->product_name,
+                    'barcode' => $line->barcode,
+                    'quantity' => $qty,
+                    'unitPrice' => (string) Number::currency($unitPrice, 'TRY', 'tr'),
+                    'lineTotal' => (string) Number::currency($lineTotal, 'TRY', 'tr'),
+                    'cost' => $cost !== null ? (string) Number::currency($cost, 'TRY', 'tr') : null,
+                    'costRaw' => $cost,
+                    'status' => (string) $line->status,
+                    'statusLabel' => $this->statusLabel((string) $line->status),
+                    'externalStatus' => (string) $line->external_status,
+                    'vatRate' => $line->vat_rate !== null ? '%'.rtrim(rtrim((string) $line->vat_rate, '0'), '.') : null,
+                    'commission' => $line->commission !== null ? '%'.rtrim(rtrim((string) $line->commission, '0'), '.') : null,
+                    'commissionAmount' => $commissionAmount !== null ? (string) Number::currency($commissionAmount, 'TRY', 'tr') : null,
+                    // Eşleşmemiş satır: sipariş yine de tam olarak kaydedildi.
+                    'matched' => $line->variant_id !== null,
+                    'variantSku' => $line->variant_sku,
+                ];
+            })
             ->all());
     }
 
@@ -382,6 +404,51 @@ class OrderController extends Controller
         $net = $this->totalsArray($totals)['net'] ?? null;
 
         return is_numeric($net) ? (string) Number::currency((float) $net, $currency, 'tr') : null;
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $lines
+     * @return array{gross: string, discount: string, commission: string, netSales: string, totalCost: ?string, netPayout: string, estimatedProfit: ?string, marginPercent: ?string}
+     */
+    private function calculateFinancials(mixed $totals, string $currency, array $lines): array
+    {
+        $arr = $this->totalsArray($totals);
+        $gross = (float) ($arr['gross'] ?? 0);
+        $discount = (float) ($arr['discount'] ?? 0);
+        $net = (float) ($arr['net'] ?? ($gross - $discount));
+
+        // Komisyon: totals icinde varsa onu, yoksa satirlardan topla
+        $commission = isset($arr['commission']) && is_numeric($arr['commission'])
+            ? (float) $arr['commission']
+            : 0.0;
+
+        $totalCost = 0.0;
+        $hasAnyCost = false;
+
+        foreach ($lines as $line) {
+            if (isset($line['costRaw']) && $line['costRaw'] !== null) {
+                $totalCost += (float) $line['costRaw'];
+                $hasAnyCost = true;
+            }
+            if ($commission === 0.0 && isset($line['commissionAmount']) && is_string($line['commissionAmount'])) {
+                // Eger ana totals'ta komisyon yoksa satirdan hesaplanmis olabilir
+            }
+        }
+
+        $netPayout = max(0, $net - $commission);
+        $profit = $hasAnyCost ? ($netPayout - $totalCost) : null;
+        $margin = ($hasAnyCost && $net > 0) ? round(($profit / $net) * 100, 1) : null;
+
+        return [
+            'gross' => (string) Number::currency($gross > 0 ? $gross : $net, $currency, 'tr'),
+            'discount' => (string) Number::currency($discount, $currency, 'tr'),
+            'commission' => (string) Number::currency($commission, $currency, 'tr'),
+            'netSales' => (string) Number::currency($net, $currency, 'tr'),
+            'totalCost' => $hasAnyCost ? (string) Number::currency($totalCost, $currency, 'tr') : null,
+            'netPayout' => (string) Number::currency($netPayout, $currency, 'tr'),
+            'estimatedProfit' => $profit !== null ? (string) Number::currency($profit, $currency, 'tr') : null,
+            'marginPercent' => $margin !== null ? '%'.$margin : null,
+        ];
     }
 
     /**

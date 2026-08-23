@@ -7,6 +7,39 @@ import {
 import { cn } from '@/lib/utils';
 
 /**
+ * Pazaryeri logosu doğrudan görünüm (çerçevesiz, temiz, orijinal oranında).
+ * Trendyol, Hepsiburada vb. logoların yatay oranlarını korur ve net gösterir.
+ */
+export function MarketplaceLogo({
+    code,
+    name,
+    className,
+    imageClassName,
+    height = 'h-5 sm:h-6',
+}: {
+    code: string;
+    name?: string;
+    className?: string;
+    imageClassName?: string;
+    height?: string;
+}) {
+    return (
+        <div className={cn('inline-flex items-center shrink-0', className)}>
+            <img
+                src={`/apps/${code}.svg`}
+                alt={name ?? code}
+                loading="lazy"
+                className={cn(
+                    'w-auto max-w-[85px] max-h-7 object-contain object-left',
+                    height,
+                    imageClassName,
+                )}
+            />
+        </div>
+    );
+}
+
+/**
  * Pazaryeri logosu, avatar boyunda. Logo yolu koddan türetilir
  * (`/apps/{kod}.svg`) — `AppCatalog::present()` ile aynı kaynak. Beyaz karo
  * `AppIcon`'dan gelir: koyu wordmark'lar karanlık temada da okunur kalır.
@@ -16,22 +49,25 @@ export function MarketplaceAvatar({
     name,
     size = 'md',
     className,
+    imageClassName,
 }: {
     code: string;
     name?: string;
     size?: 'sm' | 'md' | 'lg';
     className?: string;
+    imageClassName?: string;
 }) {
     return (
         <AppIcon
             app={{ logo: `/apps/${code}.svg`, name: name ?? code }}
             className={cn(
-                'shrink-0 ring-1 ring-border',
-                size === 'sm' && 'size-6 rounded-md p-1',
-                size === 'md' && 'size-8 rounded-lg p-1.5',
-                size === 'lg' && 'size-11 rounded-xl p-2',
+                'shrink-0 ring-1 ring-border bg-white',
+                size === 'sm' && 'size-7 rounded-full p-0.5',
+                size === 'md' && 'size-8 rounded-full p-0.5',
+                size === 'lg' && 'size-10 rounded-full p-1',
                 className,
             )}
+            imageClassName={cn('w-full h-full object-contain', imageClassName)}
         />
     );
 }
@@ -56,28 +92,33 @@ const STATE_LABELS: Record<string, string> = {
  */
 export function MarketplaceAvatarStack({
     channels,
+    size = 'md',
+    className,
 }: {
     channels: MarketplaceChannel[];
+    size?: 'sm' | 'md' | 'lg';
+    className?: string;
 }) {
     if (channels.length === 0) {
         return <span className="text-muted-foreground">—</span>;
     }
 
     return (
-        <div className="flex items-center -space-x-2.5">
+        <div className={cn('flex items-center -space-x-2', className)}>
             {channels.map((channel) => (
                 <Tooltip key={`${channel.marketplace}-${channel.name}`}>
                     <TooltipTrigger asChild>
-                        <span tabIndex={0} className="rounded-xl">
+                        <span tabIndex={0} className="inline-flex rounded-full">
                             <MarketplaceAvatar
                                 code={channel.marketplace}
                                 name={channel.name}
-                                size="lg"
+                                size={size}
                                 className={cn(
-                                    'ring-2 ring-background outline outline-border',
+                                    'rounded-full ring-2 ring-background outline outline-1 outline-border bg-white',
                                     channel.state === 'failed' &&
                                         'outline-2 outline-destructive',
                                 )}
+                                imageClassName="w-full h-full object-contain"
                             />
                         </span>
                     </TooltipTrigger>

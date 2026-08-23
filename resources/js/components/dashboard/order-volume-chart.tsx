@@ -120,8 +120,8 @@ export function OrderVolumeChart({
 
     return (
         <Card className={cn('gap-0 py-0', className)}>
-            <div className="flex flex-col items-stretch border-b sm:flex-row">
-                <div className="flex flex-1 flex-col justify-center gap-1 px-5 pt-4 pb-3 sm:py-5">
+            <div className="flex flex-col items-stretch border-b border-border sm:flex-row">
+                <div className="flex flex-1 flex-col justify-center gap-1 px-4 py-3 sm:px-5">
                     <CardTitle className="flex items-center gap-2">
                         Sipariş hacmi
                         {volume.demo && (

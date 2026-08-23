@@ -32,7 +32,7 @@ export default function AuthSplitLayout({
                 <div className="flex flex-1 items-center justify-center">
                     <div className="w-full max-w-sm py-8">
                         <div className="mb-6 flex flex-col items-center gap-1 text-center">
-                            <h1 className="font-serif text-2xl tracking-[-0.04em] text-white">
+                            <h1 className="text-2xl font-semibold tracking-tight text-foreground">
                                 {title}
                             </h1>
                             <p className="text-sm text-balance text-muted-foreground">
@@ -57,7 +57,7 @@ export default function AuthSplitLayout({
                         </span>
                         12+ pazaryeri ve e-ticaret altyapısı
                     </div>
-                    <p className="font-serif text-3xl tracking-[-0.04em] text-balance text-white">
+                    <p className="text-3xl font-semibold tracking-tight text-balance text-foreground">
                         Tüm satış kanallarınız, tek panel.
                     </p>
                     <p className="max-w-md text-sm text-muted-foreground">

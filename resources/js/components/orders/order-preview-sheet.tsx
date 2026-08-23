@@ -4,7 +4,9 @@ import {
     Copy,
     ExternalLink,
     Loader2,
+    MapPin,
     Package,
+    Phone,
     ShieldAlert,
     Truck,
     Unlink,
@@ -12,7 +14,7 @@ import {
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import { MarketplaceAvatar } from '@/components/marketplace-avatar';
+import { MarketplaceLogo } from '@/components/marketplace-avatar';
 import {
     OrderStatusBadge,
     PENDING_PAYMENT,
@@ -61,6 +63,16 @@ type OrderDetailResponse = {
         placedAt: string | null;
         lastModifiedAt: string | null;
         totals: Record<string, string>;
+        financials?: {
+            gross: string;
+            discount: string;
+            commission: string;
+            netSales: string;
+            totalCost: string | null;
+            netPayout: string;
+            estimatedProfit: string | null;
+            marginPercent: string | null;
+        };
         customer: {
             name: string | null;
             email: string | null;
@@ -73,9 +85,11 @@ type OrderDetailResponse = {
         id: number;
         remoteLineId: string;
         sku: string;
+        productName?: string | null;
         barcode: string | null;
         quantity: number;
         unitPrice: string;
+        lineTotal?: string;
         status: string;
         statusLabel: string;
         externalStatus: string;
@@ -103,7 +117,7 @@ const TOTAL_LABELS: Record<string, string> = {
     gross: 'Brüt Tutar',
     discount: 'İndirim',
     shipping: 'Kargo',
-    commission: 'Komisyon',
+    commission: 'Pazaryeri Komisyonu',
     net: 'Ödenen Tutar',
 };
 
@@ -141,7 +155,7 @@ export function OrderPreviewSheet({
                 }
             })
             .catch(() => {
-                // If fetch fails, keep basic summary
+                // Keep basic summary on error
             })
             .finally(() => {
                 if (isMounted) {
@@ -171,235 +185,234 @@ export function OrderPreviewSheet({
     const lines = detail?.lines ?? [];
     const packages = detail?.packages ?? [];
     const totals = detail?.order.totals ?? {};
+    const financials = detail?.order.financials;
 
     return (
         <Sheet open={open} onOpenChange={onOpenChange}>
             <SheetContent
                 side="right"
-                className="w-full overflow-y-auto sm:max-w-lg font-sans"
+                className="w-full overflow-y-auto sm:max-w-xl md:max-w-2xl font-sans p-6 sm:p-8"
             >
-                <SheetHeader className="border-b border-border pb-4">
-                    <div className="flex items-center gap-3">
-                        {order.marketplace ? (
-                            <MarketplaceAvatar
-                                code={order.marketplace}
-                                name={order.connection ?? undefined}
-                                size="md"
-                            />
-                        ) : (
-                            <div className="flex size-8 items-center justify-center rounded-lg border border-border bg-secondary">
-                                <Package className="size-4 text-muted-foreground" />
-                            </div>
-                        )}
-                        <div className="min-w-0 flex-1">
-                            <div className="flex items-center gap-2">
-                                <SheetTitle className="font-sans text-base font-semibold tracking-tight">
+                {/* Header */}
+                <SheetHeader className="border-b border-border pb-5">
+                    <div className="flex items-start justify-between gap-4">
+                        <div className="min-w-0 flex-1 space-y-1">
+                            <div className="flex flex-wrap items-center gap-2.5">
+                                <SheetTitle className="font-sans text-xl font-bold tracking-tight text-foreground">
                                     {order.orderNumber}
                                 </SheetTitle>
                                 <button
                                     type="button"
                                     onClick={copyOrderNumber}
-                                    className="rounded p-1 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                                    className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
                                     title="Sipariş Numarasını Kopyala"
                                     aria-label="Sipariş Numarasını Kopyala"
                                 >
                                     {copied ? (
-                                        <Check className="size-3.5 text-success" />
+                                        <Check className="size-4 text-success" />
                                     ) : (
-                                        <Copy className="size-3.5" />
+                                        <Copy className="size-4" />
                                     )}
                                 </button>
                             </div>
-                            <SheetDescription className="font-sans text-xs">
-                                Paket {order.packageId}
-                                {order.connection ? ` · ${order.connection}` : ''}
+                            <SheetDescription className="font-sans text-xs text-muted-foreground">
+                                Paket No:{' '}
+                                <span className="font-mono font-medium text-foreground">
+                                    {order.packageId}
+                                </span>
+                                {order.placedAt ? ` · ${order.placedAt}` : ''}
                             </SheetDescription>
                         </div>
+
+                        {/* Marketplace Logo */}
+                        {order.marketplace && (
+                            <div className="flex shrink-0 items-center justify-end">
+                                <MarketplaceLogo
+                                    code={order.marketplace}
+                                    name={order.connection ?? undefined}
+                                    height="h-6 sm:h-7"
+                                />
+                            </div>
+                        )}
                     </div>
 
-                    <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
-                        <div className="flex items-center gap-2">
-                            <OrderStatusBadge
-                                status={order.status}
-                                label={order.statusLabel}
-                            />
-                            {order.externalStatus && (
-                                <span className="font-sans text-[11px] text-muted-foreground">
-                                    ({order.externalStatus})
-                                </span>
-                            )}
-                        </div>
-                        {order.placedAt && (
-                            <span className="font-sans text-xs text-muted-foreground tabular-nums">
-                                {order.placedAt}
-                            </span>
+                    {/* Status and Connection Tags */}
+                    <div className="mt-3 flex flex-wrap items-center gap-2 pt-1">
+                        <OrderStatusBadge
+                            status={order.status}
+                            label={order.statusLabel}
+                        />
+                        {order.externalStatus && (
+                            <Badge variant="outline" className="text-xs font-normal text-muted-foreground">
+                                Pazaryeri: {order.externalStatus}
+                            </Badge>
+                        )}
+                        {order.connection && (
+                            <Badge variant="secondary" className="text-xs">
+                                {order.connection}
+                            </Badge>
                         )}
                     </div>
                 </SheetHeader>
 
-                <div className="space-y-5 py-2">
+                {/* Body Content */}
+                <div className="space-y-6 py-5">
                     {isPendingPayment && (
-                        <div className="flex items-start gap-2.5 rounded-lg border border-warning/25 bg-warning/10 p-3 text-xs text-warning">
+                        <div className="flex items-start gap-3 rounded-lg border border-warning/30 bg-warning/10 p-3.5 text-xs text-warning">
                             <ShieldAlert className="mt-0.5 size-4 shrink-0" />
                             <div>
-                                <strong className="font-medium">
+                                <strong className="font-semibold">
                                     Ödeme Onayı Bekleniyor:
                                 </strong>{' '}
-                                Stok ayrılmıştır ancak ödeme onaylanana kadar
-                                paketi kargoya vermeyiniz.
+                                Stok ayrılmıştır ancak ödeme onaylanana kadar paketi kargoya vermeyiniz.
                             </div>
                         </div>
                     )}
 
                     {order.unmatchedCount > 0 && (
-                        <div className="flex items-start gap-2.5 rounded-lg border border-destructive/25 bg-destructive/10 p-3 text-xs text-destructive">
+                        <div className="flex items-start gap-3 rounded-lg border border-destructive/30 bg-destructive/10 p-3.5 text-xs text-destructive">
                             <Unlink className="mt-0.5 size-4 shrink-0" />
                             <div>
-                                <strong className="font-sans font-semibold">
+                                <strong className="font-semibold">
                                     {order.unmatchedCount} adet satır
                                 </strong>{' '}
-                                katalogdaki ürün varyantlarıyla eşleşmedi.
+                                katalogdaki ürün varyantlarıyla eşleşmedi. Eşleştirme yapılana kadar bu satırlar için stok düşülemez.
                             </div>
                         </div>
                     )}
 
-                    {/* Müşteri Bilgileri */}
-                    <div className="space-y-2 rounded-lg border border-border bg-secondary/30 p-3.5">
-                        <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+                    {/* Müşteri ve Teslimat Bilgisi */}
+                    <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+                        <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                             <User className="size-3.5" />
-                            <span>Müşteri Bilgisi (KVKK Korumalı)</span>
+                            <span>Müşteri & Teslimat Bilgisi (KVKK)</span>
                         </div>
-                        <div className="grid grid-cols-2 gap-2 pt-1 text-xs">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                             <div>
-                                <span className="text-muted-foreground">
-                                    Alıcı:
-                                </span>
-                                <p className="font-medium text-foreground">
+                                <span className="block text-xs text-muted-foreground">Alıcı Adı:</span>
+                                <span className="font-medium text-foreground">
                                     {customer?.name ?? order.customer ?? '—'}
-                                </p>
+                                </span>
                             </div>
                             <div>
-                                <span className="text-muted-foreground">
-                                    Teslimat Bölgesi:
-                                </span>
-                                <p className="font-medium text-foreground">
-                                    {[customer?.district, customer?.city]
-                                        .filter(Boolean)
-                                        .join(' / ') ||
-                                        order.customerLocation ||
-                                        '—'}
-                                </p>
+                                <span className="block text-xs text-muted-foreground">Teslimat Şehir / İlçe:</span>
+                                <div className="flex items-center gap-1 font-medium text-foreground">
+                                    <MapPin className="size-3.5 text-muted-foreground shrink-0" />
+                                    <span>
+                                        {[customer?.district, customer?.city].filter(Boolean).join(', ') ||
+                                            order.customerLocation ||
+                                            '—'}
+                                    </span>
+                                </div>
                             </div>
                             {customer?.phone && (
                                 <div>
-                                    <span className="text-muted-foreground">
-                                        Telefon:
-                                    </span>
-                                    <p className="font-sans text-foreground tabular-nums font-medium">
-                                        {customer.phone}
-                                    </p>
+                                    <span className="block text-xs text-muted-foreground">İletişim Telefon:</span>
+                                    <div className="flex items-center gap-1 font-mono text-sm text-foreground">
+                                        <Phone className="size-3 text-muted-foreground shrink-0" />
+                                        <span>{customer.phone}</span>
+                                    </div>
                                 </div>
                             )}
                             {customer?.email && (
                                 <div>
-                                    <span className="text-muted-foreground">
-                                        E-posta:
-                                    </span>
-                                    <p className="font-sans text-foreground">
+                                    <span className="block text-xs text-muted-foreground">E-posta Adresi:</span>
+                                    <span className="font-sans text-xs text-foreground truncate block">
                                         {customer.email}
-                                    </p>
+                                    </span>
                                 </div>
                             )}
                         </div>
                     </div>
 
-                    {/* Sipariş Kalemleri */}
-                    <div className="space-y-2">
-                        <div className="flex items-center justify-between text-xs">
-                            <span className="font-medium text-foreground">
-                                Sipariş Satırları ({order.lineCount})
-                            </span>
+                    {/* Sipariş Satırları */}
+                    <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                            <h3 className="text-sm font-semibold text-foreground">
+                                Sipariş Kalemleri ({order.lineCount})
+                            </h3>
                             {loading && (
-                                <Loader2 className="size-3 animate-spin text-muted-foreground" />
+                                <Loader2 className="size-4 animate-spin text-muted-foreground" />
                             )}
                         </div>
 
                         {loading && lines.length === 0 ? (
-                            <div className="space-y-2">
-                                <Skeleton className="h-12 w-full rounded-md" />
-                                <Skeleton className="h-12 w-full rounded-md" />
+                            <div className="space-y-2.5">
+                                <Skeleton className="h-16 w-full rounded-xl" />
+                                <Skeleton className="h-16 w-full rounded-xl" />
                             </div>
                         ) : lines.length > 0 ? (
-                            <div className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-card">
+                            <div className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-card">
                                 {lines.map((line) => (
                                     <div
                                         key={line.id}
-                                        className="flex items-center justify-between gap-3 p-3 text-xs"
+                                        className="flex items-start justify-between gap-4 p-4 text-sm"
                                     >
-                                        <div className="min-w-0 flex-1 space-y-0.5">
-                                            <div className="flex items-center gap-1.5">
-                                                <span className="font-sans font-medium text-foreground">
-                                                    {line.sku || '—'}
-                                                </span>
-                                                {!line.matched && (
-                                                    <Badge
-                                                        variant="destructive"
-                                                        className="h-4 text-[10px]"
-                                                    >
-                                                        Eşleşmedi
-                                                    </Badge>
-                                                )}
+                                        <div className="flex items-start gap-3 min-w-0 flex-1">
+                                            <div className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-border bg-secondary/50 text-muted-foreground">
+                                                <Package className="size-4.5" />
                                             </div>
-                                            <div className="flex items-center gap-2 font-sans text-[11px] text-muted-foreground">
-                                                {line.barcode && (
-                                                    <span>
-                                                        Barkod: {line.barcode}
-                                                    </span>
-                                                )}
-                                                {line.matched &&
-                                                    line.variantSku && (
-                                                        <span>
-                                                            Katalog:{' '}
-                                                            {line.variantSku}
-                                                        </span>
+                                            <div className="min-w-0 flex-1 space-y-1">
+                                                <div className="font-medium text-foreground line-clamp-1">
+                                                    {line.productName || line.sku || 'Ürün'}
+                                                </div>
+                                                <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground font-mono">
+                                                    <span>SKU: {line.sku || '—'}</span>
+                                                    {line.barcode && <span>Barkod: {line.barcode}</span>}
+                                                </div>
+                                                <div className="pt-0.5">
+                                                    {line.matched ? (
+                                                        <Badge variant="outline" className="text-[11px] text-success border-success/30 bg-success/5 font-normal">
+                                                            Katalogla Eşleşti ({line.variantSku})
+                                                        </Badge>
+                                                    ) : (
+                                                        <Badge variant="destructive" className="text-[11px]">
+                                                            Eşleşmemiş Satır
+                                                        </Badge>
                                                     )}
+                                                </div>
                                             </div>
                                         </div>
-                                        <div className="text-right">
-                                            <div className="font-sans font-semibold text-foreground tabular-nums">
+
+                                        <div className="text-right shrink-0">
+                                            <div className="font-semibold text-foreground tabular-nums">
                                                 {line.unitPrice}
                                             </div>
-                                            <div className="font-sans text-[11px] text-muted-foreground tabular-nums">
-                                                {line.quantity} adet
+                                            <div className="text-xs text-muted-foreground font-mono">
+                                                x {line.quantity} adet
                                             </div>
+                                            {line.commission && (
+                                                <div className="text-[11px] text-muted-foreground">
+                                                    Komisyon: {line.commission}
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 ))}
                             </div>
                         ) : (
-                            <div className="rounded-lg border border-border p-3 text-center text-xs text-muted-foreground">
+                            <div className="rounded-xl border border-border p-4 text-center text-xs text-muted-foreground">
                                 {order.lineCount} adet ürün kalemi bulunuyor.
                             </div>
                         )}
                     </div>
 
-                    {/* Kargo Bilgisi */}
+                    {/* Kargo ve Teslimat Bilgisi */}
                     {packages.length > 0 && (
-                        <div className="space-y-2">
-                            <div className="flex items-center gap-2 text-xs font-medium text-foreground">
-                                <Truck className="size-3.5 text-muted-foreground" />
+                        <div className="space-y-3">
+                            <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                                <Truck className="size-4 text-muted-foreground" />
                                 <span>Kargo ve Teslimat</span>
-                            </div>
-                            <div className="space-y-2">
+                            </h3>
+                            <div className="space-y-2.5">
                                 {packages.map((pkg) => (
                                     <div
                                         key={pkg.id}
-                                        className="rounded-lg border border-border bg-card p-3 text-xs"
+                                        className="rounded-xl border border-border bg-card p-4 text-xs space-y-2"
                                     >
                                         <div className="flex items-center justify-between">
-                                            <span className="font-medium text-foreground">
-                                                {pkg.cargoProvider ??
-                                                    'Kargo Firması'}
+                                            <span className="font-semibold text-sm text-foreground">
+                                                {pkg.cargoProvider ?? 'Kargo Firması'}
                                             </span>
                                             <OrderStatusBadge
                                                 status={pkg.status}
@@ -407,25 +420,23 @@ export function OrderPreviewSheet({
                                             />
                                         </div>
                                         {pkg.trackingNumber && (
-                                            <div className="mt-2 flex items-center justify-between font-sans text-xs">
-                                                <span className="text-muted-foreground">
-                                                    Takip No:
-                                                </span>
-                                                <span className="font-medium text-foreground tabular-nums">
+                                            <div className="flex items-center justify-between pt-1">
+                                                <span className="text-muted-foreground">Takip Numarası:</span>
+                                                <span className="font-mono font-medium text-foreground tabular-nums">
                                                     {pkg.trackingNumber}
                                                 </span>
                                             </div>
                                         )}
                                         {pkg.trackingLink && (
-                                            <div className="mt-2 text-right">
+                                            <div className="pt-1 text-right">
                                                 <a
                                                     href={pkg.trackingLink}
                                                     target="_blank"
                                                     rel="noreferrer noopener"
-                                                    className="inline-flex items-center gap-1 text-xs text-primary underline-offset-4 hover:underline"
+                                                    className="inline-flex items-center gap-1 text-xs text-primary font-medium underline-offset-4 hover:underline"
                                                 >
                                                     Kargo Takip Sayfası
-                                                    <ExternalLink className="size-3" />
+                                                    <ExternalLink className="size-3.5" />
                                                 </a>
                                             </div>
                                         )}
@@ -435,51 +446,65 @@ export function OrderPreviewSheet({
                         </div>
                     )}
 
-                    {/* Tutar Özeti */}
-                    <div className="space-y-1.5 rounded-lg border border-border bg-card p-3.5">
-                        <div className="text-xs font-medium text-foreground">
-                            Tutar Özeti
+                    {/* Finansal & Tutar Özeti */}
+                    <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+                        <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                            Finansal Özet & Kesintiler
                         </div>
-                        <div className="space-y-1 pt-1 text-xs">
-                            {Object.entries(totals).length > 0 ? (
-                                Object.entries(totals).map(([key, val]) => (
-                                    <div
-                                        key={key}
-                                        className="flex justify-between font-sans"
-                                    >
-                                        <span className="text-muted-foreground">
-                                            {TOTAL_LABELS[key] ?? key}
-                                        </span>
-                                        <span
-                                            className={
-                                                key === 'net'
-                                                    ? 'font-semibold text-foreground tabular-nums'
-                                                    : 'text-muted-foreground tabular-nums'
-                                            }
-                                        >
-                                            {val}
-                                        </span>
-                                    </div>
-                                ))
-                            ) : (
-                                <div className="flex justify-between font-sans">
-                                    <span className="text-muted-foreground">
-                                        Toplam Tutar
-                                    </span>
-                                    <span className="font-semibold text-foreground tabular-nums">
-                                        {order.total ?? '—'}
-                                    </span>
+                        <div className="space-y-2 text-sm divide-y divide-border/60">
+                            <div className="space-y-1.5 pb-2">
+                                {financials ? (
+                                    <>
+                                        <div className="flex justify-between text-muted-foreground text-xs">
+                                            <span>Brüt Tutar:</span>
+                                            <span className="tabular-nums font-medium text-foreground">{financials.gross}</span>
+                                        </div>
+                                        {financials.discount !== '0,00 ₺' && (
+                                            <div className="flex justify-between text-muted-foreground text-xs">
+                                                <span>İndirimler:</span>
+                                                <span className="tabular-nums font-medium text-destructive">-{financials.discount}</span>
+                                            </div>
+                                        )}
+                                        {financials.commission !== '0,00 ₺' && (
+                                            <div className="flex justify-between text-muted-foreground text-xs">
+                                                <span>Pazaryeri Komisyonu:</span>
+                                                <span className="tabular-nums font-medium text-destructive">-{financials.commission}</span>
+                                            </div>
+                                        )}
+                                    </>
+                                ) : (
+                                    Object.entries(totals).map(([key, val]) => (
+                                        <div key={key} className="flex justify-between text-muted-foreground text-xs">
+                                            <span>{TOTAL_LABELS[key] ?? key}:</span>
+                                            <span className="tabular-nums font-medium text-foreground">{val}</span>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+
+                            <div className="flex items-center justify-between pt-2">
+                                <span className="font-semibold text-sm text-foreground">Toplam Ödenen:</span>
+                                <span className="font-bold text-base text-foreground tabular-nums">
+                                    {financials?.netSales ?? order.total ?? '—'}
+                                </span>
+                            </div>
+
+                            {financials?.netPayout && (
+                                <div className="flex items-center justify-between pt-2 text-xs font-medium text-success">
+                                    <span>Satıcıya Geçecek Tahmini Tutar:</span>
+                                    <span className="font-bold text-sm tabular-nums">{financials.netPayout}</span>
                                 </div>
                             )}
                         </div>
                     </div>
                 </div>
 
-                <SheetFooter className="mt-4 border-t border-border pt-4">
-                    <Button asChild className="w-full font-sans">
+                {/* Footer */}
+                <SheetFooter className="mt-2 border-t border-border pt-4">
+                    <Button asChild className="w-full font-sans h-10">
                         <Link href={show({ order: order.id })} instant>
                             Tüm Detay Sayfasına Git
-                            <ExternalLink className="ml-1.5 size-4" />
+                            <ExternalLink className="ml-2 size-4" />
                         </Link>
                     </Button>
                 </SheetFooter>

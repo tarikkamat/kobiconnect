@@ -23,6 +23,7 @@ class CategoryController extends Controller
             // agac sirasi verir. Metinsel siralama 1/10'u 1/2'den once koyar —
             // derinlik girintisi dogru kaldigi surece sorun degil.
             'categories' => Category::query()
+                ->withCount('products')
                 ->orderBy('path')
                 ->get()
                 ->map(fn (Category $category): array => [
@@ -30,6 +31,8 @@ class CategoryController extends Controller
                     'name' => $category->name,
                     'parentId' => $category->parent_id,
                     'depth' => substr_count($category->path, '/'),
+                    'path' => $category->path,
+                    'productCount' => (int) $category->products_count,
                 ])
                 ->all(),
         ]);

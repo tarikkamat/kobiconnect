@@ -32,9 +32,6 @@ Route::prefix('settings')->group(function (): void {
     Route::patch('table-columns', [TableColumnController::class, 'update'])
         ->name('table-columns.update');
 
-    // Görünüm (Açık / Koyu / Sistem Tema)
-    Route::inertia('appearance', 'settings/appearance')->name('appearance.edit');
-
     // Lisans — dummy vitrin, controller'siz. Lisans mimarisi kararlastirilinca
     // gercek modele baglanacak; simdilik ekran tasarimi icin statik veri.
     Route::inertia('license', 'settings/license')->name('license.edit');

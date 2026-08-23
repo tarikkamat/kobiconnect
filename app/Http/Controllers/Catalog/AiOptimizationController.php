@@ -36,4 +36,24 @@ class AiOptimizationController extends Controller
             'image' => $result,
         ]);
     }
+
+    public function generateImage(Request $request, OptimizeProductMediaAndContent $optimizer): JsonResponse
+    {
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'instruction' => ['nullable', 'string', 'max:500'],
+            'image_url' => ['nullable', 'string', 'max:1000'],
+        ]);
+
+        $result = $optimizer->refactorStudioImage(
+            $validated['image_url'] ?? null,
+            $validated['name'],
+            $validated['instruction'] ?? null
+        );
+
+        return response()->json([
+            'success' => true,
+            'image' => $result,
+        ]);
+    }
 }

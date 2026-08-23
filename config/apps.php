@@ -29,7 +29,6 @@ return [
 
     'categories' => [
         'marketplace' => 'Pazaryerleri',
-        'ecommerce' => 'E-ticaret altyapıları',
     ],
 
     'apps' => [
@@ -43,63 +42,6 @@ return [
         'hepsiburada' => [
             'name' => 'Hepsiburada',
             'category' => 'marketplace',
-        ],
-
-        'n11' => [
-            'name' => 'n11',
-            'category' => 'marketplace',
-        ],
-
-        'amazon' => [
-            'logo_dark_invert' => true,
-            'name' => 'Amazon',
-            'category' => 'marketplace',
-        ],
-
-        'ciceksepeti' => [
-            'name' => 'Çiçeksepeti',
-            'category' => 'marketplace',
-            // Logo kendi tuvalinde kucuk cizilmis; vitrinde digerleriyle ayni
-            // optik boyuta gelmesi icin buyutuluyor.
-            'logo_scale' => 1.5,
-        ],
-
-        'pazarama' => [
-            'name' => 'Pazarama',
-            'category' => 'marketplace',
-        ],
-
-        'pttavm' => [
-            'name' => 'PttAVM',
-            'category' => 'marketplace',
-        ],
-
-        'shopify' => [
-            'name' => 'Shopify',
-            'category' => 'ecommerce',
-        ],
-
-        'ikas' => [
-            'logo_dark_invert' => true,
-            'name' => 'ikas',
-            'category' => 'ecommerce',
-        ],
-
-        'ideasoft' => [
-            'name' => 'IdeaSoft',
-            'category' => 'ecommerce',
-            'logo_scale' => 1.5,
-        ],
-
-        'ticimax' => [
-            'logo_dark_invert' => true,
-            'name' => 'Ticimax',
-            'category' => 'ecommerce',
-        ],
-
-        'woocommerce' => [
-            'name' => 'WooCommerce',
-            'category' => 'ecommerce',
         ],
 
     ],

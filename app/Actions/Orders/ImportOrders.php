@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 namespace App\Actions\Orders;
 
+use App\Events\NotificationEventOccurred;
 use App\Marketplaces\Contracts\SupportsOrderSync;
 use App\Marketplaces\Data\OrderData;
 use App\Marketplaces\Data\OrderLineData;
 use App\Marketplaces\Support\Capability;
 use App\Marketplaces\Support\Exceptions\UnsupportedCapabilityException;
-use App\Marketplaces\Support\MarketplaceManager;
-use App\Marketplaces\Trendyol\TrendyolCredentials;
-use App\Marketplaces\Trendyol\TrendyolDriver;
 use App\Models\ChannelConnection;
+use App\Notifications\NotificationEvent;
+use App\Support\Sync\ConnectionDriver;
 use DateTimeImmutable;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Crypt;
@@ -52,7 +52,7 @@ final class ImportOrders
      */
     private const int STREAM_INTERVAL_SECONDS = 5;
 
-    public function __construct(private readonly MarketplaceManager $marketplaces) {}
+    public function __construct(private readonly ConnectionDriver $connectionDriver) {}
 
     /**
      * @param  int  $maxPages  a run is bounded so one cold connection cannot hold a
@@ -61,13 +61,7 @@ final class ImportOrders
      */
     public function handle(ChannelConnection $connection, int $maxPages = 20): array
     {
-        $driver = $this->marketplaces->driver($connection->marketplace);
-
-        // Credentials are per channel_connection, not per application, so the
-        // resolved driver is rebound before it is used.
-        if ($driver instanceof TrendyolDriver) {
-            $driver = $driver->for(TrendyolCredentials::fromArray($connection->credentials->toArray()));
-        }
+        $driver = $this->connectionDriver->for($connection);
 
         // The capability contract is the single decision point - no marketplace
         // name is ever branched on (BACKEND-PLAN 6.2).
@@ -182,6 +176,16 @@ final class ImportOrders
             $written = $this->lines($orderId, $order, $now);
             $packageIds = $this->packages($orderId, $order, $now);
             $this->history($orderId, $order, $packageIds, $now);
+
+            if ($existing === null) {
+                NotificationEventOccurred::dispatch(NotificationEvent::OrderReceived, [
+                    'order_id' => $orderId,
+                    'order_number' => $order->remoteOrderNumber,
+                    'connection_id' => $connection->getKey(),
+                    'connection' => $connection->name,
+                    'total' => (string) ($order->totals['net'] ?? $order->totals['gross'] ?? '0.00'),
+                ]);
+            }
 
             return ['orders' => 1, 'lines' => $written['lines'], 'unmatched' => $written['unmatched']];
         });

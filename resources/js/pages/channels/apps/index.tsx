@@ -1,9 +1,10 @@
 import { Head, router } from '@inertiajs/react';
-import { Search, X } from 'lucide-react';
+import { Search, Store, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { AppCard } from '@/components/channels/app-card';
 import type { StoreApp } from '@/components/channels/app-card';
 import { ConnectionDrawer } from '@/components/channels/connection-drawer';
+import { EmptyState } from '@/components/empty-state';
 import Heading from '@/components/heading';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -111,7 +112,7 @@ export default function AppStoreIndex({ apps, categories }: Props) {
         <>
             <Head title="Uygulama Mağazası" />
 
-            <div className="flex flex-col gap-6 p-4">
+            <div className="flex flex-col gap-6 p-4 sm:p-6 lg:p-8">
                 <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
                     <Heading
                         title="Uygulama Mağazası"
@@ -176,7 +177,7 @@ export default function AppStoreIndex({ apps, categories }: Props) {
                                 className={cn(
                                     'rounded px-2.5 py-1 text-xs font-medium transition-colors',
                                     selectedCategory === 'all'
-                                        ? 'bg-white text-background'
+                                        ? 'bg-foreground text-background'
                                         : 'text-muted-foreground hover:text-foreground',
                                 )}
                             >
@@ -192,7 +193,7 @@ export default function AppStoreIndex({ apps, categories }: Props) {
                                     className={cn(
                                         'rounded px-2.5 py-1 text-xs font-medium transition-colors',
                                         selectedCategory === category.value
-                                            ? 'bg-white text-background'
+                                            ? 'bg-foreground text-background'
                                             : 'text-muted-foreground hover:text-foreground',
                                     )}
                                 >
@@ -245,23 +246,20 @@ export default function AppStoreIndex({ apps, categories }: Props) {
                 {/* Vitrin Grid Listesi */}
                 {isFiltered ? (
                     filteredApps.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border p-12 text-center">
-                            <p className="font-serif text-2xl tracking-[-0.02em] text-muted-foreground">
-                                Aramanızla eşleşen entegrasyon bulunamadı.
-                            </p>
-                            <p className="mt-1 text-sm text-muted-foreground/70">
-                                Farklı bir anahtar kelime deneyebilir veya
-                                filtreleri sıfırlayabilirsiniz.
-                            </p>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                className="mt-4 text-xs"
-                                onClick={resetFilters}
-                            >
-                                Filtreleri Temizle
-                            </Button>
-                        </div>
+                        <EmptyState
+                            icon={Store}
+                            title="Aramanızla eşleşen entegrasyon bulunamadı"
+                            description="Farklı bir anahtar kelime deneyebilir veya filtreleri sıfırlayabilirsiniz."
+                            action={
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={resetFilters}
+                                >
+                                    Filtreleri Temizle
+                                </Button>
+                            }
+                        />
                     ) : (
                         <div className="flex flex-col gap-3">
                             <div className="flex items-center justify-between text-xs text-muted-foreground">

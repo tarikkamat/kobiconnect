@@ -1,11 +1,13 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, FolderTree, Split } from 'lucide-react';
 import type {
     MappingCategoryRow,
     MappingStatus,
 } from '@/components/channels/mapping/types';
+import { EmptyState } from '@/components/empty-state';
 import Heading from '@/components/heading';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
     Select,
     SelectContent,
@@ -47,15 +49,16 @@ export default function MappingIndex({
         return (
             <>
                 <Head title="Eşlemeler" />
-                <div className="flex flex-col gap-4 p-4">
+                <div className="flex flex-col gap-6 p-4 sm:p-6 lg:p-8">
                     <Heading
                         title="Kanal Eşlemeleri"
                         description="Kategori, özellik ve marka eşlemeleri."
                     />
-                    <p className="rounded-lg border border-dashed border-border p-8 text-center font-serif text-2xl tracking-[-0.02em] text-muted-foreground">
-                        Önce bir pazaryeri bağlantısı ekleyin; eşleme o
-                        bağlantının kataloğuna göre yapılır.
-                    </p>
+                    <EmptyState
+                        icon={Split}
+                        title="Önce bir pazaryeri bağlantısı ekleyin"
+                        description="Kategori, özellik ve marka eşlemeleri bağlı olan mağazanın kataloğuna göre yapılır."
+                    />
                 </div>
             </>
         );
@@ -65,7 +68,7 @@ export default function MappingIndex({
         <>
             <Head title="Eşlemeler" />
 
-            <div className="flex flex-col gap-4 p-4">
+            <div className="flex flex-col gap-6 p-4 sm:p-6 lg:p-8">
                 <div className="flex flex-wrap items-start justify-between gap-4">
                     <Heading
                         title="Kanal Eşlemeleri"
@@ -74,19 +77,23 @@ export default function MappingIndex({
 
                     <div className="w-56">
                         <Select
-                            value={String(connectionId ?? '')}
+                            value={
+                                connectionId === null
+                                    ? undefined
+                                    : String(connectionId)
+                            }
                             onValueChange={(value) =>
                                 router.get(
                                     index.url(undefined, {
                                         query: { connection: value },
                                     }),
                                     {},
-                                    { preserveScroll: true },
+                                    { preserveState: true, replace: true },
                                 )
                             }
                         >
-                            <SelectTrigger aria-label="Bağlantı">
-                                <SelectValue />
+                            <SelectTrigger aria-label="Pazaryeri bağlantısı seçin">
+                                <SelectValue placeholder="Bağlantı seçin" />
                             </SelectTrigger>
                             <SelectContent>
                                 {connections.map((connection) => (
@@ -103,12 +110,13 @@ export default function MappingIndex({
                 </div>
 
                 {categories.length === 0 ? (
-                    <p className="rounded-lg border border-dashed border-border p-8 text-center font-serif text-2xl tracking-[-0.02em] text-muted-foreground">
-                        Henüz kategoriniz yok. Katalog → Kategoriler ekranından
-                        ekleyin.
-                    </p>
+                    <EmptyState
+                        icon={FolderTree}
+                        title="Henüz kategoriniz yok"
+                        description="Eşleme yapabilmek için önce Katalog → Kategoriler ekranından kategori ekleyin."
+                    />
                 ) : (
-                    <div className="overflow-hidden rounded-lg border border-border">
+                    <div className="overflow-hidden rounded-xl border border-border bg-card">
                         <Table>
                             <TableHeader>
                                 <TableRow>

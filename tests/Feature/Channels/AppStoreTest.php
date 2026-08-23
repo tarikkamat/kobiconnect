@@ -32,8 +32,7 @@ it('lists every app in the catalog and marks the ones without a driver as unavai
         expect($app['available'])->toBe(array_key_exists($code, config('marketplaces.drivers')));
     }
 
-    expect($apps['trendyol']['logo'])->toBe('/apps/trendyol.svg')
-        ->and($apps['shopify']['available'])->toBeFalse();
+    expect($apps['trendyol']['logo'])->toBe('/apps/trendyol.svg');
 });
 
 it('ships each app its own credential form, with no rules leaking to the browser', function (): void {
@@ -55,9 +54,7 @@ it('ships each app its own credential form, with no rules leaking to the browser
         'service_key' => 'secret',
         'integrator_user_agent' => 'text',
         'sit' => 'checkbox',
-    ])
-        // Surucusu olmayan uygulamanin kurulum formu da yoktur.
-        ->and($fields['shopify'])->toBe([]);
+    ]);
 
     expect(collect($props['apps'])->pluck('fields')->flatten(1)->pluck('rules')->filter())->toBeEmpty();
 });

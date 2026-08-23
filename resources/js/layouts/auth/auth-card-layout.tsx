@@ -34,7 +34,7 @@ export default function AuthCardLayout({
                 <div className="flex flex-col gap-6">
                     <Card>
                         <CardHeader className="px-10 pt-8 pb-0 text-center">
-                            <CardTitle className="font-serif text-2xl font-normal tracking-[-0.04em] text-white">
+                            <CardTitle className="text-2xl font-semibold tracking-tight text-foreground">
                                 {title}
                             </CardTitle>
                             <CardDescription>{description}</CardDescription>

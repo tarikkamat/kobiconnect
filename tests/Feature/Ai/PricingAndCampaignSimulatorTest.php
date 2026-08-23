@@ -35,7 +35,7 @@ it('calculates margin-protected dynamic buybox price when competitor stock is lo
 
     $product = Product::factory()->create(['name' => 'Akıllı Saat']);
     $variant = ProductVariant::factory()->for($product)->create(['sku' => 'WATCH-01']);
-    Price::factory()->create(['variant_id' => $variant->id, 'list_price' => 349.90, 'cost_price' => 140.00]);
+    Price::factory()->create(['variant_id' => $variant->id, 'list_price' => 349.90, 'cost' => 140.00]);
 
     $calculator = new CalculateDynamicPrice;
     $result = $calculator($variant, 350.00, 'low_stock');
@@ -86,7 +86,7 @@ it('simulates campaign profitability to prevent margin erosion', function (): vo
 
     $product = Product::factory()->create(['name' => 'Sırt Çantası']);
     $variant = ProductVariant::factory()->for($product)->create();
-    Price::factory()->create(['variant_id' => $variant->id, 'list_price' => 320.00, 'cost_price' => 120.00]);
+    Price::factory()->create(['variant_id' => $variant->id, 'list_price' => 320.00, 'cost' => 120.00]);
 
     $simulator = new SimulateCampaignProfitability;
     $simulation = $simulator($product, 'Süper İndirim Günleri', 20.0, 0.0);

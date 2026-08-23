@@ -50,7 +50,7 @@ export default function MappingWizard(props: WizardProps) {
         <>
             <Head title={`${props.category.name} eşlemesi`} />
 
-            <div className="flex flex-col gap-4 p-4">
+            <div className="flex flex-col gap-6 p-4 sm:p-6 lg:p-8">
                 <Heading
                     title={`${props.category.name} · ${props.connection.name}`}
                     description={`${props.category.path} — ${props.category.productCount} ürün. Eşleme tamamlanmadan bu kategorideki ürünler pazaryerine gönderilemez.`}

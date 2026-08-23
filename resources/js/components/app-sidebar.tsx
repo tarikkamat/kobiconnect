@@ -1,6 +1,6 @@
 import { Link } from '@inertiajs/react';
 import {
-    Activity,
+    BarChart3,
     BookOpen,
     FolderGit2,
     LayoutGrid,
@@ -30,14 +30,17 @@ import { index as brands } from '@/routes/brands';
 import { index as categories } from '@/routes/categories';
 import { index as claims } from '@/routes/claims';
 import { index as connections } from '@/routes/connections';
-import { index as listings } from '@/routes/listings';
 import { index as mapping } from '@/routes/mapping';
-import { index as matches } from '@/routes/matches';
 import { index as orders } from '@/routes/orders';
 import { index as products } from '@/routes/products';
+import {
+    channels as reportsChannels,
+    index as reports,
+    orders as reportsOrders,
+    penalties as reportsPenalties,
+    products as reportsProducts,
+} from '@/routes/reports';
 import { index as stock } from '@/routes/stock';
-import { monitor } from '@/routes/sync';
-import { index as syncOperations } from '@/routes/sync/operations';
 import { index as warehouses } from '@/routes/warehouses';
 import type { NavItem } from '@/types';
 
@@ -79,6 +82,17 @@ function navGroups(): NavGroup[] {
             ],
         },
         {
+            title: 'Raporlar',
+            icon: BarChart3,
+            items: [
+                { title: 'Finans ve Satış', href: reports() },
+                { title: 'Kanal Dağılımı', href: reportsChannels() },
+                { title: 'Ürün Satışları', href: reportsProducts() },
+                { title: 'Kargo & Cezalar', href: reportsPenalties() },
+                { title: 'Sipariş Statüleri', href: reportsOrders() },
+            ],
+        },
+        {
             title: 'Katalog',
             icon: Package,
             items: [
@@ -101,16 +115,6 @@ function navGroups(): NavGroup[] {
             items: [
                 { title: 'Bağlantılarım', href: connections() },
                 { title: 'Eşlemeler', href: mapping() },
-                { title: 'Listelemeler', href: listings() },
-                { title: 'Ön Eşleşme', href: matches() },
-            ],
-        },
-        {
-            title: 'Operasyon',
-            icon: Activity,
-            items: [
-                { title: 'Senkron Monitörü', href: monitor() },
-                { title: 'İşlem Kuyruğu', href: syncOperations() },
             ],
         },
     ];

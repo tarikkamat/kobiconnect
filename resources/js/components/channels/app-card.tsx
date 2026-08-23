@@ -58,7 +58,7 @@ export function AppIcon({
     return (
         <div
             className={cn(
-                'flex items-center justify-center bg-white',
+                'flex items-center justify-center bg-white overflow-hidden',
                 app.logoDarkInvert !== undefined && 'bg-transparent',
                 className,
             )}
@@ -73,7 +73,7 @@ export function AppIcon({
                         : { scale: app.logoScale }
                 }
                 className={cn(
-                    'max-h-full max-w-full object-contain',
+                    'w-full h-full object-contain',
                     app.logoDarkInvert && 'dark:brightness-0 dark:invert',
                     imageClassName,
                 )}
@@ -103,13 +103,13 @@ export function AppCard({
                 <DropdownMenuTrigger asChild>
                     <button
                         type="button"
-                        className="group relative flex h-24 w-full cursor-pointer items-center justify-center rounded-xl border border-border bg-transparent p-0 transition-colors hover:border-foreground/30 hover:bg-secondary focus-visible:outline-none"
+                        className="group relative flex h-24 w-full cursor-pointer items-center justify-center rounded-xl border border-border bg-card p-0 transition-colors hover:border-foreground/30 hover:bg-secondary focus-visible:outline-none"
                         title={`${app.name} — bağlantıları yönet`}
                     >
                         <AppIcon
                             app={app}
-                            className="size-full rounded-xl px-8 bg-transparent"
-                            imageClassName="max-h-9"
+                            className="size-full rounded-xl px-6 bg-transparent"
+                            imageClassName="max-h-10 max-w-[140px]"
                         />
 
                         <span
@@ -165,15 +165,15 @@ export function AppCard({
         <PermissionButton
             check={check}
             variant="outline"
-            className="relative h-24 w-full rounded-xl bg-transparent p-0 hover:border-foreground/30 hover:bg-secondary disabled:opacity-100 transition-colors"
+            className="relative h-24 w-full rounded-xl border border-border bg-card p-0 hover:border-foreground/30 hover:bg-secondary disabled:opacity-100 transition-colors"
             title={app.name}
             aria-label={`${app.name} aktifleştir`}
             onClick={() => onInstall(app)}
         >
             <AppIcon
                 app={app}
-                className="size-full rounded-xl px-8 bg-transparent"
-                imageClassName="max-h-9"
+                className="size-full rounded-xl px-6 bg-transparent"
+                imageClassName="max-h-10 max-w-[140px]"
             />
 
             {app.available ? (

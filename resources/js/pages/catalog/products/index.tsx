@@ -1,9 +1,11 @@
 import { Head, InfiniteScroll, Link, router } from '@inertiajs/react';
-import { ArrowDown, ArrowUp, Plus, Search } from 'lucide-react';
+import { ArrowDown, ArrowUp, Package, PackageOpen, Plus, Search } from 'lucide-react';
 import { useState } from 'react';
 import { BulkEditDialog } from '@/components/catalog/bulk-edit-dialog';
 import { PermissionButton } from '@/components/catalog/permission-button';
 import { ProductStatusBadge } from '@/components/catalog/product-status-badge';
+import { PullProductsDialog } from '@/components/catalog/pull-products-dialog';
+import { EmptyState } from '@/components/empty-state';
 import Heading from '@/components/heading';
 import { MarketplaceAvatarStack } from '@/components/marketplace-avatar';
 import type { MarketplaceChannel } from '@/components/marketplace-avatar';
@@ -56,6 +58,7 @@ type Props = {
     filters: Filters;
     statuses: { value: string; label: string }[];
     connections: { id: number; name: string }[];
+    pullableConnections?: { id: number; name: string; marketplace: string }[];
 };
 
 /** Radix Select bos deger kabul etmez; "hepsi" secenegi bu sabitle temsil edilir. */
@@ -66,6 +69,7 @@ export default function ProductIndex({
     filters,
     statuses,
     connections,
+    pullableConnections = [],
 }: Props) {
     const can = usePermission();
     const canManage = can('catalog.manage');
@@ -123,22 +127,29 @@ export default function ProductIndex({
         <>
             <Head title="Ürünler" />
 
-            <div className="flex flex-col gap-4 p-4">
+            <div className="flex flex-col gap-6 p-4 sm:p-6 lg:p-8">
                 <div className="flex items-start justify-between gap-4">
                     <Heading
                         title="Ürünler"
                         description="Katalogdaki ürünler, stok ve fiyat özetiyle."
                     />
 
-                    {/* Devre disi bir <a> tiklanabilir kalir; buton + visit
-                        yetkisiz kullaniciyi gercekten durdurur. */}
-                    <PermissionButton
-                        check={canManage}
-                        onClick={() => router.visit(create.url())}
-                    >
-                        <Plus className="size-4" />
-                        Yeni ürün
-                    </PermissionButton>
+                    <div className="flex items-center gap-2">
+                        <PullProductsDialog
+                            connections={pullableConnections}
+                            check={canManage}
+                        />
+
+                        {/* Devre disi bir <a> tiklanabilir kalir; buton + visit
+                            yetkisiz kullaniciyi gercekten durdurur. */}
+                        <PermissionButton
+                            check={canManage}
+                            onClick={() => router.visit(create.url())}
+                        >
+                            <Plus className="size-4" />
+                            Yeni ürün
+                        </PermissionButton>
+                    </div>
                 </div>
 
                 {selected.length > 0 && (
@@ -252,20 +263,82 @@ export default function ProductIndex({
                 </div>
 
                 {products.data.length === 0 ? (
-                    <div className="rounded-lg border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
-                        <p className="font-serif text-2xl tracking-[-0.02em] text-foreground">
-                            Bu filtrelerle eşleşen ürün yok.
-                        </p>
-                        <PermissionButton
-                            check={canManage}
-                            variant="outline"
-                            className="mt-4"
-                            onClick={() => router.visit(create.url())}
-                        >
-                            <Plus className="size-4" />
-                            İlk ürününüzü ekleyin
-                        </PermissionButton>
-                    </div>
+                    <EmptyState
+                        icon={
+                            Boolean(
+                                filters.search ||
+                                    filters.category ||
+                                    filters.brand ||
+                                    filters.stock ||
+                                    filters.status ||
+                                    filters.connection,
+                            )
+                                ? PackageOpen
+                                : Package
+                        }
+                        title={
+                            Boolean(
+                                filters.search ||
+                                    filters.category ||
+                                    filters.brand ||
+                                    filters.stock ||
+                                    filters.status ||
+                                    filters.connection,
+                            )
+                                ? 'Filtrelere uygun ürün bulunamadı'
+                                : 'Henüz ürün eklenmemiş'
+                        }
+                        description={
+                            Boolean(
+                                filters.search ||
+                                    filters.category ||
+                                    filters.brand ||
+                                    filters.stock ||
+                                    filters.status ||
+                                    filters.connection,
+                            )
+                                ? 'Arama teriminizi veya filtre tercihlerinizi değiştirerek tekrar deneyebilirsiniz.'
+                                : 'Kataloğunuza yeni ürünler ekleyerek pazaryerlerinde satışa başlayabilirsiniz.'
+                        }
+                        action={
+                            Boolean(
+                                filters.search ||
+                                    filters.category ||
+                                    filters.brand ||
+                                    filters.stock ||
+                                    filters.status ||
+                                    filters.connection,
+                            ) ? (
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() =>
+                                        router.get(
+                                            index.url(),
+                                            {},
+                                            {
+                                                preserveState: true,
+                                                preserveScroll: true,
+                                                replace: true,
+                                            },
+                                        )
+                                    }
+                                >
+                                    Filtreleri Sıfırla
+                                </Button>
+                            ) : (
+                                <PermissionButton
+                                    check={canManage}
+                                    variant="default"
+                                    size="sm"
+                                    onClick={() => router.visit(create.url())}
+                                >
+                                    <Plus className="size-4" />
+                                    Yeni ürün ekle
+                                </PermissionButton>
+                            )
+                        }
+                    />
                 ) : (
                     <div className="overflow-hidden rounded-lg border border-border">
                         {/* Sayfalama tiklamasi yok: <InfiniteScroll> sonraki sayfayi kendisi ekler. */}

@@ -26,11 +26,11 @@ beforeEach(function (): void {
 it('executes copilot tools for returned products and profitability analysis', function (): void {
     $product1 = Product::factory()->create(['name' => 'Sorunlu Kargo Tişört']);
     $variant1 = ProductVariant::factory()->for($product1)->create();
-    Price::factory()->create(['variant_id' => $variant1->id, 'list_price' => 120.00, 'cost_price' => 70.00]);
+    Price::factory()->create(['variant_id' => $variant1->id, 'list_price' => 120.00, 'cost' => 70.00]);
 
     $product2 = Product::factory()->create(['name' => 'Karlı Elbise']);
     $variant2 = ProductVariant::factory()->for($product2)->create();
-    Price::factory()->create(['variant_id' => $variant2->id, 'list_price' => 550.00, 'cost_price' => 180.00]);
+    Price::factory()->create(['variant_id' => $variant2->id, 'list_price' => 550.00, 'cost' => 180.00]);
 
     // Test GetTopReturnedProductsTool
     $returnTool = new GetTopReturnedProductsTool;

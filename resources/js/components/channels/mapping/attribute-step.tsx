@@ -72,7 +72,7 @@ export function AttributeStep({
 
     if (attributes.length === 0) {
         return (
-            <p className="rounded-lg border border-dashed border-border p-8 text-center font-serif text-2xl tracking-[-0.02em] text-muted-foreground">
+            <p className="rounded-lg border border-dashed border-border p-8 text-center text-2xl font-medium tracking-tight text-muted-foreground">
                 Bu kategori için pazaryeri özellik listesi okunamadı ya da boş.
             </p>
         );

@@ -24,7 +24,7 @@ export type Alert = {
     icon: LucideIcon;
     /** `warn` dikkat ister, `alert` müdahale ister. */
     tone: 'warn' | 'alert';
-    href: string;
+    href?: string;
 };
 
 /**

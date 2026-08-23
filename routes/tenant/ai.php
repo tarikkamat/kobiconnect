@@ -32,6 +32,7 @@ Route::prefix('ai')->name('ai.')->group(function (): void {
     // 3. Görsel & İçerik Optimizasyonu (SEO & Stüdyo)
     Route::post('catalog/products/{product}/seo', [AiOptimizationController::class, 'seo'])->name('catalog.seo');
     Route::post('catalog/products/{product}/image', [AiOptimizationController::class, 'image'])->name('catalog.image');
+    Route::post('catalog/generate-image', [AiOptimizationController::class, 'generateImage'])->name('catalog.generate-image');
 
     // 4. Kendi Kendini Onaran Entegrasyon (Self-Healing Sync)
     Route::post('channels/operations/{operation}/heal', [AiSelfHealingController::class, 'heal'])->name('channels.heal');

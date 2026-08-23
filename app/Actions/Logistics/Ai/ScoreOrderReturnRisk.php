@@ -27,8 +27,17 @@ final class ScoreOrderReturnRisk
         ])->all();
 
         $customerName = 'Müşteri';
-        if ($order->customer) {
-            $customerName = (string) $order->customer;
+        $rawCustomer = $order->getAttribute('customer');
+        if ($rawCustomer instanceof \ArrayAccess || is_array($rawCustomer)) {
+            $first = isset($rawCustomer['firstName']) ? (string) $rawCustomer['firstName'] : '';
+            $last = isset($rawCustomer['lastName']) ? (string) $rawCustomer['lastName'] : '';
+            $name = isset($rawCustomer['name']) ? (string) $rawCustomer['name'] : '';
+
+            if ($first !== '' || $last !== '') {
+                $customerName = trim($first.' '.$last);
+            } elseif ($name !== '') {
+                $customerName = $name;
+            }
         }
 
         $prompt = sprintf(

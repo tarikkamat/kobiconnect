@@ -43,11 +43,11 @@ it('self-heals missing mandatory attributes and requeues operation', function ()
         'attributes' => [],
     ]);
 
-    $operation = ChannelOperation::create([
+    $operation = ChannelOperation::factory()->create([
         'connection_id' => $connection->id,
         'entity_type' => 'product',
         'entity_id' => $product->id,
-        'operation_type' => OperationType::ProductCreate,
+        'operation' => OperationType::ProductCreate->value,
         'status' => SyncState::Failed,
         'desired_state' => [
             'barcode' => '868000111222',
@@ -96,11 +96,11 @@ it('triggers self healing through http endpoint', function (): void {
 
     $user = User::factory()->create()->assignRole('Yönetici');
     $connection = ChannelConnection::factory()->create();
-    $operation = ChannelOperation::create([
+    $operation = ChannelOperation::factory()->create([
         'connection_id' => $connection->id,
         'entity_type' => 'product',
         'entity_id' => 1,
-        'operation_type' => OperationType::ProductCreate,
+        'operation' => OperationType::ProductCreate->value,
         'status' => SyncState::Failed,
         'desired_state' => ['barcode' => '123'],
         'error' => ['message' => 'Format hatası'],

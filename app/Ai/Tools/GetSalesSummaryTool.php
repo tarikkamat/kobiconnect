@@ -33,7 +33,7 @@ class GetSalesSummaryTool implements Tool
         foreach ($orders as $order) {
             /** @var array<string, mixed> $totals */
             $totals = (array) ($order->getAttribute('totals') ?? []);
-            $amount = (float) ($totals['gross_amount'] ?? $totals['total'] ?? 0.0);
+            $amount = (float) ($totals['gross'] ?? $totals['net'] ?? $totals['gross_amount'] ?? $totals['total'] ?? 0.0);
             $totalRevenue += $amount;
 
             $channelName = $order->connection ? $order->connection->name : 'Doğrudan';

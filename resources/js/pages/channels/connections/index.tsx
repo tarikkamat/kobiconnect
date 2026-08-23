@@ -23,6 +23,7 @@ import type {
     Marketplace,
 } from '@/components/channels/connection-drawer';
 import { ConnectionStatusBadge } from '@/components/channels/connection-status-badge';
+import { EmptyState } from '@/components/empty-state';
 import Heading from '@/components/heading';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -223,7 +224,7 @@ export default function ConnectionsIndex({
         <>
             <Head title="Bağlantılarım" />
 
-            <div className="flex flex-col gap-6 p-4">
+            <div className="flex flex-col gap-6 p-4 sm:p-6 lg:p-8">
                 {/* Başlık ve Aksiyon */}
                 <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
                     <Heading
@@ -407,38 +408,41 @@ export default function ConnectionsIndex({
 
                 {/* DataTable */}
                 {filteredConnections.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border p-12 text-center">
-                        <div className="flex size-12 items-center justify-center rounded-full bg-secondary text-muted-foreground mb-3">
-                            <Store className="size-6" />
-                        </div>
-                        <p className="font-serif text-2xl tracking-[-0.02em] text-muted-foreground">
-                            {isFiltered
-                                ? 'Filtreye uygun mağaza bağlantısı bulunamadı.'
-                                : 'Henüz tanımlanmış bir mağaza bağlantınız yok.'}
-                        </p>
-                        <p className="mt-1 text-xs text-muted-foreground/70 max-w-sm">
-                            {isFiltered
+                    <EmptyState
+                        icon={Store}
+                        title={
+                            isFiltered
+                                ? 'Filtreye uygun mağaza bağlantısı bulunamadı'
+                                : 'Henüz tanımlanmış bir mağaza bağlantınız yok'
+                        }
+                        description={
+                            isFiltered
                                 ? 'Farklı bir arama terimi deneyebilir veya filtreleri sıfırlayabilirsiniz.'
-                                : 'Trendyol, Hepsiburada veya diğer platformlarınızı bağlayarak entegrasyonu başlatın.'}
-                        </p>
-                        {isFiltered ? (
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                className="mt-4 text-xs"
-                                onClick={resetFilters}
-                            >
-                                Filtreleri Temizle
-                            </Button>
-                        ) : (
-                            <Link href={appsRoute()} className="mt-4">
-                                <Button size="sm" className="gap-1.5 text-xs">
-                                    <Plus className="size-3.5" />
-                                    Uygulama Mağazasına Git
+                                : 'Trendyol, Hepsiburada veya diğer platformlarınızı bağlayarak entegrasyonu başlatın.'
+                        }
+                        action={
+                            isFiltered ? (
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={resetFilters}
+                                >
+                                    Filtreleri Temizle
                                 </Button>
-                            </Link>
-                        )}
-                    </div>
+                            ) : (
+                                <Button
+                                    asChild
+                                    size="sm"
+                                    className="gap-1.5"
+                                >
+                                    <Link href={appsRoute()}>
+                                        <Plus className="size-3.5" />
+                                        Uygulama Mağazasına Git
+                                    </Link>
+                                </Button>
+                            )
+                        }
+                    />
                 ) : (
                     <div className="overflow-hidden rounded-xl border border-border bg-card">
                         <Table>

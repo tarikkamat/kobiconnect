@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Events\NotificationEventOccurred;
+use App\Listeners\Notifications\SendEventNotification;
 use App\Marketplaces\Support\MarketplaceManager;
 use App\Models\ChannelListing;
 use App\Models\InventoryItem;
@@ -15,6 +17,7 @@ use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Number;
 use Illuminate\Support\ServiceProvider;
@@ -61,6 +64,8 @@ class AppServiceProvider extends ServiceProvider
         InventoryItem::observe(InventoryItemObserver::class);
         Price::observe(PriceObserver::class);
         ChannelListing::observe(ChannelListingObserver::class);
+
+        Event::listen(NotificationEventOccurred::class, SendEventNotification::class);
 
         Date::use(CarbonImmutable::class);
 

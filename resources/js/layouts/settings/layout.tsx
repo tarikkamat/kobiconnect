@@ -7,7 +7,6 @@ import { useCurrentUrl } from '@/hooks/use-current-url';
 import { cn, toUrl } from '@/lib/utils';
 import { edit as notificationPreferences } from '@/routes/notification-preferences';
 import { edit } from '@/routes/profile';
-import { edit as editAppearance } from '@/routes/appearance';
 import { edit as editSecurity } from '@/routes/security';
 import { index as team } from '@/routes/team';
 import type { NavItem } from '@/types';
@@ -23,7 +22,6 @@ import type { NavItem } from '@/types';
 function sidebarNavItems(): (NavItem & { permission?: string })[] {
     return [
         { title: 'Profil', href: edit(), icon: null },
-        { title: 'Görünüm', href: editAppearance(), icon: null },
         { title: 'Güvenlik', href: editSecurity(), icon: null },
         {
             title: 'Ekip & Roller',

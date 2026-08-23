@@ -32,6 +32,15 @@ class ProductStoreRequest extends FormRequest
             'variants.*.barcode' => ['nullable', 'string', 'max:40', 'distinct', Rule::unique('product_variants', 'barcode')],
             'variants.*.list_price' => ['nullable', 'numeric', 'min:0', 'max:9999999.99'],
             'variants.*.on_hand' => ['nullable', 'integer', 'min:0', 'max:100000000'],
+            'variants.*.attributes' => ['nullable', 'array'],
+            'variants.*.image_url' => ['nullable', 'string', 'max:2048'],
+
+            'images' => ['nullable', 'array', 'max:20'],
+            'images.*.url' => ['required', 'string', 'max:2048'],
+            'images.*.position' => ['nullable', 'integer', 'min:0'],
+
+            'channel_ids' => ['nullable', 'array'],
+            'channel_ids.*' => ['integer', Rule::exists('channel_connections', 'id')],
         ];
     }
 

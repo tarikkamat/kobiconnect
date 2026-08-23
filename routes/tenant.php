@@ -33,10 +33,10 @@ Route::middleware(ConfigureTenantHost::class)->group(function (): void {
         // dosyada carpismamasi icin bolundu; middleware yigini burada tanimli.
         require __DIR__.'/tenant/channels.php';
         require __DIR__.'/tenant/orders.php';
-        require __DIR__.'/tenant/sync.php';
         require __DIR__.'/tenant/inventory.php';
         require __DIR__.'/tenant/catalog.php';
         require __DIR__.'/tenant/claims.php';
+        require __DIR__.'/tenant/reports.php';
         require __DIR__.'/tenant/ai.php';
 
         Route::get('dashboard', DashboardController::class)->name('dashboard');

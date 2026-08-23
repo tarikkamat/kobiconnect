@@ -6,11 +6,15 @@ namespace App\Http\Controllers\Catalog;
 
 use App\Actions\Catalog\BulkEditVariants;
 use App\Actions\Catalog\CreateProduct;
+use App\Actions\Catalog\ImportProducts;
+use App\Enums\ConnectionStatus;
 use App\Enums\ProductStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Catalog\ProductBulkEditRequest;
 use App\Http\Requests\Catalog\ProductStoreRequest;
 use App\Http\Requests\Catalog\ProductUpdateRequest;
+use App\Marketplaces\Contracts\SupportsProductSync;
+use App\Marketplaces\Support\MarketplaceManager;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\ChannelConnection;
@@ -24,7 +28,9 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Number;
 use Illuminate\Validation\Rule;
@@ -53,7 +59,7 @@ class ProductController extends Controller
      */
     private const array STATE_SEVERITY = ['failed', 'pending', 'syncing', 'synced'];
 
-    public function index(Request $request): Response
+    public function index(Request $request, MarketplaceManager $marketplaces): Response
     {
         Gate::authorize('viewAny', Product::class);
 
@@ -113,6 +119,25 @@ class ProductController extends Controller
                 'createdAt' => $product->created_at?->timezone('Europe/Istanbul')->format('d.m.Y'),
             ]);
 
+        $pullableConnections = ChannelConnection::query()
+            ->where('status', ConnectionStatus::Active)
+            ->orderBy('name')
+            ->get()
+            ->filter(function (ChannelConnection $connection) use ($marketplaces): bool {
+                try {
+                    return $marketplaces->driver($connection->marketplace) instanceof SupportsProductSync;
+                } catch (\Throwable) {
+                    return false;
+                }
+            })
+            ->map(fn (ChannelConnection $c): array => [
+                'id' => $c->getKey(),
+                'name' => $c->name,
+                'marketplace' => $c->marketplace,
+            ])
+            ->values()
+            ->all();
+
         return Inertia::render('catalog/products/index', [
             // Inertia::scroll() birlestirme davranisini ve sayfalama meta'sini
             // <InfiniteScroll> icin normalize eder.
@@ -127,7 +152,33 @@ class ProductController extends Controller
             ],
             'statuses' => $this->statusOptions(),
             'connections' => ChannelConnection::query()->orderBy('name')->get(['id', 'name']),
+            'pullableConnections' => $pullableConnections,
         ]);
+    }
+
+    public function pull(Request $request, ImportProducts $importProducts): RedirectResponse
+    {
+        Gate::authorize('create', Product::class);
+
+        $validated = $request->validate([
+            'connection_id' => ['required', 'integer', 'exists:channel_connections,id'],
+        ]);
+
+        /** @var ChannelConnection $connection */
+        $connection = ChannelConnection::query()->findOrFail($validated['connection_id']);
+
+        try {
+            $stats = $importProducts->handle($connection);
+
+            $total = $stats['created'] + $stats['matched'];
+            $message = "Pazaryerinden {$total} ürün başarıyla aktarıldı ({$stats['created']} yeni, {$stats['matched']} eşleşen).";
+
+            Inertia::flash('toast', ['type' => 'success', 'message' => $message]);
+        } catch (\Throwable $e) {
+            Inertia::flash('toast', ['type' => 'error', 'message' => 'Ürünler çekilirken hata oluştu: '.$e->getMessage()]);
+        }
+
+        return to_route('products.index');
     }
 
     public function create(): Response
@@ -138,6 +189,10 @@ class ProductController extends Controller
             'brands' => Brand::query()->orderBy('name')->get(['id', 'name']),
             'categories' => Category::query()->orderBy('path')->get(['id', 'name']),
             'statuses' => $this->statusOptions(),
+            'channelConnections' => ChannelConnection::query()
+                ->where('status', ConnectionStatus::Active)
+                ->orderBy('name')
+                ->get(['id', 'name', 'marketplace']),
         ]);
     }
 
@@ -155,11 +210,40 @@ class ProductController extends Controller
         return to_route('products.show', ['product' => $product->getKey()]);
     }
 
+    public function uploadImage(Request $request): JsonResponse
+    {
+        Gate::authorize('create', Product::class);
+
+        $request->validate([
+            'image' => ['required', 'image', 'max:10240'],
+        ]);
+
+        /** @var UploadedFile $file */
+        $file = $request->file('image');
+        $path = $file->storePublicly('products', 'public');
+        $publicUrl = '/storage/'.ltrim((string) $path, '/');
+
+        return response()->json([
+            'success' => true,
+            'url' => $publicUrl,
+            'path' => (string) $path,
+            'name' => $file->getClientOriginalName(),
+        ]);
+    }
+
     public function show(Product $product): Response
     {
         Gate::authorize('view', $product);
 
-        $product->load(['brand:id,name', 'category:id,name', 'variants.inventoryItems', 'variants.prices']);
+        $product->load([
+            'brand:id,name',
+            'category:id,name',
+            'variants.inventoryItems',
+            'variants.prices',
+            'variants.images',
+            'variants.listings.connection',
+            'images',
+        ]);
 
         // Satir ici stok duzenlemesi tek depoya baglidir; cok depolu duzenleme
         // gerektiginde bu secim varyant satirina tasinir.
@@ -176,11 +260,11 @@ class ProductController extends Controller
                 'statusLabel' => self::STATUS_LABELS[$product->status->value],
                 // Silme uyarisinin dayanagi: bu urun pazaryerinde yayinda olabilir.
                 'listingCount' => $this->listingCount($product),
+                'channels' => $this->channels($product->variants),
             ],
             'variants' => $product->variants
                 ->map(fn (ProductVariant $variant): array => $this->variantRow($variant, $warehouse))
                 ->all(),
-            // Gorseller sekmesine inilmeden cekilmez — <WhenVisible>.
             'images' => Inertia::optional(fn (): array => $product->images()
                 ->orderBy('position')
                 ->get()
@@ -191,6 +275,16 @@ class ProductController extends Controller
                     'position' => $image->position,
                 ])
                 ->all()),
+            'channelConnections' => ChannelConnection::query()
+                ->where('status', ConnectionStatus::Active)
+                ->orderBy('name')
+                ->get(['id', 'name', 'marketplace']),
+            'activeChannelIds' => $product->variants
+                ->flatMap(fn (ProductVariant $v) => $v->listings)
+                ->pluck('connection_id')
+                ->unique()
+                ->values()
+                ->all(),
             'warehouse' => $warehouse === null ? null : [
                 'id' => $warehouse->getKey(),
                 'name' => $warehouse->name,
@@ -205,7 +299,48 @@ class ProductController extends Controller
     {
         Gate::authorize('update', $product);
 
-        $product->update($request->validated());
+        $validated = $request->validated();
+
+        DB::transaction(function () use ($validated, $product): void {
+            $product->update([
+                'name' => $validated['name'],
+                'description' => $validated['description'] ?? null,
+                'brand_id' => $validated['brand_id'] ?? null,
+                'category_id' => $validated['category_id'] ?? null,
+                'status' => $validated['status'],
+            ]);
+
+            if (array_key_exists('images', $validated)) {
+                $product->images()->delete();
+                if (! empty($validated['images'])) {
+                    foreach ($validated['images'] as $idx => $img) {
+                        if (! empty($img['url'])) {
+                            ProductImage::create([
+                                'product_id' => $product->getKey(),
+                                'url' => $img['url'],
+                                'position' => $img['position'] ?? $idx,
+                            ]);
+                        }
+                    }
+                }
+            }
+
+            if (! empty($validated['channel_ids'])) {
+                foreach ($product->variants as $variant) {
+                    foreach ($validated['channel_ids'] as $channelId) {
+                        ChannelListing::firstOrCreate([
+                            'connection_id' => (int) $channelId,
+                            'variant_id' => $variant->getKey(),
+                        ]);
+                    }
+
+                    ChannelListing::query()
+                        ->where('variant_id', $variant->getKey())
+                        ->whereNotIn('connection_id', $validated['channel_ids'])
+                        ->delete();
+                }
+            }
+        });
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Ürün güncellendi.']);
 
@@ -284,7 +419,7 @@ class ProductController extends Controller
     }
 
     /**
-     * @return array{id: int, sku: string, barcode: string|null, onHand: int, available: int, price: float|null, priceFormatted: string|null}
+     * @return array{id: int, sku: string, barcode: string|null, attributes: array<string, mixed>|null, imageUrl: string|null, onHand: int, available: int, price: float|null, priceFormatted: string|null}
      */
     private function variantRow(ProductVariant $variant, ?Warehouse $warehouse): array
     {
@@ -298,6 +433,8 @@ class ProductController extends Controller
             'id' => $variant->getKey(),
             'sku' => $variant->sku,
             'barcode' => $variant->barcode,
+            'attributes' => $variant->attributes,
+            'imageUrl' => $variant->images->first()?->url,
             'onHand' => $item === null ? 0 : $item->on_hand,
             'available' => (int) $variant->inventoryItems->sum('available'),
             'price' => $price === null ? null : (float) $price->list_price,

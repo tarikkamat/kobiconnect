@@ -1,22 +1,31 @@
-import { Form, Head, router } from '@inertiajs/react';
-import { Trash2 } from 'lucide-react';
-import { useState } from 'react';
-import BrandController from '@/actions/App/Http/Controllers/Catalog/BrandController';
-import { PermissionButton } from '@/components/catalog/permission-button';
-import { toastError } from '@/components/catalog/toast-error';
-import Heading from '@/components/heading';
-import InputError from '@/components/input-error';
-import { Button } from '@/components/ui/button';
+import { Head } from '@inertiajs/react';
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-} from '@/components/ui/dialog';
+    ArrowUpDown,
+    Package,
+    Pencil,
+    Plus,
+    Search,
+    Tag,
+    Trash2,
+    X,
+} from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { BrandDeleteDialog } from '@/components/catalog/brand-delete-dialog';
+import { BrandDialog } from '@/components/catalog/brand-dialog';
+import type { BrandRow } from '@/components/catalog/brand-dialog';
+import { PermissionButton } from '@/components/catalog/permission-button';
+import { EmptyState } from '@/components/empty-state';
+import Heading from '@/components/heading';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import {
     Table,
     TableBody,
@@ -25,176 +34,424 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { usePermission } from '@/hooks/use-permission';
-import { destroy, index, update } from '@/routes/brands';
+import { index } from '@/routes/brands';
 
-type BrandRow = {
-    id: number;
-    name: string;
-    slug: string;
-    productCount: number;
-};
+type SortOption = 'name-asc' | 'name-desc' | 'products-desc' | 'products-asc';
 
 export default function BrandIndex({ brands }: { brands: BrandRow[] }) {
     const canManage = usePermission()('catalog.manage');
-    const [pendingDelete, setPendingDelete] = useState<BrandRow | null>(null);
 
-    const rename = (brand: BrandRow, name: string): void => {
-        if (name.trim() === '' || name === brand.name) {
-            return;
+    const [searchTerm, setSearchTerm] = useState('');
+    const [sortOption, setSortOption] = useState<SortOption>('name-asc');
+
+    // Dialog state'leri
+    const [dialogOpen, setDialogOpen] = useState(false);
+    const [brandToEdit, setBrandToEdit] = useState<BrandRow | null>(null);
+    const [brandToDelete, setBrandToDelete] = useState<BrandRow | null>(null);
+
+    // Toplam istatistikler
+    const totalProductsCount = useMemo(
+        () => brands.reduce((sum, b) => sum + b.productCount, 0),
+        [brands],
+    );
+
+    const brandsWithProductsCount = useMemo(
+        () => brands.filter((b) => b.productCount > 0).length,
+        [brands],
+    );
+
+    // Arama ve sıralama
+    const filteredAndSortedBrands = useMemo(() => {
+        const normalizedSearch = searchTerm.trim().toLocaleLowerCase('tr');
+
+        let result = brands;
+
+        if (normalizedSearch) {
+            result = brands.filter(
+                (brand) =>
+                    brand.name
+                        .toLocaleLowerCase('tr')
+                        .includes(normalizedSearch) ||
+                    brand.slug
+                        .toLocaleLowerCase('tr')
+                        .includes(normalizedSearch),
+            );
         }
 
-        router.patch(
-            update.url({ brand: brand.id }),
-            { name },
-            { preserveScroll: true, onError: toastError },
-        );
+        return [...result].sort((a, b) => {
+            switch (sortOption) {
+                case 'name-asc':
+                    return a.name.localeCompare(b.name, 'tr');
+                case 'name-desc':
+                    return b.name.localeCompare(a.name, 'tr');
+                case 'products-desc':
+                    return b.productCount - a.productCount;
+                case 'products-asc':
+                    return a.productCount - b.productCount;
+                default:
+                    return 0;
+            }
+        });
+    }, [brands, searchTerm, sortOption]);
+
+    const openCreate = () => {
+        setBrandToEdit(null);
+        setDialogOpen(true);
+    };
+
+    const openEdit = (brand: BrandRow) => {
+        setBrandToEdit(brand);
+        setDialogOpen(true);
+    };
+
+    const openDelete = (brand: BrandRow) => {
+        setBrandToDelete(brand);
     };
 
     return (
         <>
             <Head title="Markalar" />
 
-            <div className="flex flex-col gap-4 p-4">
-                <Heading
-                    title="Markalar"
-                    description="Pazaryeri marka eşlemesi bu listeye dayanır."
-                />
-
-                <Form
-                    {...BrandController.store.form()}
-                    options={{ preserveScroll: true }}
-                    resetOnSuccess
-                    className="flex max-w-xl items-end gap-2"
-                >
-                    {({ processing, errors }) => (
-                        <>
-                            <div className="grid flex-1 gap-2">
-                                <Label htmlFor="name">Yeni marka</Label>
-                                <Input
-                                    id="name"
-                                    name="name"
-                                    required
-                                    placeholder="Marka adı"
-                                />
-                                <InputError
-                                    message={errors.name ?? errors.slug}
-                                />
+            <div className="flex flex-col gap-6 p-4 sm:p-6 lg:p-8">
+                {/* Üst Başlık ve İstatistik Bilgisi */}
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                        <Heading
+                            title="Markalar"
+                            description="Pazaryeri marka eşlemesi ve ürün sınıflandırması bu listeye dayanır."
+                        />
+                        {brands.length > 0 && (
+                            <div className="mt-1.5 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                                <span className="flex items-center gap-1 font-medium">
+                                    <span className="font-mono font-semibold text-foreground tabular-nums">
+                                        {brands.length}
+                                    </span>{' '}
+                                    toplam marka
+                                </span>
+                                <span>•</span>
+                                <span className="flex items-center gap-1">
+                                    <Package className="size-3.5" />
+                                    <span className="font-mono font-semibold text-foreground tabular-nums">
+                                        {totalProductsCount}
+                                    </span>{' '}
+                                    bağlı ürün
+                                </span>
+                                {brandsWithProductsCount < brands.length && (
+                                    <>
+                                        <span>•</span>
+                                        <span className="text-muted-foreground/80">
+                                            <span className="font-mono tabular-nums">
+                                                {brands.length -
+                                                    brandsWithProductsCount}
+                                            </span>{' '}
+                                            markada henüz ürün yok
+                                        </span>
+                                    </>
+                                )}
                             </div>
-                            <PermissionButton
-                                check={canManage}
-                                type="submit"
-                                disabled={processing}
-                            >
-                                Ekle
-                            </PermissionButton>
-                        </>
-                    )}
-                </Form>
+                        )}
+                    </div>
+
+                    <PermissionButton
+                        check={canManage}
+                        type="button"
+                        onClick={openCreate}
+                        className="gap-1.5 self-start shadow-sm sm:self-auto"
+                    >
+                        <Plus className="size-4" />
+                        Yeni Marka
+                    </PermissionButton>
+                </div>
 
                 {brands.length === 0 ? (
-                    <p className="rounded-lg border border-dashed border-border p-8 text-center font-serif text-2xl tracking-[-0.02em] text-muted-foreground">
-                        Henüz marka eklenmemiş.
-                    </p>
+                    <EmptyState
+                        icon={Tag}
+                        title="Henüz marka eklenmemiş"
+                        description="Ürünlerinizi markalarına göre gruplamak ve pazaryeri eşlemelerini kolaylaştırmak için ilk markanızı ekleyin."
+                        action={
+                            <PermissionButton
+                                check={canManage}
+                                type="button"
+                                onClick={openCreate}
+                                className="gap-1.5"
+                            >
+                                <Plus className="size-4" />
+                                İlk Markayı Ekle
+                            </PermissionButton>
+                        }
+                    />
                 ) : (
-                    <div className="overflow-hidden rounded-lg border border-border">
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Marka</TableHead>
-                                    <TableHead>Slug</TableHead>
-                                    <TableHead className="text-right">
-                                        Ürün
-                                    </TableHead>
-                                    <TableHead className="w-16" />
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {brands.map((brand) => (
-                                    <TableRow key={brand.id}>
-                                        <TableCell>
-                                            <Input
-                                                aria-label={`${brand.name} adı`}
-                                                defaultValue={brand.name}
-                                                disabled={!canManage.allowed}
-                                                className="h-8 max-w-xs"
-                                                onBlur={(event) =>
-                                                    rename(
-                                                        brand,
-                                                        event.currentTarget
-                                                            .value,
-                                                    )
-                                                }
-                                            />
-                                        </TableCell>
-                                        <TableCell className="text-muted-foreground tabular-nums">
-                                            {brand.slug}
-                                        </TableCell>
-                                        <TableCell className="text-right tabular-nums">
-                                            {brand.productCount}
-                                        </TableCell>
-                                        <TableCell>
-                                            <PermissionButton
-                                                check={canManage}
-                                                variant="ghost"
-                                                size="icon"
-                                                aria-label={`${brand.name} sil`}
-                                                onClick={() =>
-                                                    setPendingDelete(brand)
-                                                }
-                                            >
-                                                <Trash2 />
-                                            </PermissionButton>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
+                    <div className="flex flex-col gap-4">
+                        {/* Arama ve Sıralama Kontrol Çubuğu */}
+                        <div className="flex flex-col gap-3 rounded-lg border border-border bg-card p-3 shadow-xs sm:flex-row sm:items-center sm:justify-between">
+                            {/* Arama Çubuğu */}
+                            <div className="relative max-w-md flex-1">
+                                <Search className="pointer-events-none absolute top-2.5 left-2.5 size-4 text-muted-foreground" />
+                                <Input
+                                    value={searchTerm}
+                                    onChange={(e) =>
+                                        setSearchTerm(e.target.value)
+                                    }
+                                    placeholder="Marka adı veya slug ara..."
+                                    className="h-9 pr-8 pl-8.5"
+                                    aria-label="Marka ara"
+                                />
+                                {searchTerm && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setSearchTerm('')}
+                                        className="absolute top-2.5 right-2.5 text-muted-foreground hover:text-foreground"
+                                        aria-label="Aramayı temizle"
+                                    >
+                                        <X className="size-4" />
+                                    </button>
+                                )}
+                            </div>
+
+                            {/* Sıralama Seçici */}
+                            <div className="flex items-center gap-2 self-end sm:self-auto">
+                                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                                    <ArrowUpDown className="size-3.5" />
+                                    <span className="hidden sm:inline">
+                                        Sırala:
+                                    </span>
+                                </div>
+                                <Select
+                                    value={sortOption}
+                                    onValueChange={(val) =>
+                                        setSortOption(val as SortOption)
+                                    }
+                                >
+                                    <SelectTrigger
+                                        className="h-9 w-[180px] text-xs"
+                                        aria-label="Sıralama ölçütü"
+                                    >
+                                        <SelectValue placeholder="Sıralama" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem
+                                            value="name-asc"
+                                            className="text-xs"
+                                        >
+                                            İsim (A → Z)
+                                        </SelectItem>
+                                        <SelectItem
+                                            value="name-desc"
+                                            className="text-xs"
+                                        >
+                                            İsim (Z → A)
+                                        </SelectItem>
+                                        <SelectItem
+                                            value="products-desc"
+                                            className="text-xs"
+                                        >
+                                            Ürün Sayısı (Çoktan Aza)
+                                        </SelectItem>
+                                        <SelectItem
+                                            value="products-asc"
+                                            className="text-xs"
+                                        >
+                                            Ürün Sayısı (Azdan Çoğa)
+                                        </SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+
+                        {/* Arama Sonuç Durumu */}
+                        {searchTerm.trim() && (
+                            <div className="flex items-center justify-between px-1 text-xs text-muted-foreground">
+                                <span>
+                                    "
+                                    <strong className="text-foreground">
+                                        {searchTerm}
+                                    </strong>
+                                    " araması için{' '}
+                                    <strong className="font-mono text-foreground tabular-nums">
+                                        {filteredAndSortedBrands.length}
+                                    </strong>{' '}
+                                    marka bulundu.
+                                </span>
+                                <Button
+                                    type="button"
+                                    variant="link"
+                                    size="sm"
+                                    onClick={() => setSearchTerm('')}
+                                    className="h-auto p-0 text-xs"
+                                >
+                                    Filtreyi Temizle
+                                </Button>
+                            </div>
+                        )}
+
+                        {/* Arama Sıfır Eşleşme Durumu */}
+                        {searchTerm.trim() &&
+                        filteredAndSortedBrands.length === 0 ? (
+                            <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-border bg-card p-8 text-center">
+                                <Tag className="mb-2 size-8 text-muted-foreground/60" />
+                                <h3 className="text-sm font-medium">
+                                    Eşleşen marka bulunamadı
+                                </h3>
+                                <p className="mt-1 max-w-sm text-xs text-muted-foreground">
+                                    "{searchTerm}" aramasına uygun marka
+                                    bulunmuyor. Yazımı kontrol edebilir veya
+                                    yeni bir marka oluşturabilirsiniz.
+                                </p>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setSearchTerm('')}
+                                    className="mt-3"
+                                >
+                                    Aramayı Temizle
+                                </Button>
+                            </div>
+                        ) : (
+                            /* Veri Tablosu */
+                            <div className="overflow-hidden rounded-lg border border-border bg-card shadow-xs">
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead className="w-1/2">
+                                                Marka Adı
+                                            </TableHead>
+                                            <TableHead className="w-1/3">
+                                                Slug
+                                            </TableHead>
+                                            <TableHead className="w-28 text-right">
+                                                Bağlı Ürün
+                                            </TableHead>
+                                            <TableHead className="w-24 pr-4 text-right">
+                                                İşlemler
+                                            </TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {filteredAndSortedBrands.map(
+                                            (brand) => (
+                                                <TableRow key={brand.id}>
+                                                    <TableCell>
+                                                        <div className="flex items-center gap-2.5">
+                                                            <div className="flex size-7 items-center justify-center rounded-md bg-muted/60 text-muted-foreground">
+                                                                <Tag className="size-3.5" />
+                                                            </div>
+                                                            <span className="font-medium text-foreground">
+                                                                {brand.name}
+                                                            </span>
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell className="font-mono text-xs text-muted-foreground tabular-nums">
+                                                        {brand.slug}
+                                                    </TableCell>
+                                                    <TableCell className="text-right font-mono text-sm tabular-nums">
+                                                        {brand.productCount >
+                                                        0 ? (
+                                                            <Badge
+                                                                variant="secondary"
+                                                                className="font-mono text-xs tabular-nums"
+                                                            >
+                                                                {
+                                                                    brand.productCount
+                                                                }
+                                                            </Badge>
+                                                        ) : (
+                                                            <span className="font-mono text-xs text-muted-foreground">
+                                                                0
+                                                            </span>
+                                                        )}
+                                                    </TableCell>
+                                                    <TableCell className="pr-4 text-right">
+                                                        <TooltipProvider
+                                                            delayDuration={200}
+                                                        >
+                                                            <div className="flex items-center justify-end gap-1">
+                                                                <Tooltip>
+                                                                    <TooltipTrigger
+                                                                        asChild
+                                                                    >
+                                                                        <PermissionButton
+                                                                            check={
+                                                                                canManage
+                                                                            }
+                                                                            type="button"
+                                                                            variant="ghost"
+                                                                            size="icon"
+                                                                            className="size-7 text-muted-foreground hover:text-foreground"
+                                                                            aria-label={`${brand.name} düzenle`}
+                                                                            onClick={() =>
+                                                                                openEdit(
+                                                                                    brand,
+                                                                                )
+                                                                            }
+                                                                        >
+                                                                            <Pencil className="size-3.5" />
+                                                                        </PermissionButton>
+                                                                    </TooltipTrigger>
+                                                                    <TooltipContent side="top">
+                                                                        Düzenle
+                                                                    </TooltipContent>
+                                                                </Tooltip>
+
+                                                                <Tooltip>
+                                                                    <TooltipTrigger
+                                                                        asChild
+                                                                    >
+                                                                        <PermissionButton
+                                                                            check={
+                                                                                canManage
+                                                                            }
+                                                                            type="button"
+                                                                            variant="ghost"
+                                                                            size="icon"
+                                                                            className="size-7 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                                                                            aria-label={`${brand.name} sil`}
+                                                                            onClick={() =>
+                                                                                openDelete(
+                                                                                    brand,
+                                                                                )
+                                                                            }
+                                                                        >
+                                                                            <Trash2 className="size-3.5" />
+                                                                        </PermissionButton>
+                                                                    </TooltipTrigger>
+                                                                    <TooltipContent side="top">
+                                                                        Sil
+                                                                    </TooltipContent>
+                                                                </Tooltip>
+                                                            </div>
+                                                        </TooltipProvider>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ),
+                                        )}
+                                    </TableBody>
+                                </Table>
+                            </div>
+                        )}
                     </div>
                 )}
             </div>
 
-            <Dialog
-                open={pendingDelete !== null}
-                onOpenChange={(open) => !open && setPendingDelete(null)}
-            >
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Marka silinsin mi?</DialogTitle>
-                        <DialogDescription>
-                            {pendingDelete?.name} silinecek. Bu markaya bağlı
-                            ürünler silinmez, markasız kalır.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <DialogFooter>
-                        <Button
-                            variant="outline"
-                            onClick={() => setPendingDelete(null)}
-                        >
-                            Vazgeç
-                        </Button>
-                        <Button
-                            variant="destructive"
-                            onClick={() => {
-                                if (pendingDelete === null) {
-                                    return;
-                                }
+            {/* Marka Ekleme / Düzenleme Modalı */}
+            <BrandDialog
+                open={dialogOpen}
+                onOpenChange={setDialogOpen}
+                brandToEdit={brandToEdit}
+            />
 
-                                router.delete(
-                                    destroy.url({ brand: pendingDelete.id }),
-                                    {
-                                        preserveScroll: true,
-                                        onError: toastError,
-                                    },
-                                );
-                                setPendingDelete(null);
-                            }}
-                        >
-                            Sil
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+            {/* Marka Silme Onay Modalı */}
+            <BrandDeleteDialog
+                brand={brandToDelete}
+                onClose={() => setBrandToDelete(null)}
+            />
         </>
     );
 }

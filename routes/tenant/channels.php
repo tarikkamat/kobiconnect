@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 use App\Http\Controllers\Channels\AppStoreController;
 use App\Http\Controllers\Channels\ConnectionController;
-use App\Http\Controllers\Channels\ListingController;
 use App\Http\Controllers\Channels\MappingController;
-use App\Http\Controllers\Channels\MatchInboxController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -44,23 +42,5 @@ Route::prefix('channels')->group(function (): void {
         Route::post('{connection}/{category}/attributes', [MappingController::class, 'storeAttributes'])->name('attributes');
         Route::post('{connection}/{category}/values', [MappingController::class, 'storeValues'])->name('values');
         Route::post('{connection}/{category}/brands', [MappingController::class, 'storeBrands'])->name('brands');
-    });
-
-    /*
-    | Varyant x kanal matrisi. Salt okuma: bu ekran duzeltmeyi kendisi yapmaz,
-    | duzeltme yoluna GOTURUR (urun sayfasi, islem kuyrugu, on eslesme kutusu).
-    */
-    Route::get('listings', [ListingController::class, 'index'])->name('listings.index');
-
-    /*
-    | On eslesme gelen kutusu — HEPSIBURADA.md §3 H10.
-    | Karar verilmeyen urun SATILMAZ, bu yuzden bu bir gelen kutusudur, bir
-    | ayar ekrani degil. Tekil ve toplu karar AYNI ucu kullanir: tekil karar,
-    | tek elemanli bir toplu karardir.
-    */
-    Route::prefix('matches')->name('matches.')->group(function (): void {
-        Route::get('/', [MatchInboxController::class, 'index'])->name('index');
-        Route::post('{connection}/approve', [MatchInboxController::class, 'approve'])->name('approve');
-        Route::post('{connection}/reject', [MatchInboxController::class, 'reject'])->name('reject');
     });
 });

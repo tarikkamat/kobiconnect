@@ -1,7 +1,9 @@
 import { Head, InfiniteScroll, Link, router } from '@inertiajs/react';
-import { Info, Search } from 'lucide-react';
+import { Info, RotateCcw, Search } from 'lucide-react';
 import { ClaimStatusBadge } from '@/components/claims/claim-status-badge';
+import { EmptyState } from '@/components/empty-state';
 import Heading from '@/components/heading';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
     Select,
@@ -78,7 +80,7 @@ export default function ClaimIndex({
         <>
             <Head title="İadeler" />
 
-            <div className="flex flex-col gap-4 p-4">
+            <div className="flex flex-col gap-6 p-4 sm:p-6 lg:p-8">
                 <Heading
                     title="İadeler"
                     description="Pazaryerlerinden çekilen iade talepleri."
@@ -180,9 +182,52 @@ export default function ClaimIndex({
                 </div>
 
                 {claims.data.length === 0 ? (
-                    <p className="rounded-lg border border-dashed border-border p-8 text-center font-serif text-2xl tracking-[-0.02em] text-muted-foreground">
-                        Bu filtrelerle eşleşen iade talebi yok.
-                    </p>
+                    <EmptyState
+                        icon={RotateCcw}
+                        title={
+                            Boolean(
+                                filters.search ||
+                                    filters.status ||
+                                    filters.connection,
+                            )
+                                ? 'Filtrelere uygun iade talebi bulunamadı'
+                                : 'Henüz iade talebi yok'
+                        }
+                        description={
+                            Boolean(
+                                filters.search ||
+                                    filters.status ||
+                                    filters.connection,
+                            )
+                                ? 'Arama teriminizi veya filtre tercihlerinizi değiştirerek tekrar deneyebilirsiniz.'
+                                : 'Pazaryerlerinden gelen iade ve iptal talepleri burada listelenecektir.'
+                        }
+                        action={
+                            Boolean(
+                                filters.search ||
+                                    filters.status ||
+                                    filters.connection,
+                            ) ? (
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() =>
+                                        router.get(
+                                            index.url(),
+                                            {},
+                                            {
+                                                preserveState: true,
+                                                preserveScroll: true,
+                                                replace: true,
+                                            },
+                                        )
+                                    }
+                                >
+                                    Filtreleri Sıfırla
+                                </Button>
+                            ) : null
+                        }
+                    />
                 ) : (
                     <div className="overflow-hidden rounded-lg border border-border">
                         <InfiniteScroll data="claims" buffer={300}>

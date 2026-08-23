@@ -24,12 +24,6 @@ export default defineConfig({
                     subsets: ['latin', 'latin-ext'],
                     preload: false,
                 }),
-                // Sadece bos durum/onboarding basliklarinda — on yukleme israfi.
-                bunny('Petrona', {
-                    weights: [400],
-                    subsets: ['latin', 'latin-ext'],
-                    preload: false,
-                }),
                 bunny('Geist Mono', {
                     weights: [400, 500],
                     subsets: ['latin', 'latin-ext'],

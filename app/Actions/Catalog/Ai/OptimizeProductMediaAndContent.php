@@ -66,20 +66,59 @@ final class OptimizeProductMediaAndContent
             ->quality('high')
             ->generate();
 
-        $path = $generatedImage->store('products/ai');
+        $path = $generatedImage->storePublicly('products/ai', 'public');
+        $publicUrl = '/storage/'.ltrim((string) $path, '/');
 
         $maxPosition = (int) ($product->images()->max('position') ?? 0);
         $productImage = ProductImage::create([
             'product_id' => $product->id,
-            'url' => $path,
+            'url' => $publicUrl,
             'position' => $maxPosition + 1,
         ]);
 
         return [
             'success' => true,
             'image_id' => $productImage->id,
-            'url' => $path,
+            'url' => $publicUrl,
             'product_id' => $product->id,
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function generateStandaloneStudioImage(string $productName, ?string $customInstruction = null): array
+    {
+        return $this->refactorStudioImage(null, $productName, $customInstruction);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function refactorStudioImage(?string $imageUrl, string $productName, ?string $customInstruction = null): array
+    {
+        $imageContext = $imageUrl ? "Original image reference: {$imageUrl}. Transform this product photo into a high-end commercial photoshoot." : '';
+
+        $prompt = sprintf(
+            'Professional commercial product studio photograph of %s. %s Clean professional backdrop, calibrated studio lighting, crisp sharpness, 4k ultra-detailed commercial e-commerce render. %s',
+            $productName,
+            $imageContext,
+            $customInstruction ? 'Instructions: '.$customInstruction : ''
+        );
+
+        $generatedImage = Image::of($prompt)
+            ->square()
+            ->quality('high')
+            ->generate();
+
+        $path = $generatedImage->storePublicly('products/ai', 'public');
+        $publicUrl = '/storage/'.ltrim((string) $path, '/');
+
+        return [
+            'success' => true,
+            'url' => $publicUrl,
+            'path' => (string) $path,
+            'original_url' => $imageUrl,
         ];
     }
 }

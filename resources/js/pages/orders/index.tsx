@@ -14,7 +14,11 @@ import {
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import Heading from '@/components/heading';
-import { MarketplaceAvatar } from '@/components/marketplace-avatar';
+import { EmptyState } from '@/components/empty-state';
+import {
+    MarketplaceAvatar,
+    MarketplaceLogo,
+} from '@/components/marketplace-avatar';
 import {
     OrderPreviewSheet,
     type OrderPreviewSummary,
@@ -179,7 +183,7 @@ export default function OrderIndex({
         <>
             <Head title="Siparişler" />
 
-            <div className="flex flex-col gap-5 p-4 sm:p-6 font-sans">
+            <div className="flex flex-col gap-6 p-4 sm:p-6 lg:p-8 font-sans">
                 {/* Header */}
                 <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                     <Heading
@@ -500,35 +504,30 @@ export default function OrderIndex({
 
                 {/* Orders Content */}
                 {orders.data.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-border py-16 px-4 text-center">
-                        <div className="flex size-12 items-center justify-center rounded-full bg-secondary text-muted-foreground">
-                            {hasActiveFilters ? (
-                                <PackageOpen className="size-6" />
-                            ) : (
-                                <Package className="size-6" />
-                            )}
-                        </div>
-                        <h3 className="mt-4 font-sans font-semibold text-xl tracking-tight text-foreground">
-                            {hasActiveFilters
+                    <EmptyState
+                        icon={hasActiveFilters ? PackageOpen : Package}
+                        title={
+                            hasActiveFilters
                                 ? 'Filtrelere uygun sipariş bulunamadı'
-                                : 'Henüz sipariş kaydı yok'}
-                        </h3>
-                        <p className="mt-1.5 max-w-md text-sm text-muted-foreground">
-                            {hasActiveFilters
+                                : 'Henüz sipariş kaydı yok'
+                        }
+                        description={
+                            hasActiveFilters
                                 ? 'Arama teriminizi veya filtre tercihlerinizi değiştirerek tekrar deneyebilirsiniz.'
-                                : 'Pazaryeri bağlantılarınızdan yeni siparişler çekildikçe burada listelenecektir.'}
-                        </p>
-                        {hasActiveFilters && (
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                className="mt-5"
-                                onClick={clearAllFilters}
-                            >
-                                Filtreleri Sıfırla
-                            </Button>
-                        )}
-                    </div>
+                                : 'Pazaryeri bağlantılarınızdan yeni siparişler çekildikçe burada listelenecektir.'
+                        }
+                        action={
+                            hasActiveFilters ? (
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={clearAllFilters}
+                                >
+                                    Filtreleri Sıfırla
+                                </Button>
+                            ) : null
+                        }
+                    />
                 ) : (
                     /* Table Container */
                     <div className="overflow-hidden rounded-lg border border-border bg-card">
@@ -536,7 +535,7 @@ export default function OrderIndex({
                             <Table>
                                 <TableHeader>
                                     <TableRow className="border-b border-border hover:bg-transparent">
-                                        <TableHead className="w-14">
+                                        <TableHead className="w-24 min-w-[90px]">
                                             Kanal
                                         </TableHead>
                                         <TableHead className="min-w-[200px]">
@@ -565,15 +564,15 @@ export default function OrderIndex({
                                 <TableBody>
                                     {orders.data.map((order) => {
                                         const isPending =
-                                            order.status === PENDING_PAYMENT;
+                                             order.status === PENDING_PAYMENT;
                                         const isCopied =
-                                            copiedOrderId === order.id;
+                                             copiedOrderId === order.id;
 
                                         return (
                                             <TableRow
                                                 key={order.id}
                                                 onClick={() =>
-                                                    openPreview(order)
+                                                     openPreview(order)
                                                 }
                                                 className={cn(
                                                     'cursor-pointer transition-colors duration-150',
@@ -582,13 +581,13 @@ export default function OrderIndex({
                                                         : 'hover:bg-secondary/50',
                                                 )}
                                             >
-                                                {/* Marketplace Avatar */}
-                                                <TableCell className="w-14">
+                                                {/* Marketplace Logo */}
+                                                <TableCell className="w-24 min-w-[90px] py-3">
                                                     {order.marketplace ? (
                                                         <Tooltip>
                                                             <TooltipTrigger asChild>
-                                                                <span tabIndex={0} className="inline-block">
-                                                                    <MarketplaceAvatar
+                                                                <div tabIndex={0} className="flex items-center">
+                                                                    <MarketplaceLogo
                                                                         code={
                                                                             order.marketplace
                                                                         }
@@ -596,9 +595,9 @@ export default function OrderIndex({
                                                                             order.connection ??
                                                                             undefined
                                                                         }
-                                                                        size="md"
+                                                                        height="h-5 sm:h-6"
                                                                     />
-                                                                </span>
+                                                                </div>
                                                             </TooltipTrigger>
                                                             <TooltipContent>
                                                                 {order.connection ??
