@@ -43,7 +43,15 @@ it('her panel ekrani sahip rolu icin render oluyor', function (): void {
             continue;
         }
 
-        $screens[$route->getName() ?? $path] = $path;
+        // Panel ekranlari route adiyla tanimlidir; adsiz tenant GET'leri
+        // ekran degil protokol ucudur (or. MCP sunucusunun 405 stub'i).
+        $name = $route->getName();
+
+        if ($name === null) {
+            continue;
+        }
+
+        $screens[$name] = $path;
     }
 
     expect($screens)->not->toBeEmpty('Tenant panelinde hic ekran bulunamadi.');

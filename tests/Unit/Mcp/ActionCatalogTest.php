@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 use App\Mcp\ActionCatalog;
 use App\Mcp\Servers\KobiConnectServer;
+use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
+use Illuminate\Http\Request;
 use Laravel\Mcp\Facades\Mcp;
 use Stancl\Tenancy\Middleware\InitializeTenancyByPath;
 use Tests\TestCase;
@@ -67,4 +69,19 @@ it('MCP sunucusu tenant yolunda ve oturum arkasinda kayitli', function (): void 
 it('sunucu uc araci yayinlar', function (): void {
     expect((new ReflectionClass(KobiConnectServer::class))->getDefaultProperties()['tools'])
         ->toHaveCount(3);
+});
+
+it('MCP ucu CSRF dogrulamasindan muaf, panel uclari degil', function (): void {
+    // MCP istemcisi tarayici degildir: ne CSRF token'i ne Sec-Fetch-Site
+    // basligi gonderir, muafiyet olmadan her cagri 419 doner.
+    $middleware = new PreventRequestForgery(app(), app('encrypter'));
+
+    $isExcluded = Closure::bind(
+        fn (Request $request): bool => $this->inExceptArray($request),
+        $middleware,
+        PreventRequestForgery::class,
+    );
+
+    expect($isExcluded(Request::create('/1005/mcp', 'POST')))->toBeTrue()
+        ->and($isExcluded(Request::create('/1005/orders', 'POST')))->toBeFalse();
 });

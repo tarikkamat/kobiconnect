@@ -8,6 +8,7 @@ Before planning or editing, find the row whose globs match the file's path and r
 | resources/css/app.css | .ai/rules/css.md |
 | resources/js/** | .ai/rules/js.md |
 | app/Marketplaces/** | .ai/rules/marketplaces.md |
+| app/Mcp/** | .ai/rules/mcp.md |
 | app/Actions/Onboarding/** | .ai/rules/onboarding.md |
 | app/Providers/TenancyServiceProvider.php | .ai/rules/providers.md |
 | routes/tenant.php, routes/web.php | .ai/rules/routes.md |

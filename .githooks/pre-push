@@ -1,0 +1,23 @@
+#!/bin/sh
+# Tag push'u = production deploy. CI'in calistirdigi kontrolleri once burada
+# calistirip kirik bir tag'in disari cikmasini engelliyoruz. Normal branch
+# push'lari etkilenmez, hizli kalir.
+set -e
+
+tagging=0
+while read -r _local_ref _local_sha remote_ref _remote_sha; do
+    case "$remote_ref" in
+        refs/tags/*) tagging=1 ;;
+    esac
+done
+
+[ "$tagging" -eq 0 ] && exit 0
+
+echo "==> Tag push'u algilandi, CI kontrolleri calistiriliyor..."
+vendor/bin/pint --test
+vendor/bin/phpstan analyse --memory-limit=512M --no-progress
+npm run lint:check
+npm run format:check
+npm run types:check
+php artisan test --compact
+echo "==> Tum kontroller gecti, tag gonderiliyor."

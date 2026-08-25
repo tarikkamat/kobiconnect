@@ -67,6 +67,12 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->encryptCookies(except: ['appearance', 'sidebar_state']);
 
+        // MCP ucu JSON-RPC konusur; istemcide CSRF token'i uretecek bir sayfa
+        // yoktur. Guvenli, cunku uc yalnizca JSON govde kabul eder: bir <form>
+        // JSON content-type gonderemez, cross-origin fetch ise preflight'a
+        // takilir. Kimlik yine `auth` middleware'inden gelir.
+        $middleware->validateCsrfTokens(except: ['*/mcp']);
+
         $middleware->web(append: [
             HandleAppearance::class,
             HandleInertiaRequests::class,

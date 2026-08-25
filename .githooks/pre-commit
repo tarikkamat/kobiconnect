@@ -1,0 +1,21 @@
+#!/bin/sh
+# Prettier ve Pint, CI'da ancak tag atildiktan sonra calisiyor. Bu hook ayni
+# duzeltmeleri commit aninda staged dosyalara uygular, boylece format hatasi
+# CI'a hic ulasmaz.
+# ponytail: bosluklu dosya adlarinda xargs bolunur; repo'da yok, cikarsa -z/-0'a gec.
+set -e
+
+changed=$(git diff --cached --name-only --diff-filter=ACMR)
+[ -z "$changed" ] && exit 0
+
+res=$(echo "$changed" | grep '^resources/' || true)
+if [ -n "$res" ]; then
+    echo "$res" | xargs npx prettier --write --ignore-unknown --log-level warn
+    echo "$res" | xargs git add
+fi
+
+phpfiles=$(echo "$changed" | grep '\.php$' || true)
+if [ -n "$phpfiles" ] && [ -x vendor/bin/pint ]; then
+    echo "$phpfiles" | xargs vendor/bin/pint -q
+    echo "$phpfiles" | xargs git add
+fi

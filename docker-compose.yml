@@ -43,7 +43,7 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
-    networks: [kobiconnect]
+    networks: [kobiconnect_backend]
 
   redis:
     image: redis:7-alpine

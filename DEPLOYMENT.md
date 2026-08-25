@@ -8,7 +8,7 @@ Bu proje, **Laravel Octane (RoadRunner)** motoru ile yüksek performanslı çal�
 
 GitHub Actions (`.github/workflows/ci.yml`) üzerinde tam otomatik CI/CD yapılandırılmıştır:
 
-1. **`master`/`main` push veya Tag (`v*`)**:
+1. **Tag push (`v*`) veya manuel `workflow_dispatch`**:
    - **CI Aşaması:** Lint (Pint), PHPStan (Larastan L7), ESLint, Prettier, TypeScript ve PHPUnit testleri çalışır.
    - **Build Aşaması:** Testler başarıyla geçerse Docker imajı derlenir ve GitHub Container Registry'e (`ghcr.io/<owner>/kobiconnect`) `latest` ve commit SHA etiketleriyle push edilir.
    - **Deploy Aşaması:** SSH ile VDS'deki `/opt/kobiconnect` dizinine bağlanılır, yeni imaj çekilir (`pull`), veritabanı migration'ları çalıştırılır (`migrate --force`) ve servisler sıfır kesintiye yakın şekilde güncellenir (`up -d`).
@@ -57,7 +57,7 @@ KopiCRM'in kurulu olduğu sunucudaki web sunucusuna göre aşağıdaki bloklarda
 
 ### A) Sunucuda Caddy Kullanılıyorsa (KopiCRM'deki gibi):
 
-> **Dikkat:** Caddy konteyner içinde çalıştığı için `reverse_proxy 127.0.0.1:8010`
+> **Dikkat:** Caddy konteyner içinde çalıştığı için `reverse_proxy 127.0.0.1:8020`
 > **çalışmaz** — o adres Caddy'nin kendi loopback'idir ve 502 döner. Docker ağı
 > üzerinden konteyner adıyla bağlanmak gerekir.
 
@@ -107,7 +107,7 @@ docker compose exec app php artisan migrate --force
 
 | Servis | Motor | Port / Erişim |
 |---|---|---|
-| `kobiconnect_app` | **Laravel Octane + RoadRunner** | `127.0.0.1:8010` |
+| `kobiconnect_app` | **Laravel Octane + RoadRunner** | `127.0.0.1:8020` |
 | `kobiconnect_scheduler` | x | x
 | `kobiconnect_worker` | Kuyruk İşleyicisi | Arka Plan |
 | `kobiconnect_redis` | In-Memory Önbellek & Kuyruk | `kobiconnect_redis:6379` (İç Ağ) |
