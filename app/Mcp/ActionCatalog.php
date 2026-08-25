@@ -153,6 +153,12 @@ final class ActionCatalog
 
         try {
             $route->bind($request);
+
+            // PathTenantResolver'in yaptigi: tenant segmenti bir controller
+            // argumani degildir, cozuldukten sonra dusurulur. Kalirsa
+            // ControllerDispatcher onu ilk model parametresine denk getirir.
+            $route->forgetParameter('tenant');
+
             $router->substituteBindings($route);
             $router->substituteImplicitBindings($route);
 

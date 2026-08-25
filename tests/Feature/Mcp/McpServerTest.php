@@ -117,15 +117,3 @@ it('list-actions araci katalogu dondurur', function (): void {
         ->assertOk()
         ->assertSee('stock.index');
 });
-
-it('debug', function (): void {
-    $this->actingAs($this->keeper);
-    $route = Illuminate\Support\Facades\Route::getRoutes()->getByName('stock.update');
-    $url = route('stock.update', ['variant' => $this->variant->id, 'warehouse' => $this->warehouse->id]);
-    dump($url);
-    $req = Illuminate\Http\Request::create($url, 'PATCH', ['on_hand' => 40, 'reason' => 'x']);
-    $route->bind($req);
-    dump($route->parameters());
-    app(Illuminate\Routing\Router::class)->substituteImplicitBindings($route);
-    dump(array_map(fn ($p) => is_object($p) ? get_class($p) : $p, $route->parameters()));
-});
