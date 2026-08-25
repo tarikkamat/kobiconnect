@@ -11,7 +11,7 @@
     "require": {
         "php": "^8.3",
         "inertiajs/inertia-laravel": "^3.0",
-        "laravel/ai": "^0.10.3",
+        "laravel/ai": "^0.11.0",
         "laravel/fortify": "^1.37.2",
         "laravel/framework": "^13.17",
         "laravel/horizon": "^5.48",
@@ -30,7 +30,7 @@
     "require-dev": {
         "fakerphp/faker": "^1.24",
         "larastan/larastan": "^3.9",
-        "laravel/boost": "^2.5",
+        "laravel/boost": "^2.6",
         "laravel/pail": "^1.2.5",
         "laravel/pao": "^1.0.6",
         "laravel/pint": "^1.27",

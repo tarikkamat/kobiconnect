@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "6cdc3fb6d1457c04308182bc0f799a24",
+    "content-hash": "1477d467f3dbe0616e39a69245262c8e",
     "packages": [
         {
             "name": "aws/aws-crt-php",
@@ -1697,16 +1697,16 @@
         },
         {
             "name": "laravel/ai",
-            "version": "v0.10.3",
+            "version": "v0.11.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/laravel/ai.git",
-                "reference": "c3848aae389f45c605eefb0dda5bd5fa7df76eaa"
+                "reference": "dd08142f0c4dc4d5544521ce3fc4a1b9c2fe748c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/laravel/ai/zipball/c3848aae389f45c605eefb0dda5bd5fa7df76eaa",
-                "reference": "c3848aae389f45c605eefb0dda5bd5fa7df76eaa",
+                "url": "https://api.github.com/repos/laravel/ai/zipball/dd08142f0c4dc4d5544521ce3fc4a1b9c2fe748c",
+                "reference": "dd08142f0c4dc4d5544521ce3fc4a1b9c2fe748c",
                 "shasum": ""
             },
             "require": {
@@ -1769,7 +1769,7 @@
                 "issues": "https://github.com/laravel/ai/issues",
                 "source": "https://github.com/laravel/ai"
             },
-            "time": "2026-08-06T13:39:04+00:00"
+            "time": "2026-08-19T03:03:13+00:00"
         },
         {
             "name": "laravel/fortify",
@@ -10924,16 +10924,16 @@
         },
         {
             "name": "laravel/boost",
-            "version": "v2.5.5",
+            "version": "v2.6.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/laravel/boost.git",
-                "reference": "a6c798975a893d3c0a609ebc6ed37a007ecbedec"
+                "reference": "44f5944bf837856bc727aab87aba026dc70faa94"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/laravel/boost/zipball/a6c798975a893d3c0a609ebc6ed37a007ecbedec",
-                "reference": "a6c798975a893d3c0a609ebc6ed37a007ecbedec",
+                "url": "https://api.github.com/repos/laravel/boost/zipball/44f5944bf837856bc727aab87aba026dc70faa94",
+                "reference": "44f5944bf837856bc727aab87aba026dc70faa94",
                 "shasum": ""
             },
             "require": {
@@ -10986,7 +10986,7 @@
                 "issues": "https://github.com/laravel/boost/issues",
                 "source": "https://github.com/laravel/boost"
             },
-            "time": "2026-08-19T02:26:00+00:00"
+            "time": "2026-08-25T15:25:31+00:00"
         },
         {
             "name": "laravel/pail",

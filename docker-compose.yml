@@ -1,0 +1,67 @@
+x-app: &app
+  image: ${IMAGE:-kobiconnect:latest}
+  restart: unless-stopped
+  env_file: .env
+  depends_on:
+    redis:
+      condition: service_started
+    postgres:
+      condition: service_healthy
+  volumes:
+    - storage:/app/storage
+  networks: [kobiconnect_backend]
+
+services:
+  app:
+    <<: *app
+    container_name: kobiconnect_app
+    ports:
+      - "127.0.0.1:8020:8000"
+
+  worker:
+    <<: *app
+    container_name: kobiconnect_worker
+    command: php artisan queue:work redis --sleep=1 --tries=3 --max-time=3600 --backoff=5
+
+  scheduler:
+    <<: *app
+    container_name: kobiconnect_scheduler
+    command: php artisan schedule:work
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: kobiconnect_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_DATABASE:-kobiconnect}
+      POSTGRES_USER: ${DB_USERNAME:-kobiconnect_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-kobiconnect_secret_postgres_pass}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-kobiconnect_user} -d ${DB_DATABASE:-kobiconnect}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks: [kobiconnect]
+
+  redis:
+    image: redis:7-alpine
+    container_name: kobiconnect_redis
+    restart: unless-stopped
+    command: ['redis-server', '--appendonly', 'yes', '--requirepass', '${REDIS_PASSWORD:-kobiconnect_secret_redis_pass}']
+    volumes:
+      - redisdata:/data
+    networks: [kobiconnect_backend]
+
+networks:
+  kobiconnect_backend:
+    name: kobiconnect_backend
+
+volumes:
+  storage:
+    name: kobiconnect_storage
+  pgdata:
+    name: kobiconnect_pgdata
+  redisdata:
+    name: kobiconnect_redisdata
