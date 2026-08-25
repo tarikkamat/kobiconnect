@@ -108,6 +108,7 @@ docker compose exec app php artisan migrate --force
 | Servis | Motor | Port / Erişim |
 |---|---|---|
 | `kobiconnect_app` | **Laravel Octane + RoadRunner** | `127.0.0.1:8020` |
-| `kobiconnect_scheduler` | x | x
+| `kobiconnect_scheduler` | Zamanlanmis Gorevler | Arka Plan |
 | `kobiconnect_worker` | Kuyruk İşleyicisi | Arka Plan |
+| `kobiconnect_nightwatch` | Nightwatch Agent | `nightwatch:2407` (İç Ağ) |
 | `kobiconnect_redis` | In-Memory Önbellek & Kuyruk | `kobiconnect_redis:6379` (İç Ağ) |

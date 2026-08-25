@@ -28,6 +28,16 @@ services:
     container_name: kobiconnect_scheduler
     command: php artisan schedule:work
 
+  nightwatch:
+    <<: *app
+    container_name: kobiconnect_nightwatch
+    command: php artisan nightwatch:agent --listen-on=0.0.0.0:2407
+    healthcheck:
+      test: ['CMD', 'php', 'artisan', 'nightwatch:status']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
   postgres:
     image: postgres:16-alpine
     container_name: kobiconnect_postgres
