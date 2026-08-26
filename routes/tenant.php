@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Http\Controllers\Catalog\AttributeController;
 use App\Http\Controllers\Catalog\BrandController;
 use App\Http\Controllers\Catalog\CategoryController;
+use App\Http\Controllers\Catalog\DefinitionController;
 use App\Http\Controllers\Catalog\DynamicCategoryController;
 use App\Http\Controllers\Catalog\PriceListController;
 use App\Http\Controllers\Catalog\ProductController;
@@ -48,6 +49,7 @@ Route::middleware(ConfigureTenantHost::class)->group(function (): void {
         Route::get('dashboard', DashboardController::class)->name('dashboard');
 
         Route::prefix('catalog')->group(function (): void {
+            Route::get('definitions', [DefinitionController::class, 'index'])->name('definitions.index');
             Route::get('products', [ProductController::class, 'index'])->name('products.index');
             Route::get('products/{product}', [ProductController::class, 'show'])->name('products.show');
             Route::patch('products/{product}', [ProductController::class, 'update'])->name('products.update');
