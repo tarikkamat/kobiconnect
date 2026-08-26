@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Actions\Team;
 
+use App\Mail\Lifecycle\TeamInvitation;
 use App\Models\User;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
 
@@ -38,6 +40,14 @@ final class InviteUser
         $user->assignRole($role);
 
         Password::broker()->sendResetLink(['email' => $email]);
+
+        $tenantName = tenant()->name ?? 'KobiConnect';
+        Mail::to($user)->queue(new TeamInvitation(
+            userName: $name,
+            roleName: $role,
+            tenantName: $tenantName,
+            loginUrl: url('/login'),
+        ));
 
         return $user;
     }

@@ -11,6 +11,7 @@ use Illuminate\Support\Str;
 use Laravel\Mcp\Facades\Mcp;
 use Laravel\Mcp\Server\Http\Controllers\OAuthRegisterController;
 use Laravel\Mcp\Server\Registrar;
+use Laravel\Passport\Passport;
 use Stancl\Tenancy\Middleware\InitializeTenancyByPath;
 
 /*
@@ -43,7 +44,11 @@ Mcp::web('{tenant}/mcp', KobiConnectServer::class)
     ]);
 
 // `mcp:use` kapsamini tanimlar; Passport kurulu degilse sessizce hicbir sey
-// yapmaz. Kesif belgeleri bu kapsami ilan eder.
+// yapmaz. Kesif belgeleri bu kapsami ilan eder. Aciklamayi ONCE biz yaziyoruz:
+// ensureMcpScope kapsam zaten tanimliysa dokunmuyor, dokunsa onay ekraninda
+// paketin Ingilizce "Use MCP server" metni cikardi.
+Passport::tokensCan([Registrar::OAUTH_SCOPE => 'KobiConnect panelinizi sizin yetkilerinizle kullanmak']);
+
 Registrar::ensureMcpScope();
 
 /*

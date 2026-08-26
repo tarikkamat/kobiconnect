@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { useCurrentUrl } from '@/hooks/use-current-url';
 import { cn, toUrl } from '@/lib/utils';
+import { setup as mcpSetup } from '@/routes/mcp';
 import { edit as notificationPreferences } from '@/routes/notification-preferences';
 import { edit } from '@/routes/profile';
 import { edit as editSecurity } from '@/routes/security';
@@ -34,6 +35,7 @@ function sidebarNavItems(): (NavItem & { permission?: string })[] {
             href: notificationPreferences(),
             icon: null,
         },
+        { title: 'Yapay Zekâ (MCP)', href: mcpSetup(), icon: null },
     ];
 }
 

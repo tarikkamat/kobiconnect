@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace App\Actions\Sync;
 
 use App\Enums\ProcessingStatus;
+use App\Events\NotificationEventOccurred;
 use App\Marketplaces\Data\Enums\SyncDirection;
 use App\Marketplaces\Data\PullPage;
 use App\Models\ChannelConnection;
 use App\Models\SyncCursor;
 use App\Models\SyncRun;
+use App\Notifications\NotificationEvent;
 use DateTimeImmutable;
 use InvalidArgumentException;
 use Throwable;
@@ -90,6 +92,12 @@ final class RunPull
                 'finished_at' => now(),
                 'stats' => ['pages' => $pages, 'items' => $items],
                 'error' => ['class' => $exception::class, 'message' => $exception->getMessage()],
+            ]);
+
+            NotificationEventOccurred::dispatch(NotificationEvent::SyncFailed, [
+                'connection_id' => (string) $connection->getKey(),
+                'connection' => $connection->name,
+                'reason' => $exception->getMessage(),
             ]);
 
             throw $exception;

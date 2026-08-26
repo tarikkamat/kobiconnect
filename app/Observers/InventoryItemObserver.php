@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Observers;
 
 use App\Actions\Sync\QueueVariantSync;
+use App\Events\NotificationEventOccurred;
 use App\Models\InventoryItem;
+use App\Notifications\NotificationEvent;
 
 /**
  * Every stock movement is a marketplace push waiting to happen.
@@ -26,6 +28,17 @@ final class InventoryItemObserver
     {
         if ($item->wasRecentlyCreated || $item->wasChanged(['on_hand', 'reserved', 'safety_stock'])) {
             $this->sync->stock($item->variant);
+
+            $item->refresh();
+            if ($item->safety_stock > 0 && $item->available <= $item->safety_stock) {
+                $variant = $item->variant;
+                NotificationEventOccurred::dispatch(NotificationEvent::StockCriticalLow, [
+                    'variant_id' => (string) $variant->getKey(),
+                    'sku' => $variant->sku,
+                    'available' => (string) $item->available,
+                    'safety_stock' => (string) $item->safety_stock,
+                ]);
+            }
         }
     }
 

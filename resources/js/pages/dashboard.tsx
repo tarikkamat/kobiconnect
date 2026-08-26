@@ -26,6 +26,7 @@ import {
     RowText,
     toneIcon,
 } from '@/components/dashboard/list-card';
+import { OnboardingOverlay } from '@/components/dashboard/onboarding-overlay';
 import {
     OrderVolumeChart,
     OrderVolumeSkeleton,
@@ -224,325 +225,323 @@ export default function Dashboard({
         <>
             <Head title="Gösterge Paneli" />
 
-            <div className="flex flex-col gap-6 p-4 sm:p-6 lg:p-8">
-                <div className="flex flex-wrap items-end justify-between gap-3">
-                    <Heading
-                        title="Gösterge Paneli"
-                        description="Seçili dönemde neyin aksadığını ve nereye bakmanız gerektiğini gösterir."
-                    />
-                    {started && <RangePicker range={range} />}
-                </div>
+            <div className="relative min-h-[calc(100vh-4rem)] p-4 sm:p-6 lg:p-8">
+                {/* Onboarding Overlay over blurred dashboard when not started */}
+                {!started && <OnboardingOverlay steps={steps} />}
 
-                {pending.length > 0 && (
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="text-2xl font-semibold tracking-tight">
-                                {started
-                                    ? 'Kurulumu tamamlayın'
-                                    : 'Henüz başlamadınız'}
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="flex flex-col gap-3">
-                            {steps.map((step) => (
-                                <div
-                                    key={step.title}
-                                    className="flex items-start gap-3"
-                                >
-                                    {step.done ? (
-                                        <CircleCheck className="mt-0.5 size-5 shrink-0 text-success" />
-                                    ) : (
-                                        <CircleDashed className="mt-0.5 size-5 shrink-0 text-muted-foreground" />
-                                    )}
-                                    <div>
+                <div
+                    className={cn(
+                        'flex flex-col gap-6 transition-all duration-300',
+                        !started &&
+                            'pointer-events-none opacity-40 blur-md filter select-none',
+                    )}
+                >
+                    <div className="flex flex-wrap items-end justify-between gap-3">
+                        <Heading
+                            title="Gösterge Paneli"
+                            description="Seçili dönemde neyin aksadığını ve nereye bakmanız gerektiğini gösterir."
+                        />
+                        <RangePicker range={range} />
+                    </div>
+
+                    {started && pending.length > 0 && (
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="text-xl font-semibold tracking-tight">
+                                    Kurulumu tamamlayın
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="flex flex-col gap-3">
+                                {steps.map((step) => (
+                                    <div
+                                        key={step.title}
+                                        className="flex items-start gap-3"
+                                    >
                                         {step.done ? (
-                                            <p className="font-medium text-muted-foreground line-through">
-                                                {step.title}
-                                            </p>
+                                            <CircleCheck className="mt-0.5 size-5 shrink-0 text-success" />
                                         ) : (
-                                            <Link
-                                                href={step.href}
-                                                className="font-medium underline-offset-4 hover:underline"
-                                            >
-                                                {step.title}
-                                            </Link>
+                                            <CircleDashed className="mt-0.5 size-5 shrink-0 text-muted-foreground" />
                                         )}
-                                        <p className="text-sm text-muted-foreground">
-                                            {step.description}
-                                        </p>
+                                        <div>
+                                            {step.done ? (
+                                                <p className="font-medium text-muted-foreground line-through">
+                                                    {step.title}
+                                                </p>
+                                            ) : (
+                                                <Link
+                                                    href={step.href}
+                                                    className="font-medium underline-offset-4 hover:underline"
+                                                >
+                                                    {step.title}
+                                                </Link>
+                                            )}
+                                            <p className="text-sm text-muted-foreground">
+                                                {step.description}
+                                            </p>
+                                        </div>
                                     </div>
-                                </div>
-                            ))}
-                        </CardContent>
-                    </Card>
-                )}
+                                ))}
+                            </CardContent>
+                        </Card>
+                    )}
 
-                {started && (
-                    <>
-                        <Deferred data="kpis" fallback={<KpiStripSkeleton />}>
-                            {kpis && <KpiStrip kpis={kpis} />}
-                        </Deferred>
+                    <Deferred data="kpis" fallback={<KpiStripSkeleton />}>
+                        {kpis && <KpiStrip kpis={kpis} />}
+                    </Deferred>
 
-                        {/* Uyarılar ve satış trendi yan yana: "neye
+                    {/* Uyarılar ve satış trendi yan yana: "neye
                             müdahale etmeliyim" ile "işler nereye gidiyor"
                             aynı ekran yüksekliğinde durur. */}
-                        <div className="grid gap-4 lg:grid-cols-3">
-                            <Deferred
-                                data="salesTrend"
-                                fallback={
-                                    <ChartSkeleton className="lg:col-span-2" />
-                                }
-                            >
-                                {salesTrend && (
-                                    <SalesTrendChart
-                                        trend={salesTrend}
-                                        summary={`${sales?.count ?? 0} sipariş · ${sales?.total ?? ''} · bugün ${sales?.today ?? 0}`}
-                                        className="lg:col-span-2"
-                                    />
-                                )}
-                            </Deferred>
-
-                            <Deferred
-                                data={STAT_PROPS}
-                                fallback={<AlertsCardSkeleton />}
-                            >
-                                <AlertsCard
-                                    alerts={[
-                                        {
-                                            key: 'unmatched',
-                                            label: 'Eşleşmemiş satır',
-                                            detail:
-                                                (unmatched?.lines ?? 0) === 0
-                                                    ? 'Bütün satırlar katalogla eşleşti'
-                                                    : `${unmatched?.orders} siparişte, eşlenmeden hazırlanamaz`,
-                                            count: unmatched?.lines ?? 0,
-                                            icon: Unlink,
-                                            tone: 'warn',
-                                            href: unmatchedOrders,
-                                        },
-                                        {
-                                            key: 'operations',
-                                            label: 'Başarısız işlem',
-                                            detail: `${syncHealth?.pendingOperations ?? 0} işlem kuyrukta bekliyor`,
-                                            count:
-                                                syncHealth?.failedOperations ??
-                                                0,
-                                            icon: CircleAlert,
-                                            tone: 'alert',
-                                        },
-                                        {
-                                            key: 'stock',
-                                            label: 'Kritik stok',
-                                            detail:
-                                                (criticalStock?.count ?? 0) ===
-                                                0
-                                                    ? 'Emniyet stoğu altında varyant yok'
-                                                    : 'Varyant emniyet stoğunun altında',
-                                            count: criticalStock?.count ?? 0,
-                                            icon: PackageOpen,
-                                            tone: 'warn',
-                                            href: stockRoute().url,
-                                        },
-                                        {
-                                            key: 'connections',
-                                            label: 'Bağlantı hatası',
-                                            detail:
-                                                (connections?.errored ?? 0) ===
-                                                0
-                                                    ? `${connections?.items.length ?? 0} bağlantı sorunsuz çalışıyor`
-                                                    : 'Hatalı bağlantı sessizce durur',
-                                            count: connections?.errored ?? 0,
-                                            icon: Cable,
-                                            tone: 'alert',
-                                            href: connectionsRoute().url,
-                                        },
-                                    ]}
+                    <div className="grid gap-4 lg:grid-cols-3">
+                        <Deferred
+                            data="salesTrend"
+                            fallback={
+                                <ChartSkeleton className="lg:col-span-2" />
+                            }
+                        >
+                            {salesTrend && (
+                                <SalesTrendChart
+                                    trend={salesTrend}
+                                    summary={`${sales?.count ?? 0} sipariş · ${sales?.total ?? ''} · bugün ${sales?.today ?? 0}`}
+                                    className="lg:col-span-2"
                                 />
-                            </Deferred>
-                        </div>
+                            )}
+                        </Deferred>
 
-                        {/* Tek 12'lik ızgara: sipariş hacmi 8, kritik stok 4
+                        <Deferred
+                            data={STAT_PROPS}
+                            fallback={<AlertsCardSkeleton />}
+                        >
+                            <AlertsCard
+                                alerts={[
+                                    {
+                                        key: 'unmatched',
+                                        label: 'Eşleşmemiş satır',
+                                        detail:
+                                            (unmatched?.lines ?? 0) === 0
+                                                ? 'Bütün satırlar katalogla eşleşti'
+                                                : `${unmatched?.orders} siparişte, eşlenmeden hazırlanamaz`,
+                                        count: unmatched?.lines ?? 0,
+                                        icon: Unlink,
+                                        tone: 'warn',
+                                        href: unmatchedOrders,
+                                    },
+                                    {
+                                        key: 'operations',
+                                        label: 'Başarısız işlem',
+                                        detail: `${syncHealth?.pendingOperations ?? 0} işlem kuyrukta bekliyor`,
+                                        count:
+                                            syncHealth?.failedOperations ?? 0,
+                                        icon: CircleAlert,
+                                        tone: 'alert',
+                                    },
+                                    {
+                                        key: 'stock',
+                                        label: 'Kritik stok',
+                                        detail:
+                                            (criticalStock?.count ?? 0) === 0
+                                                ? 'Emniyet stoğu altında varyant yok'
+                                                : 'Varyant emniyet stoğunun altında',
+                                        count: criticalStock?.count ?? 0,
+                                        icon: PackageOpen,
+                                        tone: 'warn',
+                                        href: stockRoute().url,
+                                    },
+                                    {
+                                        key: 'connections',
+                                        label: 'Bağlantı hatası',
+                                        detail:
+                                            (connections?.errored ?? 0) === 0
+                                                ? `${connections?.items.length ?? 0} bağlantı sorunsuz çalışıyor`
+                                                : 'Hatalı bağlantı sessizce durur',
+                                        count: connections?.errored ?? 0,
+                                        icon: Cable,
+                                        tone: 'alert',
+                                        href: connectionsRoute().url,
+                                    },
+                                ]}
+                            />
+                        </Deferred>
+                    </div>
+
+                    {/* Tek 12'lik ızgara: sipariş hacmi 8, kritik stok 4
                             (ilk sıra); kanal payı, satış hedefi ve bağlantılar
                             4'er (ikinci sıra). xl altında ikişerli. */}
-                        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-12">
-                            <Deferred
-                                data="orderVolume"
-                                fallback={
-                                    <OrderVolumeSkeleton className="xl:col-span-8" />
-                                }
-                            >
-                                {orderVolume && (
-                                    <OrderVolumeChart
-                                        volume={orderVolume}
-                                        className="xl:col-span-8"
-                                    />
-                                )}
-                            </Deferred>
+                    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-12">
+                        <Deferred
+                            data="orderVolume"
+                            fallback={
+                                <OrderVolumeSkeleton className="xl:col-span-8" />
+                            }
+                        >
+                            {orderVolume && (
+                                <OrderVolumeChart
+                                    volume={orderVolume}
+                                    className="xl:col-span-8"
+                                />
+                            )}
+                        </Deferred>
 
-                            <Deferred
-                                data="criticalStock"
-                                fallback={
-                                    <ListCardSkeleton className="xl:col-span-4" />
+                        <Deferred
+                            data="criticalStock"
+                            fallback={
+                                <ListCardSkeleton className="xl:col-span-4" />
+                            }
+                        >
+                            <ListCard
+                                title="Kritik stok"
+                                href={stockRoute().url}
+                                className="xl:col-span-4"
+                                badge={
+                                    (criticalStock?.count ?? 0) > 0 ? (
+                                        <Badge
+                                            variant="secondary"
+                                            className="font-mono tabular-nums"
+                                        >
+                                            {criticalStock?.count} varyant
+                                        </Badge>
+                                    ) : null
                                 }
                             >
-                                <ListCard
-                                    title="Kritik stok"
-                                    href={stockRoute().url}
-                                    className="xl:col-span-4"
-                                    badge={
-                                        (criticalStock?.count ?? 0) > 0 ? (
-                                            <Badge
-                                                variant="secondary"
-                                                className="font-mono tabular-nums"
+                                {criticalStock?.items.length ? (
+                                    criticalStock.items.map((item) => {
+                                        // Tukenmis stok satis durdurur;
+                                        // emniyetin altina inmek sadece
+                                        // siparis vermeyi hatirlatir.
+                                        const tone =
+                                            item.available <= 0
+                                                ? 'alert'
+                                                : 'warn';
+
+                                        return (
+                                            <ListRow
+                                                key={item.id}
+                                                tone={tone}
+                                                href={stockRoute().url}
                                             >
-                                                {criticalStock?.count} varyant
-                                            </Badge>
-                                        ) : null
-                                    }
-                                >
-                                    {criticalStock?.items.length ? (
-                                        criticalStock.items.map((item) => {
-                                            // Tukenmis stok satis durdurur;
-                                            // emniyetin altina inmek sadece
-                                            // siparis vermeyi hatirlatir.
-                                            const tone =
-                                                item.available <= 0
-                                                    ? 'alert'
-                                                    : 'warn';
-
-                                            return (
-                                                <ListRow
-                                                    key={item.id}
-                                                    tone={tone}
-                                                    href={stockRoute().url}
-                                                >
-                                                    <PackageOpen
-                                                        aria-hidden
-                                                        className={cn(
-                                                            'size-4 shrink-0',
-                                                            toneIcon(tone),
-                                                        )}
-                                                    />
-                                                    <RowText
-                                                        title={item.product}
-                                                        detail={item.sku}
-                                                    />
-                                                    <RowPill tone={tone}>
-                                                        {item.available} /{' '}
-                                                        {item.safetyStock}
-                                                    </RowPill>
-                                                </ListRow>
-                                            );
-                                        })
-                                    ) : (
-                                        <ListEmpty>
-                                            Emniyet stokunun altına inen varyant
-                                            yok.
-                                        </ListEmpty>
-                                    )}
-                                </ListCard>
-                            </Deferred>
-
-                            <Deferred
-                                data="channelShare"
-                                fallback={
-                                    <ChartSkeleton
-                                        rows={3}
-                                        className="xl:col-span-4"
-                                    />
-                                }
-                            >
-                                {channelShare && (
-                                    <ChannelShareChart
-                                        share={channelShare}
-                                        className="xl:col-span-4"
-                                    />
+                                                <PackageOpen
+                                                    aria-hidden
+                                                    className={cn(
+                                                        'size-4 shrink-0',
+                                                        toneIcon(tone),
+                                                    )}
+                                                />
+                                                <RowText
+                                                    title={item.product}
+                                                    detail={item.sku}
+                                                />
+                                                <RowPill tone={tone}>
+                                                    {item.available} /{' '}
+                                                    {item.safetyStock}
+                                                </RowPill>
+                                            </ListRow>
+                                        );
+                                    })
+                                ) : (
+                                    <ListEmpty>
+                                        Emniyet stokunun altına inen varyant
+                                        yok.
+                                    </ListEmpty>
                                 )}
-                            </Deferred>
+                            </ListCard>
+                        </Deferred>
 
-                            <Deferred
-                                data="salesTarget"
-                                fallback={
-                                    <ChartSkeleton
-                                        height={240}
-                                        rows={3}
-                                        className="xl:col-span-4"
-                                    />
-                                }
-                            >
-                                {salesTarget && (
-                                    <SalesTargetChart
-                                        target={salesTarget}
-                                        className="xl:col-span-4"
-                                    />
-                                )}
-                            </Deferred>
-                            <Deferred
-                                data="connections"
-                                fallback={
-                                    <ListCardSkeleton className="xl:col-span-4" />
-                                }
-                            >
-                                <ListCard
-                                    title="Kanal bağlantıları"
-                                    href={connectionsRoute().url}
+                        <Deferred
+                            data="channelShare"
+                            fallback={
+                                <ChartSkeleton
+                                    rows={3}
                                     className="xl:col-span-4"
-                                    badge={
-                                        (connections?.errored ?? 0) > 0 ? (
-                                            <Badge
-                                                variant="secondary"
-                                                className="font-mono tabular-nums"
-                                            >
-                                                {connections?.errored} hatalı
-                                            </Badge>
-                                        ) : null
-                                    }
-                                >
-                                    {connections?.items.length ? (
-                                        connections.items.map((connection) => {
-                                            const tone =
-                                                CONNECTION_ROW_TONES[
-                                                    connection.status
-                                                ];
+                                />
+                            }
+                        >
+                            {channelShare && (
+                                <ChannelShareChart
+                                    share={channelShare}
+                                    className="xl:col-span-4"
+                                />
+                            )}
+                        </Deferred>
 
-                                            return (
-                                                <ListRow
-                                                    key={connection.id}
-                                                    tone={tone}
-                                                    href={
-                                                        connectionsRoute().url
+                        <Deferred
+                            data="salesTarget"
+                            fallback={
+                                <ChartSkeleton
+                                    height={240}
+                                    rows={3}
+                                    className="xl:col-span-4"
+                                />
+                            }
+                        >
+                            {salesTarget && (
+                                <SalesTargetChart
+                                    target={salesTarget}
+                                    className="xl:col-span-4"
+                                />
+                            )}
+                        </Deferred>
+                        <Deferred
+                            data="connections"
+                            fallback={
+                                <ListCardSkeleton className="xl:col-span-4" />
+                            }
+                        >
+                            <ListCard
+                                title="Kanal bağlantıları"
+                                href={connectionsRoute().url}
+                                className="xl:col-span-4"
+                                badge={
+                                    (connections?.errored ?? 0) > 0 ? (
+                                        <Badge
+                                            variant="secondary"
+                                            className="font-mono tabular-nums"
+                                        >
+                                            {connections?.errored} hatalı
+                                        </Badge>
+                                    ) : null
+                                }
+                            >
+                                {connections?.items.length ? (
+                                    connections.items.map((connection) => {
+                                        const tone =
+                                            CONNECTION_ROW_TONES[
+                                                connection.status
+                                            ];
+
+                                        return (
+                                            <ListRow
+                                                key={connection.id}
+                                                tone={tone}
+                                                href={connectionsRoute().url}
+                                            >
+                                                <MarketplaceAvatar
+                                                    code={
+                                                        connection.marketplace
                                                     }
-                                                >
-                                                    <MarketplaceAvatar
-                                                        code={
-                                                            connection.marketplace
-                                                        }
-                                                        name={connection.name}
-                                                        size="sm"
-                                                    />
-                                                    <RowText
-                                                        title={connection.name}
-                                                        detail={
-                                                            connection.checkedAt ??
-                                                            'Kontrol edilmedi'
-                                                        }
-                                                        muted={
-                                                            tone === undefined
-                                                        }
-                                                    />
-                                                    <RowPill tone={tone}>
-                                                        {connection.statusLabel}
-                                                    </RowPill>
-                                                </ListRow>
-                                            );
-                                        })
-                                    ) : (
-                                        <ListEmpty>Bağlı kanal yok.</ListEmpty>
-                                    )}
-                                </ListCard>
-                            </Deferred>
-                        </div>
-                    </>
-                )}
+                                                    name={connection.name}
+                                                    size="sm"
+                                                />
+                                                <RowText
+                                                    title={connection.name}
+                                                    detail={
+                                                        connection.checkedAt ??
+                                                        'Kontrol edilmedi'
+                                                    }
+                                                    muted={tone === undefined}
+                                                />
+                                                <RowPill tone={tone}>
+                                                    {connection.statusLabel}
+                                                </RowPill>
+                                            </ListRow>
+                                        );
+                                    })
+                                ) : (
+                                    <ListEmpty>Bağlı kanal yok.</ListEmpty>
+                                )}
+                            </ListCard>
+                        </Deferred>
+                    </div>
+                </div>
             </div>
         </>
     );

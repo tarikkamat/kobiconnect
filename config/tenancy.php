@@ -159,7 +159,11 @@ return [
          * disable asset() helper tenancy and explicitly use tenant_asset() calls in places
          * where you want to use tenant-specific assets (product images, avatars, etc).
          */
-        'asset_helper_tenancy' => true,
+        // KAPALI: acikken asset() -> /tenancy/assets/... uretir ve Vite'in
+        // public/build ciktisi orada olmadigi icin tenant yolundaki HER blade
+        // sayfasi (panel kabugu, MCP onay ekrani) stilsiz doner. Tenant'a ozgu
+        // dosya icin tenant_asset() var; uygulamada asset() cagrisi yok.
+        'asset_helper_tenancy' => false,
     ],
 
     /**

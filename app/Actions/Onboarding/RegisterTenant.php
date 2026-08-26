@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Actions\Onboarding;
 
+use App\Mail\Lifecycle\WelcomeEmail;
 use App\Models\Tenant;
 use App\Models\User;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Schema;
 use RuntimeException;
 use Throwable;
@@ -85,6 +87,11 @@ final class RegisterTenant
         $owner->forceFill(['email_verified_at' => now()])->save();
 
         $owner->assignRole('Sahip');
+
+        Mail::to($owner)->queue(new WelcomeEmail(
+            userName: $owner->name,
+            dashboardUrl: url('/'),
+        ));
 
         return $owner;
     }

@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace App\Actions\Sync;
 
+use App\Events\NotificationEventOccurred;
 use App\Marketplaces\Data\Enums\SyncState;
 use App\Marketplaces\Data\PushResult;
+use App\Models\ChannelConnection;
 use App\Models\ChannelOperation;
+use App\Notifications\NotificationEvent;
 use App\Support\Sync\MarketplaceWindow;
 use Illuminate\Support\Collection;
 
@@ -51,6 +54,15 @@ final class ApplyBatchResult
                     'error' => null,
                 ]);
 
+                if ($operation->entity_type === 'product') {
+                    NotificationEventOccurred::dispatch(NotificationEvent::ProductApproved, [
+                        'product_id' => (string) $operation->entity_id,
+                        'sku' => $operation->desired_state['reference'] ?? '',
+                        'connection_id' => (string) $operation->connection_id,
+                        'connection' => ChannelConnection::find($operation->connection_id)->name ?? '',
+                    ]);
+                }
+
                 continue;
             }
 
@@ -72,6 +84,15 @@ final class ApplyBatchResult
             'remote_result' => $remoteResult,
             'error' => $error,
         ]);
+
+        if ($operation->entity_type === 'product') {
+            NotificationEventOccurred::dispatch(NotificationEvent::ProductRejected, [
+                'product_id' => (string) $operation->entity_id,
+                'connection_id' => (string) $operation->connection_id,
+                'connection' => ChannelConnection::find($operation->connection_id)->name ?? '',
+                'reason' => $error['message'] ?? ($error['code'] ?? 'Bilinmeyen hata'),
+            ]);
+        }
     }
 
     /**

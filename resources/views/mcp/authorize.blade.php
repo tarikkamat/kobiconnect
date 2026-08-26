@@ -29,7 +29,7 @@
         }
     </style>
 
-    <title>Authorize Application - {{ config('app.name', 'MCP Server') }}</title>
+    <title>Bağlantı izni - {{ config('app.name', 'KobiConnect') }}</title>
 
     <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -58,11 +58,14 @@
                 </div>
 
                 <h3 class="text-2xl font-semibold leading-none tracking-tight text-center">
-                    Authorize {{ $client->name }}
+                    {{ $client->name }} bağlanmak istiyor
                 </h3>
 
                 <p class="text-sm text-muted-foreground text-center">
-                    This application will be able to:<br/>Use available MCP functionality.
+                    İzin verirseniz bu uygulama KobiConnect panelinizi
+                    <strong>sizin yetkilerinizle</strong> kullanabilir: ürün, stok,
+                    sipariş ve rapor ekranlarını okuyabilir ve güncelleyebilir.
+                    İzni istediğiniz an geri alabilirsiniz.
                 </p>
             </div>
 
@@ -70,14 +73,14 @@
             <div class="p-6 pt-0 space-y-4">
                 <!-- User Info -->
                 <div class="rounded-lg border p-4 bg-muted/50">
-                    <p class="text-sm text-muted-foreground mb-2">Logged in as:</p>
+                    <p class="text-sm text-muted-foreground mb-2">Şu hesapla giriş yaptınız:</p>
                     <p class="font-medium">{{ $user->email }}</p>
                 </div>
 
                 <!-- Scopes / Permissions -->
                 @if(count($scopes) > 0)
                     <div class="space-y-2">
-                        <p class="text-sm font-medium">Permissions:</p>
+                        <p class="text-sm font-medium">İstenen izinler:</p>
 
                         <ul class="space-y-2">
                             @foreach($scopes as $scope)
@@ -101,25 +104,23 @@
                 <form method="POST" action="{{ route('passport.authorizations.deny') }}" class="flex-1">
                     @csrf
                     @method('DELETE')
-                    <input type="hidden" name="state" value="">
                     <input type="hidden" name="client_id" value="{{ $client->id }}">
                     <input type="hidden" name="auth_token" value="{{ $authToken }}">
                     <button type="submit" class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 w-full">
                         <svg class="mr-2 h-4 w-4" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                         </svg>
-                        Cancel
+                        Vazgeç
                     </button>
                 </form>
 
                 <!-- Approve Form -->
                 <form method="POST" action="{{ route('passport.authorizations.approve') }}" class="flex-1" id="authorizeForm">
                     @csrf
-                    <input type="hidden" name="state" value="">
                     <input type="hidden" name="client_id" value="{{ $client->id }}">
                     <input type="hidden" name="auth_token" value="{{ $authToken }}">
                     <button type="submit" class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 w-full" id="authorizeButton">
-                        <span id="authorizeText">Authorize</span>
+                        <span id="authorizeText">İzin ver</span>
 
                         <svg id="loadingSpinner" class="animate-spin -ml-1 mr-3 h-4 w-4 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -142,7 +143,7 @@
         form.addEventListener('submit', function(e) {
             // Show loading state...
             button.disabled = true;
-            authorizeText.textContent = 'Authorizing...';
+            authorizeText.textContent = 'İzin veriliyor...';
             loadingSpinner.classList.remove('hidden');
 
             // After form submission, watch for redirect and close window...

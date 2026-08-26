@@ -5,18 +5,22 @@ declare(strict_types=1);
 namespace App\Actions\Orders;
 
 use App\Events\NotificationEventOccurred;
+use App\Mail\Lifecycle\FirstOrderReceived;
 use App\Marketplaces\Contracts\SupportsOrderSync;
+use App\Marketplaces\Data\Enums\CanonicalOrderStatus;
 use App\Marketplaces\Data\OrderData;
 use App\Marketplaces\Data\OrderLineData;
 use App\Marketplaces\Support\Capability;
 use App\Marketplaces\Support\Exceptions\UnsupportedCapabilityException;
 use App\Models\ChannelConnection;
+use App\Models\User;
 use App\Notifications\NotificationEvent;
 use App\Support\Sync\ConnectionDriver;
 use DateTimeImmutable;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Sleep;
 
 /**
@@ -132,8 +136,9 @@ final class ImportOrders
         }
 
         $lastModifiedAt = $this->lastModifiedAt($order);
+        $hadOrders = DB::table('orders')->exists();
 
-        return DB::transaction(function () use ($connection, $order, $lastModifiedAt): array {
+        return DB::transaction(function () use ($connection, $order, $lastModifiedAt, $hadOrders): array {
             $existing = DB::table('orders')
                 ->where('connection_id', $connection->getKey())
                 ->where('remote_id', $order->remoteId)
@@ -174,6 +179,15 @@ final class ImportOrders
                 ->value('id');
 
             $written = $this->lines($orderId, $order, $now);
+
+            if ($existing === null && $written['unmatched'] > 0) {
+                NotificationEventOccurred::dispatch(NotificationEvent::OrderLineUnmatched, [
+                    'connection_id' => $connection->getKey(),
+                    'connection' => $connection->name,
+                    'count' => (string) $written['unmatched'],
+                ]);
+            }
+
             $packageIds = $this->packages($orderId, $order, $now);
             $this->history($orderId, $order, $packageIds, $now);
 
@@ -184,6 +198,30 @@ final class ImportOrders
                     'connection_id' => $connection->getKey(),
                     'connection' => $connection->name,
                     'total' => (string) ($order->totals['net'] ?? $order->totals['gross'] ?? '0.00'),
+                ]);
+
+                if (! $hadOrders) {
+                    $orderUrl = route('orders.show', ['order' => $orderId], absolute: false);
+                    $recipients = User::query()->get();
+                    foreach ($recipients as $recipient) {
+                        Mail::to($recipient)->queue(new FirstOrderReceived(
+                            data: [
+                                'orderNumber' => $order->remoteOrderNumber,
+                                'channel' => $connection->name,
+                                'total' => (string) ($order->totals['net'] ?? $order->totals['gross'] ?? '0.00'),
+                            ],
+                            orderUrl: url($orderUrl),
+                        ));
+                    }
+                }
+            }
+
+            if ($existing !== null && $order->status === CanonicalOrderStatus::Cancelled) {
+                NotificationEventOccurred::dispatch(NotificationEvent::OrderCancelled, [
+                    'order_id' => $orderId,
+                    'order_number' => $order->remoteOrderNumber,
+                    'connection_id' => $connection->getKey(),
+                    'connection' => $connection->name,
                 ]);
             }
 

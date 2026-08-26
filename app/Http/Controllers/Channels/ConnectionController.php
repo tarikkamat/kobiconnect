@@ -8,11 +8,14 @@ use App\Actions\Channels\CheckConnectionHealth;
 use App\Enums\ConnectionStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Channels\ConnectionRequest;
+use App\Mail\Lifecycle\FirstConnectionEstablished;
 use App\Models\ChannelConnection;
+use App\Models\User;
 use App\Support\AppCatalog;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -143,6 +146,22 @@ class ConnectionController extends Controller
             'webhook_token' => Str::random(48),
             'status' => ConnectionStatus::Paused,
         ]);
+
+        $isFirstConnection = ChannelConnection::query()->count() === 1;
+
+        if ($isFirstConnection) {
+            $recipients = User::query()
+                ->with('roles.permissions')
+                ->get()
+                ->filter(fn (User $user): bool => $user->can('channels.manage'));
+
+            foreach ($recipients as $recipient) {
+                Mail::to($recipient)->queue(new FirstConnectionEstablished(
+                    connectionName: $connection->name,
+                    marketplace: $this->catalog->find($connection->marketplace)['name'] ?? $connection->marketplace,
+                ));
+            }
+        }
 
         $result = $health->handle($connection);
 

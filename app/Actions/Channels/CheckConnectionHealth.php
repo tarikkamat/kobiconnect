@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Actions\Channels;
 
 use App\Enums\ConnectionStatus;
+use App\Events\NotificationEventOccurred;
 use App\Marketplaces\Hepsiburada\Exceptions\HepsiburadaApiException;
 use App\Marketplaces\Hepsiburada\HepsiburadaClient;
 use App\Marketplaces\Hepsiburada\HepsiburadaCredentials;
@@ -16,6 +17,7 @@ use App\Marketplaces\Trendyol\Exceptions\TrendyolApiException;
 use App\Marketplaces\Trendyol\TrendyolClient;
 use App\Marketplaces\Trendyol\TrendyolCredentials;
 use App\Models\ChannelConnection;
+use App\Notifications\NotificationEvent;
 use Illuminate\Http\Client\ConnectionException;
 use Throwable;
 
@@ -49,6 +51,14 @@ final class CheckConnectionHealth
             'capabilities' => $this->capabilities($connection->marketplace),
             'settings' => [...($connection->settings ?? []), 'last_health_error' => $error],
         ]);
+
+        if ($error !== null) {
+            NotificationEventOccurred::dispatch(NotificationEvent::ConnectionCredentialsInvalid, [
+                'connection_id' => (string) $connection->getKey(),
+                'connection' => $connection->name,
+                'reason' => $error,
+            ]);
+        }
 
         return [
             'ok' => $error === null,

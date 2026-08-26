@@ -6,7 +6,10 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Settings\NotificationPreferenceController;
 use App\Http\Controllers\Settings\TableColumnController;
 use App\Http\Controllers\Team\TeamController;
+use App\Mcp\ActionCatalog;
 use Illuminate\Support\Facades\Route;
+use Inertia\Inertia;
+use Inertia\Response;
 
 /*
 | Ek ayar ekranlari: ekip & roller, bildirim tercihleri.
@@ -31,6 +34,14 @@ Route::prefix('settings')->group(function (): void {
     // Tablo kolon gorunurlugu — ekransiz, kolon secicisinden sessiz kayit.
     Route::patch('table-columns', [TableColumnController::class, 'update'])
         ->name('table-columns.update');
+
+    // MCP baglanti ekrani. Controller yok: ekranin tek isi kullanicinin ELLE
+    // YAZAMAYACAGI adresi (tenant kimligi iceren /{tenant}/mcp) kopyalanabilir
+    // gostermek. Action sayisi katalogdan okunur ki ekran bayatlamasin.
+    Route::get('mcp', fn (): Response => Inertia::render('settings/mcp', [
+        'endpoint' => url(tenant('id').'/mcp'),
+        'actionCount' => count(ActionCatalog::all()),
+    ]))->name('mcp.setup');
 
     // Lisans — dummy vitrin, controller'siz. Lisans mimarisi kararlastirilinca
     // gercek modele baglanacak; simdilik ekran tasarimi icin statik veri.
