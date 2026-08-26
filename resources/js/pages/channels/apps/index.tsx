@@ -352,6 +352,3 @@ AppStoreIndex.layout = {
         },
     ],
 };
-
-
-

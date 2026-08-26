@@ -8,7 +8,6 @@ use App\Marketplaces\Contracts\MarketplaceDriver;
 use App\Marketplaces\Support\Capability;
 use App\Marketplaces\Support\Exceptions\MarketplaceException;
 use App\Marketplaces\Support\MarketplaceManager;
-use Illuminate\Support\Arr;
 
 /**
  * Uygulama magazasinin vitrini — `config/apps.php` ile surucu kaydini
@@ -17,6 +16,28 @@ use Illuminate\Support\Arr;
  * Iki soruyu TEK yerde cevaplar:
  *   - Bu uygulama var mi?  -> katalogda tanimli mi
  *   - Kurulabilir mi?      -> surucusu kayitli mi (yoksa "Yakinda")
+ *
+ * @phpstan-type CredentialField array{
+ *     name: string,
+ *     label: string,
+ *     type: 'text'|'secret'|'select'|'checkbox',
+ *     help?: string,
+ *     options?: list<string>,
+ *     default?: string,
+ *     identity?: bool,
+ * }
+ * @phpstan-type AppCard array{
+ *     code: string,
+ *     name: string,
+ *     category: string,
+ *     categoryLabel: string,
+ *     logo: string,
+ *     logoScale: float,
+ *     logoDarkInvert: bool,
+ *     capabilities: list<array{value: string, label: string}>,
+ *     available: bool,
+ *     fields: list<CredentialField>,
+ * }
  */
 final class AppCatalog
 {
@@ -45,7 +66,7 @@ final class AppCatalog
      * Vitrindeki tum uygulamalar. Sira: once kurulabilenler, sonra alfabetik —
      * "Yakinda" kartlari listenin basini isgal etmez.
      *
-     * @return list<array<string, mixed>>
+     * @return list<AppCard>
      */
     public function all(): array
     {
@@ -57,7 +78,7 @@ final class AppCatalog
     }
 
     /**
-     * @return array<string, mixed>|null
+     * @return AppCard|null
      */
     public function find(string $code): ?array
     {
@@ -87,7 +108,7 @@ final class AppCatalog
      * Vitrin karti. Kurulu baglanti sayisi BURADA YOK: o istek basina degisen
      * veridir ve cagiran tarafta birlestirilir.
      *
-     * @return array<string, mixed>
+     * @return AppCard
      */
     private function present(string $code): array
     {
@@ -125,7 +146,7 @@ final class AppCatalog
         return array_map(
             static fn (Capability $capability): array => [
                 'value' => $capability->value,
-                'label' => self::CAPABILITY_LABELS[$capability->value] ?? $capability->value,
+                'label' => self::CAPABILITY_LABELS[$capability->value],
             ],
             $driver->capabilities(),
         );
@@ -134,7 +155,7 @@ final class AppCatalog
     /**
      * Kimlik formu surucunun bildirimidir; `rules` sunucuda kalir.
      *
-     * @return list<array<string, mixed>>
+     * @return list<CredentialField>
      */
     private function credentialFields(string $code): array
     {
@@ -144,10 +165,14 @@ final class AppCatalog
             return [];
         }
 
-        return array_map(
-            static fn (array $field): array => Arr::except($field, ['rules']),
-            $driver->credentialFields(),
-        );
+        $fields = [];
+
+        foreach ($driver->credentialFields() as $field) {
+            unset($field['rules']);
+            $fields[] = $field;
+        }
+
+        return $fields;
     }
 
     private function driver(string $code): ?MarketplaceDriver

@@ -6,36 +6,24 @@ import {
     Loader2,
     Package,
     Save,
-    Sparkles,
     Tag,
     Trash2,
     TriangleAlert,
     Wand2,
 } from 'lucide-react';
 import { useState } from 'react';
-import { toast } from 'sonner';
 import ProductController from '@/actions/App/Http/Controllers/Catalog/ProductController';
-import {
-    AttributeVariantMatrix,
-    VariantItem,
-} from '@/components/catalog/attribute-variant-matrix';
-import {
-    ChannelConnectionItem,
-    ChannelPricingManager,
-} from '@/components/catalog/channel-pricing-manager';
+import type { ChannelConnectionItem } from '@/components/catalog/channel-pricing-manager';
+import { ChannelPricingManager } from '@/components/catalog/channel-pricing-manager';
 import { InlineNumberCell } from '@/components/catalog/inline-number-cell';
-import {
-    MediaGalleryAiStudio,
-    ProductImageItem,
-} from '@/components/catalog/media-gallery-ai-studio';
+import type { ProductImageItem } from '@/components/catalog/media-gallery-ai-studio';
+import { MediaGalleryAiStudio } from '@/components/catalog/media-gallery-ai-studio';
 import { PermissionButton } from '@/components/catalog/permission-button';
 import { ProductStatusBadge } from '@/components/catalog/product-status-badge';
 import { toastError } from '@/components/catalog/toast-error';
-import {
-    MarketplaceAvatarStack,
-    MarketplaceChannel,
-} from '@/components/marketplace-avatar';
 import InputError from '@/components/input-error';
+import type { MarketplaceChannel } from '@/components/marketplace-avatar';
+import { MarketplaceAvatarStack } from '@/components/marketplace-avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -497,6 +485,7 @@ export default function ProductShow({
                                                                                             {
                                                                                                 k
                                                                                             }
+
                                                                                             :{' '}
                                                                                             {
                                                                                                 v

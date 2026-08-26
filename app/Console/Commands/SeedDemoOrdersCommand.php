@@ -28,9 +28,11 @@ class SeedDemoOrdersCommand extends Command
         $tenantId = $this->option('tenant');
         $count = (int) $this->option('count');
 
-        $tenants = $tenantId !== null
-            ? Tenant::query()->where('id', (string) $tenantId)->get()
-            : Tenant::query()->get();
+        $tenants = Tenant::query()->pluck('id')->map(strval(...));
+
+        if ($tenantId !== null) {
+            $tenants = $tenants->intersect([(string) $tenantId])->values();
+        }
 
         if ($tenants->isEmpty()) {
             $this->error('Tenant bulunamadı.');
@@ -38,13 +40,13 @@ class SeedDemoOrdersCommand extends Command
             return self::FAILURE;
         }
 
-        foreach ($tenants as $tenant) {
-            $this->info("Tenant {$tenant->id} için {$count} adet demo sipariş oluşturuluyor...");
+        // Tenant semasina girmek SyncCommand ile ayni yoldan olur; `runForMultiple`
+        // her tenant icin tenancy'yi baslatir ve sonrasinda eski durumu geri verir.
+        tenancy()->runForMultiple($tenants, function (Tenant $tenant) use ($count): void {
+            $this->info("Tenant {$tenant->getTenantKey()} için {$count} adet demo sipariş oluşturuluyor...");
 
-            $tenant->run(function () use ($count): void {
-                $this->seedOrdersForCurrentTenant($count);
-            });
-        }
+            $this->seedOrdersForCurrentTenant($count);
+        });
 
         $this->info('Tüm demo siparişler başarıyla oluşturuldu!');
 
@@ -156,7 +158,7 @@ class SeedDemoOrdersCommand extends Command
                     'district' => $customerInfo['district'],
                     'address' => $customerInfo['district'].' Mah. '.fake()->streetName().' No:'.fake()->buildingNumber(),
                 ],
-            ]));
+            ], JSON_THROW_ON_ERROR));
 
             // Kalemler
             $lineCount = fake()->randomElement([1, 1, 1, 2, 2, 3]);
@@ -166,8 +168,9 @@ class SeedDemoOrdersCommand extends Command
 
             for ($li = 1; $li <= $lineCount; $li++) {
                 $variant = $variants->isNotEmpty() ? $variants[($i + $li) % $variants->count()] : null;
-                $sku = $variant?->sku ?? ('SKU-'.fake()->numerify('###-####'));
-                $barcode = $variant?->barcode ?? fake()->ean13();
+                // `??` null uzerinde property okumayi zaten bastirir; `?->` gereksiz.
+                $sku = $variant->sku ?? ('SKU-'.fake()->numerify('###-####'));
+                $barcode = $variant->barcode ?? fake()->ean13();
 
                 $unitPrice = fake()->randomElement([
                     fake()->randomFloat(2, 85, 250),

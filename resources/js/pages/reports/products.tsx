@@ -1,10 +1,8 @@
 import { Head, router } from '@inertiajs/react';
 import { Search } from 'lucide-react';
 import { useState } from 'react';
-import {
-    ReportHeader,
-    type ConnectionItem,
-} from '@/components/reports/report-header';
+import { ReportHeader } from '@/components/reports/report-header';
+import type { ConnectionItem } from '@/components/reports/report-header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -15,7 +13,10 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { index as reportsRoute, products as productsRoute } from '@/routes/reports';
+import {
+    index as reportsRoute,
+    products as productsRoute,
+} from '@/routes/reports';
 
 type ProductRow = {
     sku: string;
@@ -88,7 +89,8 @@ export default function ReportsProducts({
                                 Ürün Satış Listesi
                             </h3>
                             <p className="text-xs text-muted-foreground">
-                                SKU veya barkod bazında satılan adet ve kârlılık dökümü.
+                                SKU veya barkod bazında satılan adet ve kârlılık
+                                dökümü.
                             </p>
                         </div>
 
@@ -97,15 +99,22 @@ export default function ReportsProducts({
                             className="flex items-center gap-2"
                         >
                             <div className="relative w-full sm:w-64">
-                                <Search className="absolute left-2.5 top-2.5 size-4 text-muted-foreground" />
+                                <Search className="absolute top-2.5 left-2.5 size-4 text-muted-foreground" />
                                 <Input
                                     placeholder="SKU veya barkod ara..."
                                     value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    onChange={(e) =>
+                                        setSearchTerm(e.target.value)
+                                    }
                                     className="h-8 pl-8 text-xs"
                                 />
                             </div>
-                            <Button type="submit" size="sm" variant="secondary" className="h-8 text-xs">
+                            <Button
+                                type="submit"
+                                size="sm"
+                                variant="secondary"
+                                className="h-8 text-xs"
+                            >
                                 Filtrele
                             </Button>
                         </form>
@@ -116,10 +125,18 @@ export default function ReportsProducts({
                             <TableRow className="border-b border-border hover:bg-transparent">
                                 <TableHead>SKU / Ürün Kodu</TableHead>
                                 <TableHead>Barkod</TableHead>
-                                <TableHead className="text-right">Satılan Adet</TableHead>
-                                <TableHead className="text-right">Toplam Ciro (Brüt)</TableHead>
-                                <TableHead className="text-right">Komisyon Kesintisi</TableHead>
-                                <TableHead className="text-right">Net Satış Geliri</TableHead>
+                                <TableHead className="text-right">
+                                    Satılan Adet
+                                </TableHead>
+                                <TableHead className="text-right">
+                                    Toplam Ciro (Brüt)
+                                </TableHead>
+                                <TableHead className="text-right">
+                                    Komisyon Kesintisi
+                                </TableHead>
+                                <TableHead className="text-right">
+                                    Net Satış Geliri
+                                </TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -132,16 +149,16 @@ export default function ReportsProducts({
                                         <TableCell className="font-mono text-xs text-muted-foreground">
                                             {p.barcode || '—'}
                                         </TableCell>
-                                        <TableCell className="font-mono text-xs text-right tabular-nums">
+                                        <TableCell className="text-right font-mono text-xs tabular-nums">
                                             {p.quantitySold} adet
                                         </TableCell>
-                                        <TableCell className="font-mono font-medium text-xs text-right text-foreground tabular-nums">
+                                        <TableCell className="text-right font-mono text-xs font-medium text-foreground tabular-nums">
                                             {p.grossSales}
                                         </TableCell>
-                                        <TableCell className="font-mono text-xs text-right text-rose-500 tabular-nums">
+                                        <TableCell className="text-right font-mono text-xs text-rose-500 tabular-nums">
                                             {p.commissionTotal}
                                         </TableCell>
-                                        <TableCell className="font-mono font-semibold text-xs text-right text-emerald-500 tabular-nums">
+                                        <TableCell className="text-right font-mono text-xs font-semibold text-emerald-500 tabular-nums">
                                             {p.netEarnings}
                                         </TableCell>
                                     </TableRow>

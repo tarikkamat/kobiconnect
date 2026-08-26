@@ -1,6 +1,13 @@
 import { Head, InfiniteScroll, Link, router } from '@inertiajs/react';
 import { Boxes, Lock, Search, Warehouse } from 'lucide-react';
-import { Fragment, useCallback, useMemo, useRef, useState } from 'react';
+import {
+    Fragment,
+    useCallback,
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
+} from 'react';
 import { InlineNumberCell } from '@/components/catalog/inline-number-cell';
 import { PermissionButton } from '@/components/catalog/permission-button';
 import { toastError } from '@/components/catalog/toast-error';
@@ -91,6 +98,7 @@ const MIN_COLUMN_WIDTHS: Record<string, number> = {
 
 function getInitialWidths(warehouses: Warehouse[]): Record<string, number> {
     const defaults: Record<string, number> = { ...DEFAULT_COLUMN_WIDTHS };
+
     for (const wh of warehouses) {
         defaults[`wh_${wh.id}_onHand`] = DEFAULT_SUBCOLUMN_WIDTHS.onHand;
         defaults[`wh_${wh.id}_reserved`] = DEFAULT_SUBCOLUMN_WIDTHS.reserved;
@@ -105,8 +113,10 @@ function getInitialWidths(warehouses: Warehouse[]): Record<string, number> {
 
     try {
         const saved = localStorage.getItem(STORAGE_KEY);
+
         if (saved) {
             const parsed = JSON.parse(saved);
+
             return { ...defaults, ...parsed };
         }
     } catch {
@@ -165,8 +175,12 @@ export default function StockIndex({ variants, warehouses, filters }: Props) {
     );
     const [resizingCol, setResizingCol] = useState<string | null>(null);
 
+    // Surukleme sirasinda en guncel genislikleri okumak icin ayna. Render
+    // sirasinda ref yazmak yasak; effect'te senkronlanir.
     const columnWidthsRef = useRef(columnWidths);
-    columnWidthsRef.current = columnWidths;
+    useEffect(() => {
+        columnWidthsRef.current = columnWidths;
+    }, [columnWidths]);
 
     const handleMouseDown = useCallback(
         (colKey: string, e: React.MouseEvent | React.TouchEvent) => {
@@ -247,11 +261,13 @@ export default function StockIndex({ variants, warehouses, filters }: Props) {
 
         setColumnWidths((prev) => {
             const next = { ...prev, [colKey]: defaultWidth };
+
             try {
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
             } catch {
                 // ignore
             }
+
             return next;
         });
     }, []);
@@ -260,6 +276,7 @@ export default function StockIndex({ variants, warehouses, filters }: Props) {
         let sum =
             (columnWidths.sku ?? DEFAULT_COLUMN_WIDTHS.sku) +
             (columnWidths.product ?? DEFAULT_COLUMN_WIDTHS.product);
+
         for (const warehouse of warehouses) {
             sum +=
                 (columnWidths[`wh_${warehouse.id}_onHand`] ??
@@ -271,6 +288,7 @@ export default function StockIndex({ variants, warehouses, filters }: Props) {
                 (columnWidths[`wh_${warehouse.id}_safetyStock`] ??
                     DEFAULT_SUBCOLUMN_WIDTHS.safetyStock);
         }
+
         return sum;
     }, [columnWidths, warehouses]);
 

@@ -1,14 +1,6 @@
 import { Link, router } from '@inertiajs/react';
-import {
-    BarChart3,
-    DollarSign,
-    Layers,
-    Package,
-    Scale,
-    ShoppingCart,
-} from 'lucide-react';
+import { DollarSign, Layers, Package, Scale, ShoppingCart } from 'lucide-react';
 import { DateRangePicker } from '@/components/date-range-picker';
-import Heading from '@/components/heading';
 import { MarketplaceAvatar } from '@/components/marketplace-avatar';
 import { Button } from '@/components/ui/button';
 import {
@@ -80,7 +72,11 @@ export function ReportHeader({
             query.connection = targetConnection;
         }
 
-        if (targetSearch !== null && targetSearch !== undefined && targetSearch !== '') {
+        if (
+            targetSearch !== null &&
+            targetSearch !== undefined &&
+            targetSearch !== ''
+        ) {
             query.search = targetSearch;
         }
 
@@ -105,7 +101,9 @@ export function ReportHeader({
         });
     };
 
-    const handlePreset = (preset: 'today' | 'last7' | 'thisMonth' | 'last30' | 'thisYear') => {
+    const handlePreset = (
+        preset: 'today' | 'last7' | 'thisMonth' | 'last30' | 'thisYear',
+    ) => {
         const now = new Date();
         const to = formatIsoDate(now);
         let from = to;
@@ -113,13 +111,21 @@ export function ReportHeader({
         if (preset === 'today') {
             from = to;
         } else if (preset === 'last7') {
-            const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7);
+            const d = new Date(
+                now.getFullYear(),
+                now.getMonth(),
+                now.getDate() - 7,
+            );
             from = formatIsoDate(d);
         } else if (preset === 'thisMonth') {
             const d = new Date(now.getFullYear(), now.getMonth(), 1);
             from = formatIsoDate(d);
         } else if (preset === 'last30') {
-            const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 30);
+            const d = new Date(
+                now.getFullYear(),
+                now.getMonth(),
+                now.getDate() - 30,
+            );
             from = formatIsoDate(d);
         } else if (preset === 'thisYear') {
             const d = new Date(now.getFullYear(), 0, 1);
@@ -173,13 +179,13 @@ export function ReportHeader({
                         {title}
                     </h1>
                     {description && (
-                        <p className="text-xs text-muted-foreground max-w-2xl leading-relaxed">
+                        <p className="max-w-2xl text-xs leading-relaxed text-muted-foreground">
                             {description}
                         </p>
                     )}
                 </div>
 
-                <div className="flex flex-wrap items-center gap-2 shrink-0 sm:pt-0.5">
+                <div className="flex shrink-0 flex-wrap items-center gap-2 sm:pt-0.5">
                     {/* Channel Filter */}
                     <Select
                         value={
@@ -194,7 +200,7 @@ export function ReportHeader({
                             );
                         }}
                     >
-                        <SelectTrigger className="w-[190px] h-9 text-xs">
+                        <SelectTrigger className="h-9 w-[190px] text-xs">
                             <SelectValue placeholder="Tüm Kanallar" />
                         </SelectTrigger>
                         <SelectContent>
@@ -205,10 +211,12 @@ export function ReportHeader({
                                 <SelectItem key={c.id} value={String(c.id)}>
                                     <div className="flex items-center gap-2">
                                         <MarketplaceAvatar
-                                            marketplace={c.marketplace}
+                                            code={c.marketplace}
                                             className="size-4"
                                         />
-                                        <span className="truncate">{c.name}</span>
+                                        <span className="truncate">
+                                            {c.name}
+                                        </span>
                                     </div>
                                 </SelectItem>
                             ))}
@@ -226,7 +234,7 @@ export function ReportHeader({
 
             {/* Quick Date Presets */}
             <div className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
-                <span className="font-medium mr-1">Hızlı Aralık:</span>
+                <span className="mr-1 font-medium">Hızlı Aralık:</span>
                 <Button
                     variant="ghost"
                     size="sm"
@@ -281,9 +289,9 @@ export function ReportHeader({
                             href={tab.href}
                             prefetch
                             className={cn(
-                                'flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors whitespace-nowrap',
+                                'flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-medium whitespace-nowrap transition-colors',
                                 isActive
-                                    ? 'bg-primary/10 text-primary font-semibold'
+                                    ? 'bg-primary/10 font-semibold text-primary'
                                     : 'text-muted-foreground hover:bg-muted hover:text-foreground',
                             )}
                         >

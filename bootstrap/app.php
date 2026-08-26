@@ -67,11 +67,16 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->encryptCookies(except: ['appearance', 'sidebar_state']);
 
-        // MCP ucu JSON-RPC konusur; istemcide CSRF token'i uretecek bir sayfa
-        // yoktur. Guvenli, cunku uc yalnizca JSON govde kabul eder: bir <form>
-        // JSON content-type gonderemez, cross-origin fetch ise preflight'a
-        // takilir. Kimlik yine `auth` middleware'inden gelir.
-        $middleware->validateCsrfTokens(except: ['*/mcp']);
+        // Token ucuna istemci SUNUCUSU gelir; CSRF token'i uretecek bir sayfa
+        // yoktur ve kimlik zaten PKCE dogrulayicisindan gelir. Passport'un
+        // route grubu `web` tasidigi icin (config/passport.php) muafiyet
+        // olmadan her token takasi 419 donerdi.
+        //
+        // `POST {tenant}/oauth/authorize` (onay formu) BILEREK disarida: o
+        // gercek bir tarayici formudur ve CSRF korumasi altinda kalmali.
+        // {tenant}/mcp ve {tenant}/oauth/register `web` grubunda degil, o
+        // yuzden listede yoklar.
+        $middleware->validateCsrfTokens(except: ['*/oauth/token']);
 
         $middleware->web(append: [
             HandleAppearance::class,

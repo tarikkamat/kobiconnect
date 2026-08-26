@@ -5,6 +5,7 @@ Before planning or editing, find the row whose globs match the file's path and r
 | Applies to | Rule file |
 | --- | --- |
 | app/Console/Commands/** | .ai/rules/commands.md |
+| config/passport.php | .ai/rules/config.md |
 | resources/css/app.css | .ai/rules/css.md |
 | resources/js/** | .ai/rules/js.md |
 | app/Marketplaces/** | .ai/rules/marketplaces.md |

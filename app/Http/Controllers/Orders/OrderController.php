@@ -426,7 +426,7 @@ class OrderController extends Controller
         $hasAnyCost = false;
 
         foreach ($lines as $line) {
-            if (isset($line['costRaw']) && $line['costRaw'] !== null) {
+            if (isset($line['costRaw'])) {
                 $totalCost += (float) $line['costRaw'];
                 $hasAnyCost = true;
             }

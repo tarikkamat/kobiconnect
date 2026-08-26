@@ -1,5 +1,12 @@
 import { Head, InfiniteScroll, Link, router } from '@inertiajs/react';
-import { ArrowDown, ArrowUp, Package, PackageOpen, Plus, Search } from 'lucide-react';
+import {
+    ArrowDown,
+    ArrowUp,
+    Package,
+    PackageOpen,
+    Plus,
+    Search,
+} from 'lucide-react';
 import { useState } from 'react';
 import { BulkEditDialog } from '@/components/catalog/bulk-edit-dialog';
 import { PermissionButton } from '@/components/catalog/permission-button';
@@ -265,50 +272,34 @@ export default function ProductIndex({
                 {products.data.length === 0 ? (
                     <EmptyState
                         icon={
-                            Boolean(
-                                filters.search ||
-                                    filters.category ||
-                                    filters.brand ||
-                                    filters.stock ||
-                                    filters.status ||
-                                    filters.connection,
-                            )
+                            filters.search ||
+                            filters.stock ||
+                            filters.status ||
+                            filters.connection
                                 ? PackageOpen
                                 : Package
                         }
                         title={
-                            Boolean(
-                                filters.search ||
-                                    filters.category ||
-                                    filters.brand ||
-                                    filters.stock ||
-                                    filters.status ||
-                                    filters.connection,
-                            )
+                            filters.search ||
+                            filters.stock ||
+                            filters.status ||
+                            filters.connection
                                 ? 'Filtrelere uygun ürün bulunamadı'
                                 : 'Henüz ürün eklenmemiş'
                         }
                         description={
-                            Boolean(
-                                filters.search ||
-                                    filters.category ||
-                                    filters.brand ||
-                                    filters.stock ||
-                                    filters.status ||
-                                    filters.connection,
-                            )
+                            filters.search ||
+                            filters.stock ||
+                            filters.status ||
+                            filters.connection
                                 ? 'Arama teriminizi veya filtre tercihlerinizi değiştirerek tekrar deneyebilirsiniz.'
                                 : 'Kataloğunuza yeni ürünler ekleyerek pazaryerlerinde satışa başlayabilirsiniz.'
                         }
                         action={
-                            Boolean(
-                                filters.search ||
-                                    filters.category ||
-                                    filters.brand ||
-                                    filters.stock ||
-                                    filters.status ||
-                                    filters.connection,
-                            ) ? (
+                            filters.search ||
+                            filters.stock ||
+                            filters.status ||
+                            filters.connection ? (
                                 <Button
                                     variant="outline"
                                     size="sm"

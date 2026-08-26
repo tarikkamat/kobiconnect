@@ -66,10 +66,6 @@ function sparkOptions(colors: ChartColors, positive: boolean): ApexOptions {
             labels: { show: false },
             axisBorder: { show: false },
             axisTicks: { show: false },
-            padding: {
-                top: 0,
-                bottom: 0,
-            },
         },
     };
 }
@@ -85,7 +81,10 @@ export function KpiStrip({ kpis }: { kpis: Kpis }) {
     return (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             {kpis.items.map((item, index) => (
-                <Card key={item.key} className="gap-0 overflow-hidden py-0 border-border bg-card">
+                <Card
+                    key={item.key}
+                    className="gap-0 overflow-hidden border-border bg-card py-0"
+                >
                     <CardContent className="px-4 pt-4 pb-0">
                         <div className="flex items-start justify-between gap-2">
                             <p className="text-sm text-muted-foreground">
@@ -106,7 +105,7 @@ export function KpiStrip({ kpis }: { kpis: Kpis }) {
                             </Badge>
                         </div>
 
-                        <p className="mt-1.5 font-mono text-[28px] leading-none font-medium tabular-nums text-foreground">
+                        <p className="mt-1.5 font-mono text-[28px] leading-none font-medium text-foreground tabular-nums">
                             {item.value}
                         </p>
 
@@ -116,7 +115,7 @@ export function KpiStrip({ kpis }: { kpis: Kpis }) {
                         </p>
                     </CardContent>
 
-                    <div className="mt-3 h-14 overflow-hidden [&_.apexcharts-canvas]:!block [&_.apexcharts-canvas_svg]:!block [&_.apexcharts-canvas_svg]:!w-full [&_.apexcharts-canvas_svg]:!h-[56px]">
+                    <div className="mt-3 h-14 overflow-hidden [&_.apexcharts-canvas]:!block [&_.apexcharts-canvas_svg]:!block [&_.apexcharts-canvas_svg]:!h-[56px] [&_.apexcharts-canvas_svg]:!w-full">
                         <Chart
                             type="area"
                             options={sparkOptions(colors, item.positive)}
@@ -143,7 +142,10 @@ export function KpiStripSkeleton() {
     return (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             {[0, 1, 2, 3].map((slot) => (
-                <Card key={slot} className="gap-0 overflow-hidden py-0 border-border bg-card">
+                <Card
+                    key={slot}
+                    className="gap-0 overflow-hidden border-border bg-card py-0"
+                >
                     <CardContent className="px-4 pt-4 pb-0">
                         <div className="flex items-start justify-between gap-2">
                             <Skeleton className="h-5 w-20" />

@@ -193,10 +193,10 @@ class ReportController extends Controller
             return;
         }
 
-        $tenant = tenancy()->tenant;
+        $tenant = tenant();
         if ($tenant !== null) {
             Artisan::call('demo:seed-orders', [
-                '--tenant' => (string) $tenant->id,
+                '--tenant' => (string) $tenant->getTenantKey(),
                 '--count' => 60,
             ]);
         }
@@ -216,7 +216,7 @@ class ReportController extends Controller
      */
     private function connections(): array
     {
-        return DB::table('channel_connections')
+        return array_values(DB::table('channel_connections')
             ->select(['id', 'name', 'marketplace'])
             ->orderBy('name')
             ->get()
@@ -225,7 +225,7 @@ class ReportController extends Controller
                 'name' => (string) $c->name,
                 'marketplace' => (string) $c->marketplace,
             ])
-            ->all();
+            ->all());
     }
 
     /**

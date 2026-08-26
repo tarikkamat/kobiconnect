@@ -430,10 +430,10 @@ class ProductController extends Controller
         $price = $variant->prices->firstWhere('currency', 'TRY');
 
         return [
-            'id' => $variant->getKey(),
+            'id' => $variant->id,
             'sku' => $variant->sku,
             'barcode' => $variant->barcode,
-            'attributes' => $variant->attributes,
+            'attributes' => $variant->attributeValues(),
             'imageUrl' => $variant->images->first()?->url,
             'onHand' => $item === null ? 0 : $item->on_hand,
             'available' => (int) $variant->inventoryItems->sum('available'),
@@ -451,7 +451,7 @@ class ProductController extends Controller
      */
     private function channels(Collection $variants): array
     {
-        return $variants
+        return array_values($variants
             ->flatMap(fn (ProductVariant $variant): Collection => $variant->listings)
             ->filter(fn (ChannelListing $listing): bool => $listing->connection !== null)
             ->groupBy('connection_id')
@@ -460,8 +460,7 @@ class ProductController extends Controller
                 'name' => $listings->first()->connection->name,
                 'state' => $this->worstState($listings),
             ])
-            ->values()
-            ->all();
+            ->all());
     }
 
     /**

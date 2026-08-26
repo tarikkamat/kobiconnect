@@ -77,7 +77,7 @@ export function WarehouseFormDialog({
                             <div className="space-y-4">
                                 {/* Temel Bilgiler */}
                                 <div className="space-y-3">
-                                    <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                                    <div className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                         Temel Bilgiler
                                     </div>
                                     <div className="grid gap-3 sm:grid-cols-2">
@@ -98,9 +98,7 @@ export function WarehouseFormDialog({
                                                 }
                                                 placeholder="Örn: Ana Depo, Kadıköy Şube"
                                             />
-                                            <InputError
-                                                message={errors.name}
-                                            />
+                                            <InputError message={errors.name} />
                                         </div>
 
                                         <div className="grid gap-1.5">
@@ -118,18 +116,16 @@ export function WarehouseFormDialog({
                                                     warehouse?.code ?? ''
                                                 }
                                                 placeholder="Örn: WH-01, DEP-MRKZ"
-                                                className="font-mono tabular-nums uppercase"
+                                                className="font-mono uppercase tabular-nums"
                                             />
-                                            <InputError
-                                                message={errors.code}
-                                            />
+                                            <InputError message={errors.code} />
                                         </div>
                                     </div>
                                 </div>
 
                                 {/* Adres Bilgileri */}
                                 <div className="space-y-3 pt-2">
-                                    <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                                    <div className="flex items-center gap-1.5 text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                         <MapPin className="size-3.5" />
                                         Adres & Konum
                                     </div>
@@ -241,14 +237,14 @@ export function WarehouseFormDialog({
                                             </div>
                                             <p className="text-xs text-muted-foreground">
                                                 Bu depo şu anda varsayılan
-                                                depodur. Varsayılanlık, başka bir
-                                                depo varsayılan seçilerek
+                                                depodur. Varsayılanlık, başka
+                                                bir depo varsayılan seçilerek
                                                 aktarılabilir.
                                             </p>
                                         </div>
                                     ) : (
                                         <div className="space-y-1.5">
-                                            <label className="flex items-start gap-2.5 cursor-pointer text-sm font-medium">
+                                            <label className="flex cursor-pointer items-start gap-2.5 text-sm font-medium">
                                                 <Checkbox
                                                     name="is_default"
                                                     value="1"

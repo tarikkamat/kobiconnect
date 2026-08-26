@@ -185,29 +185,23 @@ export default function ClaimIndex({
                     <EmptyState
                         icon={RotateCcw}
                         title={
-                            Boolean(
-                                filters.search ||
-                                    filters.status ||
-                                    filters.connection,
-                            )
+                            filters.search ||
+                            filters.status ||
+                            filters.connection
                                 ? 'Filtrelere uygun iade talebi bulunamadı'
                                 : 'Henüz iade talebi yok'
                         }
                         description={
-                            Boolean(
-                                filters.search ||
-                                    filters.status ||
-                                    filters.connection,
-                            )
+                            filters.search ||
+                            filters.status ||
+                            filters.connection
                                 ? 'Arama teriminizi veya filtre tercihlerinizi değiştirerek tekrar deneyebilirsiniz.'
                                 : 'Pazaryerlerinden gelen iade ve iptal talepleri burada listelenecektir.'
                         }
                         action={
-                            Boolean(
-                                filters.search ||
-                                    filters.status ||
-                                    filters.connection,
-                            ) ? (
+                            filters.search ||
+                            filters.status ||
+                            filters.connection ? (
                                 <Button
                                     variant="outline"
                                     size="sm"

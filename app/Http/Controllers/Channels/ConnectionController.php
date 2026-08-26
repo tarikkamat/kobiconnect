@@ -57,11 +57,11 @@ class ConnectionController extends Controller
             $app = $this->catalog->find($connection->marketplace);
             $fields = $app['fields'] ?? [];
             $secretKeys = array_column(
-                array_filter($fields, static fn (array $f): bool => ($f['type'] ?? '') === 'secret'),
+                array_filter($fields, static fn (array $f): bool => $f['type'] === 'secret'),
                 'name',
             );
 
-            $rawCredentials = $connection->credentials?->toArray() ?? [];
+            $rawCredentials = $connection->credentials->toArray();
             $safeValues = [];
             $secretsStored = [];
 

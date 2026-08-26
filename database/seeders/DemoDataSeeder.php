@@ -42,7 +42,7 @@ class DemoDataSeeder extends Seeder
     public function run(): void
     {
         if (Product::query()->exists()) {
-            $this->command?->warn('Tenant zaten veri içeriyor, demo seeder atlandı.');
+            $this->command->warn('Tenant zaten veri içeriyor, demo seeder atlandı.');
 
             return;
         }

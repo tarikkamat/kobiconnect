@@ -57,7 +57,13 @@ function Field({
     return (
         <div>
             <dt className="text-xs text-muted-foreground">{label}</dt>
-            <dd className={mono ? 'text-sm font-mono tabular-nums font-medium text-foreground' : 'text-sm font-medium text-foreground'}>
+            <dd
+                className={
+                    mono
+                        ? 'font-mono text-sm font-medium text-foreground tabular-nums'
+                        : 'text-sm font-medium text-foreground'
+                }
+            >
                 {children}
             </dd>
         </div>
@@ -69,9 +75,9 @@ export default function ClaimShow({ claim, order, items }: Props) {
         <>
             <Head title={`İade ${claim.remoteClaimId}`} />
 
-            <div className="flex flex-col gap-5 p-4 sm:p-6 lg:p-8 font-sans max-w-7xl mx-auto">
+            <div className="mx-auto flex max-w-7xl flex-col gap-5 p-4 font-sans sm:p-6 lg:p-8">
                 {/* Top Navigation & Breadcrumbs */}
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex items-center gap-3">
                         <Button
                             asChild
@@ -85,13 +91,18 @@ export default function ClaimShow({ claim, order, items }: Props) {
                             </Link>
                         </Button>
                         <span className="text-muted-foreground/40">/</span>
-                        <span className="font-mono text-sm text-foreground font-semibold">
+                        <span className="font-mono text-sm font-semibold text-foreground">
                             {claim.remoteClaimId}
                         </span>
                     </div>
 
                     <div className="flex items-center gap-2.5">
-                        <Button asChild variant="outline" size="sm" className="h-8 gap-1.5 text-xs">
+                        <Button
+                            asChild
+                            variant="outline"
+                            size="sm"
+                            className="h-8 gap-1.5 text-xs"
+                        >
                             <Link href={orderShow({ order: order.id })}>
                                 <ShoppingBag className="size-3.5" />
                                 <span>Siparişi Görüntüle</span>
@@ -101,11 +112,11 @@ export default function ClaimShow({ claim, order, items }: Props) {
                 </div>
 
                 {/* Main Header Banner */}
-                <div className="rounded-xl border border-border bg-card p-4 sm:p-5 shadow-xs">
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="rounded-xl border border-border bg-card p-4 shadow-xs sm:p-5">
+                    <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
                         <div className="space-y-1.5">
                             <div className="flex flex-wrap items-center gap-2.5">
-                                <h1 className="font-sans text-xl sm:text-2xl font-bold tracking-tight text-foreground">
+                                <h1 className="font-sans text-xl font-bold tracking-tight text-foreground sm:text-2xl">
                                     İade {claim.remoteClaimId}
                                 </h1>
                                 <ClaimStatusBadge
@@ -149,15 +160,17 @@ export default function ClaimShow({ claim, order, items }: Props) {
                 <div className="flex items-start gap-3 rounded-lg border border-border bg-muted/40 p-3.5 text-xs text-muted-foreground shadow-xs">
                     <Info className="mt-0.5 size-4 shrink-0 text-foreground" />
                     <p>
-                        İade onay ve red işlemleri doğrudan pazaryeri paneli üzerinden yapılır; bu ekran senkronize edilen talebin güncel durumunu gösterir.
+                        İade onay ve red işlemleri doğrudan pazaryeri paneli
+                        üzerinden yapılır; bu ekran senkronize edilen talebin
+                        güncel durumunu gösterir.
                     </p>
                 </div>
 
                 {/* 2 Cards Grid: Claim Info & Order Info */}
                 <div className="grid gap-5 md:grid-cols-2">
-                    <Card className="gap-0 py-0 overflow-hidden border-border bg-card shadow-xs">
+                    <Card className="gap-0 overflow-hidden border-border bg-card py-0 shadow-xs">
                         <CardHeader className="border-b border-border bg-muted/40 px-4 py-3">
-                            <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                            <CardTitle className="flex items-center gap-2 text-sm font-semibold">
                                 <Receipt className="size-4 text-muted-foreground" />
                                 Talep Bilgisi
                             </CardTitle>
@@ -171,8 +184,10 @@ export default function ClaimShow({ claim, order, items }: Props) {
                                     {claim.openedAt ?? '—'}
                                 </Field>
                                 <div className="col-span-2">
-                                    <dt className="text-xs text-muted-foreground">İade Sebebi</dt>
-                                    <dd className="text-sm font-medium text-foreground mt-0.5">
+                                    <dt className="text-xs text-muted-foreground">
+                                        İade Sebebi
+                                    </dt>
+                                    <dd className="mt-0.5 text-sm font-medium text-foreground">
                                         {claim.reason ?? '—'}
                                     </dd>
                                 </div>
@@ -180,9 +195,9 @@ export default function ClaimShow({ claim, order, items }: Props) {
                         </CardContent>
                     </Card>
 
-                    <Card className="gap-0 py-0 overflow-hidden border-border bg-card shadow-xs">
+                    <Card className="gap-0 overflow-hidden border-border bg-card py-0 shadow-xs">
                         <CardHeader className="border-b border-border bg-muted/40 px-4 py-3">
-                            <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                            <CardTitle className="flex items-center gap-2 text-sm font-semibold">
                                 <ShoppingBag className="size-4 text-muted-foreground" />
                                 Bağlı Sipariş Bilgisi
                             </CardTitle>
@@ -190,10 +205,14 @@ export default function ClaimShow({ claim, order, items }: Props) {
                         <CardContent className="p-4">
                             <dl className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <dt className="text-xs text-muted-foreground">Sipariş Numarası</dt>
+                                    <dt className="text-xs text-muted-foreground">
+                                        Sipariş Numarası
+                                    </dt>
                                     <dd className="text-sm">
                                         <Link
-                                            href={orderShow({ order: order.id })}
+                                            href={orderShow({
+                                                order: order.id,
+                                            })}
                                             instant
                                             className="font-mono font-bold text-primary underline underline-offset-4"
                                         >
@@ -228,32 +247,39 @@ export default function ClaimShow({ claim, order, items }: Props) {
 
                     <Table>
                         <TableHeader>
-                            <TableRow className="border-b border-border hover:bg-transparent text-xs">
+                            <TableRow className="border-b border-border text-xs hover:bg-transparent">
                                 <TableHead className="w-24">Kalem ID</TableHead>
                                 <TableHead>SKU</TableHead>
                                 <TableHead>Barkod</TableHead>
-                                <TableHead className="text-right">Adet</TableHead>
-                                <TableHead className="text-right">Birim Fiyat</TableHead>
+                                <TableHead className="text-right">
+                                    Adet
+                                </TableHead>
+                                <TableHead className="text-right">
+                                    Birim Fiyat
+                                </TableHead>
                                 <TableHead>Durum</TableHead>
                                 <TableHead>Sebep</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {items.map((item) => (
-                                <TableRow key={item.id} className="hover:bg-secondary/30 text-xs">
-                                    <TableCell className="font-mono tabular-nums font-medium text-foreground py-3">
+                                <TableRow
+                                    key={item.id}
+                                    className="text-xs hover:bg-secondary/30"
+                                >
+                                    <TableCell className="py-3 font-mono font-medium text-foreground tabular-nums">
                                         {item.remoteItemId}
                                     </TableCell>
-                                    <TableCell className="font-mono tabular-nums font-medium py-3">
+                                    <TableCell className="py-3 font-mono font-medium tabular-nums">
                                         {item.sku ?? '—'}
                                     </TableCell>
-                                    <TableCell className="font-mono text-muted-foreground tabular-nums py-3">
+                                    <TableCell className="py-3 font-mono text-muted-foreground tabular-nums">
                                         {item.barcode ?? '—'}
                                     </TableCell>
-                                    <TableCell className="text-right font-mono tabular-nums font-bold py-3">
+                                    <TableCell className="py-3 text-right font-mono font-bold tabular-nums">
                                         {item.quantity}
                                     </TableCell>
-                                    <TableCell className="text-right font-mono tabular-nums font-medium py-3">
+                                    <TableCell className="py-3 text-right font-mono font-medium tabular-nums">
                                         {item.unitPrice ?? '—'}
                                     </TableCell>
                                     <TableCell className="py-3">
@@ -269,7 +295,7 @@ export default function ClaimShow({ claim, order, items }: Props) {
                                             )}
                                         </div>
                                     </TableCell>
-                                    <TableCell className="max-w-48 truncate text-muted-foreground py-3">
+                                    <TableCell className="max-w-48 truncate py-3 text-muted-foreground">
                                         {item.reason ?? '—'}
                                     </TableCell>
                                 </TableRow>

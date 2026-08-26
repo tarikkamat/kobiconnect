@@ -17,10 +17,10 @@ export default function License() {
                     description="Mevcut paket ve lisans kullanım detaylarınız."
                 />
 
-                <Card className="gap-0 py-0 overflow-hidden border-border bg-card shadow-xs">
+                <Card className="gap-0 overflow-hidden border-border bg-card py-0 shadow-xs">
                     <CardHeader className="border-b border-border bg-muted/40 px-4 py-3">
                         <div className="flex items-center justify-between">
-                            <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                            <CardTitle className="flex items-center gap-2 text-sm font-semibold">
                                 <KeyRound className="size-4 text-primary" />
                                 KobiConnect Kurumsal Lisans
                             </CardTitle>
@@ -29,13 +29,16 @@ export default function License() {
                             </Badge>
                         </div>
                     </CardHeader>
-                    <CardContent className="p-4 space-y-3">
+                    <CardContent className="space-y-3 p-4">
                         <div className="flex items-start gap-3 rounded-lg border border-success/20 bg-success/5 p-3 text-xs text-success">
-                            <ShieldCheck className="size-4 shrink-0 mt-0.5" />
+                            <ShieldCheck className="mt-0.5 size-4 shrink-0" />
                             <div>
-                                <strong className="font-semibold">Sınırsız Pazaryeri Entegrasyonu</strong>
-                                <p className="text-[11px] text-muted-foreground mt-0.5">
-                                    Tüm pazaryeri bağlantıları, sipariş ve stok senkronizasyon özellikleri aktif durumdadır.
+                                <strong className="font-semibold">
+                                    Sınırsız Pazaryeri Entegrasyonu
+                                </strong>
+                                <p className="mt-0.5 text-[11px] text-muted-foreground">
+                                    Tüm pazaryeri bağlantıları, sipariş ve stok
+                                    senkronizasyon özellikleri aktif durumdadır.
                                 </p>
                             </div>
                         </div>

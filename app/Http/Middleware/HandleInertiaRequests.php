@@ -54,7 +54,9 @@ class HandleInertiaRequests extends Middleware
             'roles' => $user?->getRoleNames()->all() ?? [],
             // Kisiye ozel tablo kolon gorunurlugu; bos dizi yerine obje ki
             // istemcide Record<string, ...> olarak tip guvenli okunsun.
-            'tablePreferences' => (object) ($user?->table_preferences ?? []),
+            // `?->` degil `->`: `??` null uzerinde property okumayi zaten
+            // bastirir, `$user` null olsa da bos dizi doner.
+            'tablePreferences' => (object) ($user->table_preferences ?? []),
             'tenant' => tenant() === null ? null : [
                 'id' => tenant('id'),
                 'host' => $request->getHost(),

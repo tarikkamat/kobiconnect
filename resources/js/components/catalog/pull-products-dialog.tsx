@@ -1,4 +1,4 @@
-import { router, useForm } from '@inertiajs/react';
+import { useForm } from '@inertiajs/react';
 import { Download } from 'lucide-react';
 import { useState } from 'react';
 import ProductController from '@/actions/App/Http/Controllers/Catalog/ProductController';
@@ -82,12 +82,19 @@ export function PullProductsDialog({
                     </DialogHeader>
 
                     <div className="grid gap-2">
-                        <Label htmlFor="connection_id">Pazaryeri Bağlantısı</Label>
+                        <Label htmlFor="connection_id">
+                            Pazaryeri Bağlantısı
+                        </Label>
                         <Select
                             value={data.connection_id}
-                            onValueChange={(val) => setData('connection_id', val)}
+                            onValueChange={(val) =>
+                                setData('connection_id', val)
+                            }
                         >
-                            <SelectTrigger id="connection_id" aria-label="Pazaryeri Bağlantısı">
+                            <SelectTrigger
+                                id="connection_id"
+                                aria-label="Pazaryeri Bağlantısı"
+                            >
                                 <SelectValue placeholder="Bağlantı seçin" />
                             </SelectTrigger>
                             <SelectContent>

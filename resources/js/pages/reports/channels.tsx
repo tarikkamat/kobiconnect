@@ -1,9 +1,7 @@
 import { Head } from '@inertiajs/react';
 import { MarketplaceAvatar } from '@/components/marketplace-avatar';
-import {
-    ReportHeader,
-    type ConnectionItem,
-} from '@/components/reports/report-header';
+import { ReportHeader } from '@/components/reports/report-header';
+import type { ConnectionItem } from '@/components/reports/report-header';
 import { Badge } from '@/components/ui/badge';
 import {
     Table,
@@ -13,7 +11,10 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { channels as channelsRoute, index as reportsRoute } from '@/routes/reports';
+import {
+    channels as channelsRoute,
+    index as reportsRoute,
+} from '@/routes/reports';
 
 type ChannelRow = {
     id: number;
@@ -81,10 +82,14 @@ export default function ReportsChannels({
                                 Kanal Bazlı Satış & Hakediş Tablosu
                             </h3>
                             <p className="text-xs text-muted-foreground">
-                                Aktif bağlı pazaryerlerinin seçilen tarih aralığındaki finansal dökümü.
+                                Aktif bağlı pazaryerlerinin seçilen tarih
+                                aralığındaki finansal dökümü.
                             </p>
                         </div>
-                        <Badge variant="outline" className="font-mono text-xs tabular-nums">
+                        <Badge
+                            variant="outline"
+                            className="font-mono text-xs tabular-nums"
+                        >
                             {channelBreakdown.length} kanal
                         </Badge>
                     </div>
@@ -92,15 +97,33 @@ export default function ReportsChannels({
                     <Table>
                         <TableHeader>
                             <TableRow className="border-b border-border hover:bg-transparent">
-                                <TableHead className="w-[220px]">Kanal</TableHead>
-                                <TableHead className="text-right">Sipariş</TableHead>
-                                <TableHead className="text-right">Satılan Ürün</TableHead>
-                                <TableHead className="text-right">Brüt Satış</TableHead>
-                                <TableHead className="text-right">Komisyon</TableHead>
-                                <TableHead className="text-right">Kargo & Cezalar</TableHead>
-                                <TableHead className="text-right">Net Hakediş</TableHead>
-                                <TableHead className="text-right">Ort. Komisyon</TableHead>
-                                <TableHead className="text-right">Ciro Payı</TableHead>
+                                <TableHead className="w-[220px]">
+                                    Kanal
+                                </TableHead>
+                                <TableHead className="text-right">
+                                    Sipariş
+                                </TableHead>
+                                <TableHead className="text-right">
+                                    Satılan Ürün
+                                </TableHead>
+                                <TableHead className="text-right">
+                                    Brüt Satış
+                                </TableHead>
+                                <TableHead className="text-right">
+                                    Komisyon
+                                </TableHead>
+                                <TableHead className="text-right">
+                                    Kargo & Cezalar
+                                </TableHead>
+                                <TableHead className="text-right">
+                                    Net Hakediş
+                                </TableHead>
+                                <TableHead className="text-right">
+                                    Ort. Komisyon
+                                </TableHead>
+                                <TableHead className="text-right">
+                                    Ciro Payı
+                                </TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -110,7 +133,7 @@ export default function ReportsChannels({
                                         <TableCell className="font-medium">
                                             <div className="flex items-center gap-2.5">
                                                 <MarketplaceAvatar
-                                                    marketplace={row.marketplace}
+                                                    code={row.marketplace}
                                                     className="size-5"
                                                 />
                                                 <div className="flex flex-col">
@@ -123,27 +146,27 @@ export default function ReportsChannels({
                                                 </div>
                                             </div>
                                         </TableCell>
-                                        <TableCell className="font-mono text-xs text-right tabular-nums">
+                                        <TableCell className="text-right font-mono text-xs tabular-nums">
                                             {row.orderCount}
                                         </TableCell>
-                                        <TableCell className="font-mono text-xs text-right tabular-nums">
+                                        <TableCell className="text-right font-mono text-xs tabular-nums">
                                             {row.itemCount} adet
                                         </TableCell>
-                                        <TableCell className="font-mono font-semibold text-xs text-right text-foreground tabular-nums">
+                                        <TableCell className="text-right font-mono text-xs font-semibold text-foreground tabular-nums">
                                             {row.grossSales}
                                         </TableCell>
-                                        <TableCell className="font-mono text-xs text-right text-rose-500 tabular-nums">
+                                        <TableCell className="text-right font-mono text-xs text-rose-500 tabular-nums">
                                             {row.commissionTotal}
                                         </TableCell>
-                                        <TableCell className="font-mono text-xs text-right text-amber-500 tabular-nums">
+                                        <TableCell className="text-right font-mono text-xs text-amber-500 tabular-nums">
                                             {row.penaltyTotal
                                                 ? `${row.shippingTotal} (+${row.penaltyTotal})`
                                                 : row.shippingTotal}
                                         </TableCell>
-                                        <TableCell className="font-mono font-semibold text-xs text-right text-emerald-500 tabular-nums">
+                                        <TableCell className="text-right font-mono text-xs font-semibold text-emerald-500 tabular-nums">
                                             {row.netEarnings}
                                         </TableCell>
-                                        <TableCell className="font-mono text-xs text-right tabular-nums">
+                                        <TableCell className="text-right font-mono text-xs tabular-nums">
                                             %{row.avgCommissionRate}
                                         </TableCell>
                                         <TableCell className="text-right">
@@ -162,7 +185,8 @@ export default function ReportsChannels({
                                         colSpan={9}
                                         className="py-12 text-center text-xs text-muted-foreground"
                                     >
-                                        Seçilen tarih aralığında kanal sipariş verisi bulunamadı.
+                                        Seçilen tarih aralığında kanal sipariş
+                                        verisi bulunamadı.
                                     </TableCell>
                                 </TableRow>
                             )}

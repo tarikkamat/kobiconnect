@@ -74,8 +74,12 @@ export const AI_STUDIO_PRESETS: AiStudioPreset[] = [
 ];
 
 function getXsrfToken(): string {
-    if (typeof document === 'undefined') return '';
+    if (typeof document === 'undefined') {
+        return '';
+    }
+
     const match = document.cookie.match(/XSRF-TOKEN=([^;]+)/);
+
     return match ? decodeURIComponent(match[1]) : '';
 }
 
@@ -85,7 +89,11 @@ type Props = {
     productName: string;
 };
 
-export function MediaGalleryAiStudio({ images, setImages, productName }: Props) {
+export function MediaGalleryAiStudio({
+    images,
+    setImages,
+    productName,
+}: Props) {
     const [isUploading, setIsUploading] = useState(false);
     const [customUrlInput, setCustomUrlInput] = useState('');
     const [showUrlInput, setShowUrlInput] = useState(false);
@@ -93,7 +101,9 @@ export function MediaGalleryAiStudio({ images, setImages, productName }: Props) 
 
     // AI Refactor Modal State
     const [isRefactorOpen, setIsRefactorOpen] = useState(false);
-    const [targetImage, setTargetImage] = useState<ProductImageItem | null>(null);
+    const [targetImage, setTargetImage] = useState<ProductImageItem | null>(
+        null,
+    );
     const [selectedPreset, setSelectedPreset] = useState<string>('clean_white');
     const [aiCustomInstruction, setAiCustomInstruction] = useState('');
     const [isGeneratingAi, setIsGeneratingAi] = useState(false);
@@ -104,55 +114,76 @@ export function MediaGalleryAiStudio({ images, setImages, productName }: Props) 
 
     // Handle Upload
     const handleFileUpload = async (files: FileList | null) => {
-        if (!files || files.length === 0) return;
+        if (!files || files.length === 0) {
+            return;
+        }
 
         setIsUploading(true);
-        const uploadPromises = Array.from(files).map(async (file) => {
-            const formData = new FormData();
-            formData.append('image', file);
+        const uploadPromises = Array.from(files).map(
+            async (file): Promise<ProductImageItem | null> => {
+                const formData = new FormData();
+                formData.append('image', file);
 
-            try {
-                const response = await fetch(ProductController.uploadImage.url(), {
-                    method: 'POST',
-                    headers: {
-                        'X-XSRF-TOKEN': getXsrfToken(),
-                        Accept: 'application/json',
-                    },
-                    body: formData,
-                });
+                try {
+                    const response = await fetch(
+                        ProductController.uploadImage.url(),
+                        {
+                            method: 'POST',
+                            headers: {
+                                'X-XSRF-TOKEN': getXsrfToken(),
+                                Accept: 'application/json',
+                            },
+                            body: formData,
+                        },
+                    );
 
-                if (!response.ok) {
-                    const err = await response.json().catch(() => ({}));
-                    throw new Error(err.message || 'Görsel yüklenemedi.');
+                    if (!response.ok) {
+                        const err = await response.json().catch(() => ({}));
+
+                        throw new Error(err.message || 'Görsel yüklenemedi.');
+                    }
+
+                    const data: { url: string } = await response.json();
+
+                    return {
+                        id: String(Date.now() + Math.random()),
+                        url: data.url,
+                        name: file.name,
+                    };
+                } catch (err: unknown) {
+                    const errorMsg =
+                        err instanceof Error ? err.message : 'Yükleme hatası';
+                    toast.error(`${file.name} yüklenemedi: ${errorMsg}`);
+
+                    return null;
                 }
-
-                const data = await response.json();
-                return {
-                    id: String(Date.now() + Math.random()),
-                    url: data.url,
-                    name: file.name,
-                };
-            } catch (err: unknown) {
-                const errorMsg = err instanceof Error ? err.message : 'Yükleme hatası';
-                toast.error(`${file.name} yüklenemedi: ${errorMsg}`);
-                return null;
-            }
-        });
+            },
+        );
 
         const results = await Promise.all(uploadPromises);
-        const successful = results.filter((item): item is ProductImageItem => item !== null);
+        const successful = results.filter(
+            (item): item is ProductImageItem => item !== null,
+        );
 
         if (successful.length > 0) {
             setImages((prev) => [...prev, ...successful]);
             toast.success(`${successful.length} görsel başarıyla yüklendi.`);
         }
+
         setIsUploading(false);
-        if (fileInputRef.current) fileInputRef.current.value = '';
+
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+        }
     };
 
     const handleAddCustomUrl = () => {
         const trimmed = customUrlInput.trim();
-        if (!trimmed) return;
+
+        if (!trimmed) {
+            return;
+        }
+
         setImages((prev) => [
             ...prev,
             { id: String(Date.now() + Math.random()), url: trimmed },
@@ -167,10 +198,14 @@ export function MediaGalleryAiStudio({ images, setImages, productName }: Props) 
     };
 
     const handleSetCoverImage = (indexToCover: number) => {
-        if (indexToCover === 0) return;
+        if (indexToCover === 0) {
+            return;
+        }
+
         setImages((prev) => {
             const copy = [...prev];
             const [selected] = copy.splice(indexToCover, 1);
+
             return [selected, ...copy];
         });
         toast.success('Kapak görseli güncellendi.');
@@ -193,32 +228,41 @@ export function MediaGalleryAiStudio({ images, setImages, productName }: Props) 
         if (preset) {
             instructionParts.push(preset.prompt);
         }
+
         if (aiCustomInstruction.trim()) {
             instructionParts.push(aiCustomInstruction.trim());
         }
 
         setIsGeneratingAi(true);
+
         try {
-            const response = await fetch(AiOptimizationController.generateImage.url(), {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-XSRF-TOKEN': getXsrfToken(),
-                    Accept: 'application/json',
+            const response = await fetch(
+                AiOptimizationController.generateImage.url(),
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-XSRF-TOKEN': getXsrfToken(),
+                        Accept: 'application/json',
+                    },
+                    body: JSON.stringify({
+                        name: nameToUse,
+                        image_url: targetImage ? targetImage.url : undefined,
+                        instruction: instructionParts.join(' '),
+                    }),
                 },
-                body: JSON.stringify({
-                    name: nameToUse,
-                    image_url: targetImage ? targetImage.url : undefined,
-                    instruction: instructionParts.join(' '),
-                }),
-            });
+            );
 
             if (!response.ok) {
                 const err = await response.json().catch(() => ({}));
-                throw new Error(err.message || 'AI stüdyo fotoğrafı üretilemedi.');
+
+                throw new Error(
+                    err.message || 'AI stüdyo fotoğrafı üretilemedi.',
+                );
             }
 
             const resData = await response.json();
+
             if (resData.success && resData.image?.url) {
                 setAiGeneratedPreview({
                     url: resData.image.url,
@@ -229,7 +273,8 @@ export function MediaGalleryAiStudio({ images, setImages, productName }: Props) 
                 throw new Error('Geçersiz sunucu yanıtı.');
             }
         } catch (err: unknown) {
-            const errorMsg = err instanceof Error ? err.message : 'AI üretim hatası';
+            const errorMsg =
+                err instanceof Error ? err.message : 'AI üretim hatası';
             toast.error(`Hata: ${errorMsg}`);
         } finally {
             setIsGeneratingAi(false);
@@ -238,7 +283,9 @@ export function MediaGalleryAiStudio({ images, setImages, productName }: Props) 
 
     // Apply Result to Gallery
     const handleApplyResult = (mode: 'replace' | 'add' | 'cover') => {
-        if (!aiGeneratedPreview) return;
+        if (!aiGeneratedPreview) {
+            return;
+        }
 
         const newImage: ProductImageItem = {
             id: String(Date.now()),
@@ -249,9 +296,13 @@ export function MediaGalleryAiStudio({ images, setImages, productName }: Props) 
 
         if (mode === 'replace' && targetImage) {
             setImages((prev) =>
-                prev.map((item) => (item.id === targetImage.id ? newImage : item))
+                prev.map((item) =>
+                    item.id === targetImage.id ? newImage : item,
+                ),
             );
-            toast.success('Orijinal görsel AI stüdyo fotoğrafı ile değiştirildi.');
+            toast.success(
+                'Orijinal görsel AI stüdyo fotoğrafı ile değiştirildi.',
+            );
         } else if (mode === 'cover') {
             setImages((prev) => [newImage, ...prev]);
             toast.success('AI stüdyo fotoğrafı kapak olarak eklendi.');
@@ -269,7 +320,7 @@ export function MediaGalleryAiStudio({ images, setImages, productName }: Props) 
         <div className="space-y-4">
             {/* Quick Standalone AI Prompt Bar if no images */}
             {images.length === 0 && (
-                <div className="rounded-xl border border-primary/20 bg-linear-to-r from-primary/5 via-primary/2 to-transparent p-3.5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div className="flex flex-col gap-3 rounded-xl border border-primary/20 bg-linear-to-r from-primary/5 via-primary/2 to-transparent p-3.5 sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex items-center gap-2.5">
                         <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
                             <Sparkles className="size-4" />
@@ -279,7 +330,8 @@ export function MediaGalleryAiStudio({ images, setImages, productName }: Props) 
                                 Fotoğrafınız yok mu? AI ile stüdyo çekimi üretin
                             </p>
                             <p className="text-[11px] text-muted-foreground">
-                                Ürün başlığına göre profesyonel stüdyo ortamı kurgular.
+                                Ürün başlığına göre profesyonel stüdyo ortamı
+                                kurgular.
                             </p>
                         </div>
                     </div>
@@ -288,7 +340,7 @@ export function MediaGalleryAiStudio({ images, setImages, productName }: Props) 
                         size="sm"
                         variant="default"
                         onClick={() => handleOpenRefactor(null)}
-                        className="gap-1.5 text-xs shrink-0 self-start sm:self-auto h-8"
+                        className="h-8 shrink-0 gap-1.5 self-start text-xs sm:self-auto"
                     >
                         <Wand2 className="size-3.5" />
                         AI Stüdyo Çekimi Üret
@@ -303,7 +355,7 @@ export function MediaGalleryAiStudio({ images, setImages, productName }: Props) 
                     e.preventDefault();
                     handleFileUpload(e.dataTransfer.files);
                 }}
-                className="rounded-xl border border-dashed border-border bg-secondary/20 p-6 text-center transition-colors hover:bg-secondary/40 flex flex-col items-center justify-center gap-2"
+                className="flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-secondary/20 p-6 text-center transition-colors hover:bg-secondary/40"
             >
                 <input
                     ref={fileInputRef}
@@ -326,12 +378,12 @@ export function MediaGalleryAiStudio({ images, setImages, productName }: Props) 
                         <button
                             type="button"
                             onClick={() => fileInputRef.current?.click()}
-                            className="text-primary underline underline-offset-4 hover:text-primary/80 font-semibold"
+                            className="font-semibold text-primary underline underline-offset-4 hover:text-primary/80"
                         >
                             dosya seçin
                         </button>
                     </p>
-                    <p className="text-xs text-muted-foreground mt-0.5">
+                    <p className="mt-0.5 text-xs text-muted-foreground">
                         PNG, JPG, WEBP • Maks. 10 MB/dosya
                     </p>
                 </div>
@@ -343,24 +395,26 @@ export function MediaGalleryAiStudio({ images, setImages, productName }: Props) 
                             variant="ghost"
                             size="sm"
                             onClick={() => setShowUrlInput(true)}
-                            className="text-xs text-muted-foreground h-7"
+                            className="h-7 text-xs text-muted-foreground"
                         >
                             + URL ile Görsel Ekle
                         </Button>
                     ) : (
-                        <div className="flex flex-wrap items-center justify-center gap-2 mt-1">
+                        <div className="mt-1 flex flex-wrap items-center justify-center gap-2">
                             <Input
                                 type="url"
                                 value={customUrlInput}
-                                onChange={(e) => setCustomUrlInput(e.target.value)}
+                                onChange={(e) =>
+                                    setCustomUrlInput(e.target.value)
+                                }
                                 placeholder="https://..."
-                                className="text-xs h-8 w-60"
+                                className="h-8 w-60 text-xs"
                             />
                             <Button
                                 type="button"
                                 size="sm"
                                 onClick={handleAddCustomUrl}
-                                className="text-xs h-8"
+                                className="h-8 text-xs"
                             >
                                 Ekle
                             </Button>
@@ -369,7 +423,7 @@ export function MediaGalleryAiStudio({ images, setImages, productName }: Props) 
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => setShowUrlInput(false)}
-                                className="text-xs h-8"
+                                className="h-8 text-xs"
                             >
                                 İptal
                             </Button>
@@ -382,19 +436,24 @@ export function MediaGalleryAiStudio({ images, setImages, productName }: Props) 
             {images.length > 0 && (
                 <div className="space-y-2.5">
                     <div className="flex items-center justify-between text-xs text-muted-foreground">
-                        <span>Yüklenen Görseller (İlk görsel ana kapaktır • Üzerindeki ✨ butonuyla AI dönüştürün)</span>
-                        <span className="font-mono tabular-nums font-medium">{images.length} adet</span>
+                        <span>
+                            Yüklenen Görseller (İlk görsel ana kapaktır •
+                            Üzerindeki ✨ butonuyla AI dönüştürün)
+                        </span>
+                        <span className="font-mono font-medium tabular-nums">
+                            {images.length} adet
+                        </span>
                     </div>
 
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
                         {images.map((img, idx) => (
                             <div
                                 key={img.id}
                                 className={cn(
-                                    'group relative aspect-square rounded-lg border overflow-hidden bg-card transition-all shadow-xs',
+                                    'group relative aspect-square overflow-hidden rounded-lg border bg-card shadow-xs transition-all',
                                     idx === 0
                                         ? 'border-primary ring-2 ring-primary/30'
-                                        : 'border-border hover:border-muted-foreground/50'
+                                        : 'border-border hover:border-muted-foreground/50',
                                 )}
                             >
                                 <img
@@ -409,9 +468,9 @@ export function MediaGalleryAiStudio({ images, setImages, productName }: Props) 
                                     <div className="absolute top-2 left-2 z-10">
                                         <Badge
                                             variant="default"
-                                            className="bg-primary text-primary-foreground text-[10px] font-semibold h-5 px-1.5 shadow-xs"
+                                            className="h-5 bg-primary px-1.5 text-[10px] font-semibold text-primary-foreground shadow-xs"
                                         >
-                                            <Star className="size-3 fill-current mr-0.5" />
+                                            <Star className="mr-0.5 size-3 fill-current" />
                                             Kapak
                                         </Badge>
                                     </div>
@@ -420,7 +479,10 @@ export function MediaGalleryAiStudio({ images, setImages, productName }: Props) 
                                 {/* AI badge */}
                                 {img.isAi && idx !== 0 && (
                                     <div className="absolute top-2 left-2 z-10">
-                                        <Badge variant="secondary" className="text-[9px] h-4 px-1 bg-secondary/80 backdrop-blur-xs">
+                                        <Badge
+                                            variant="secondary"
+                                            className="h-4 bg-secondary/80 px-1 text-[9px] backdrop-blur-xs"
+                                        >
                                             AI
                                         </Badge>
                                     </div>
@@ -431,7 +493,7 @@ export function MediaGalleryAiStudio({ images, setImages, productName }: Props) 
                                     <button
                                         type="button"
                                         onClick={() => handleOpenRefactor(img)}
-                                        className="size-7 rounded-md bg-background/85 hover:bg-primary hover:text-primary-foreground text-foreground border border-border flex items-center justify-center transition-all shadow-xs"
+                                        className="flex size-7 items-center justify-center rounded-md border border-border bg-background/85 text-foreground shadow-xs transition-all hover:bg-primary hover:text-primary-foreground"
                                         title="Bu fotoğrafı AI Stüdyo Çekimine Dönüştür"
                                         aria-label="AI ile Fotoğrafı Dönüştür"
                                     >
@@ -440,15 +502,17 @@ export function MediaGalleryAiStudio({ images, setImages, productName }: Props) 
                                 </div>
 
                                 {/* Overlay Action Bar on Hover */}
-                                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-2">
+                                <div className="absolute inset-0 flex flex-col justify-end bg-black/50 p-2 opacity-0 transition-opacity group-hover:opacity-100">
                                     <div className="flex items-center gap-1.5">
                                         {idx !== 0 && (
                                             <Button
                                                 type="button"
                                                 variant="secondary"
                                                 size="sm"
-                                                onClick={() => handleSetCoverImage(idx)}
-                                                className="flex-1 text-[10px] h-6 bg-card text-card-foreground shadow-xs gap-1"
+                                                onClick={() =>
+                                                    handleSetCoverImage(idx)
+                                                }
+                                                className="h-6 flex-1 gap-1 bg-card text-[10px] text-card-foreground shadow-xs"
                                             >
                                                 <Star className="size-3 text-warning" />
                                                 Kapak Yap
@@ -456,8 +520,10 @@ export function MediaGalleryAiStudio({ images, setImages, productName }: Props) 
                                         )}
                                         <button
                                             type="button"
-                                            onClick={() => handleRemoveImage(img.id)}
-                                            className="size-6 rounded-md bg-destructive/90 text-destructive-foreground flex items-center justify-center transition-colors hover:bg-destructive shrink-0 ml-auto"
+                                            onClick={() =>
+                                                handleRemoveImage(img.id)
+                                            }
+                                            className="ml-auto flex size-6 shrink-0 items-center justify-center rounded-md bg-destructive/90 text-destructive-foreground transition-colors hover:bg-destructive"
                                             title="Görseli Sil"
                                             aria-label="Görseli Sil"
                                         >
@@ -473,14 +539,16 @@ export function MediaGalleryAiStudio({ images, setImages, productName }: Props) 
 
             {/* AI STUDIO REFACTOR MODAL / DIALOG */}
             <Dialog open={isRefactorOpen} onOpenChange={setIsRefactorOpen}>
-                <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+                <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
                     <DialogHeader>
                         <div className="flex items-center gap-2">
                             <div className="flex size-7 items-center justify-center rounded-md bg-primary/10 text-primary">
                                 <Sparkles className="size-4" />
                             </div>
                             <DialogTitle className="text-base">
-                                {targetImage ? 'Fotoğrafı AI Stüdyo Çekimine Dönüştür' : 'AI Stüdyo Ürün Fotoğrafı Oluştur'}
+                                {targetImage
+                                    ? 'Fotoğrafı AI Stüdyo Çekimine Dönüştür'
+                                    : 'AI Stüdyo Ürün Fotoğrafı Oluştur'}
                             </DialogTitle>
                         </div>
                         <DialogDescription className="text-xs">
@@ -492,18 +560,23 @@ export function MediaGalleryAiStudio({ images, setImages, productName }: Props) 
 
                     <div className="space-y-4 py-2">
                         {/* Before & After comparison if generating/previewing */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                             {/* Original Image box */}
                             {targetImage && (
                                 <div className="space-y-1.5">
-                                    <Label className="text-xs font-medium text-muted-foreground">Orijinal Fotoğraf</Label>
-                                    <div className="aspect-square rounded-lg border border-border bg-secondary/20 overflow-hidden flex items-center justify-center relative">
+                                    <Label className="text-xs font-medium text-muted-foreground">
+                                        Orijinal Fotoğraf
+                                    </Label>
+                                    <div className="relative flex aspect-square items-center justify-center overflow-hidden rounded-lg border border-border bg-secondary/20">
                                         <img
                                             src={targetImage.url}
                                             alt="Original"
                                             className="size-full object-cover"
                                         />
-                                        <Badge variant="secondary" className="absolute top-2 left-2 text-[10px]">
+                                        <Badge
+                                            variant="secondary"
+                                            className="absolute top-2 left-2 text-[10px]"
+                                        >
                                             Kaynak
                                         </Badge>
                                     </div>
@@ -511,23 +584,33 @@ export function MediaGalleryAiStudio({ images, setImages, productName }: Props) 
                             )}
 
                             {/* Result Preview Box */}
-                            <div className={cn('space-y-1.5', !targetImage && 'sm:col-span-2')}>
+                            <div
+                                className={cn(
+                                    'space-y-1.5',
+                                    !targetImage && 'sm:col-span-2',
+                                )}
+                            >
                                 <Label className="text-xs font-medium text-muted-foreground">
-                                    AI Stüdyo Çekimi {aiGeneratedPreview && '✨'}
+                                    AI Stüdyo Çekimi{' '}
+                                    {aiGeneratedPreview && '✨'}
                                 </Label>
                                 <div
                                     className={cn(
-                                        'rounded-lg border overflow-hidden flex flex-col items-center justify-center text-center p-4 transition-all relative',
+                                        'relative flex flex-col items-center justify-center overflow-hidden rounded-lg border p-4 text-center transition-all',
                                         aiGeneratedPreview
-                                            ? 'aspect-square border-primary ring-2 ring-primary/20 bg-card p-0'
-                                            : 'aspect-square border-dashed border-border bg-secondary/15'
+                                            ? 'aspect-square border-primary bg-card p-0 ring-2 ring-primary/20'
+                                            : 'aspect-square border-dashed border-border bg-secondary/15',
                                     )}
                                 >
                                     {isGeneratingAi ? (
-                                        <div className="flex flex-col items-center justify-center gap-2 text-primary p-4">
+                                        <div className="flex flex-col items-center justify-center gap-2 p-4 text-primary">
                                             <Loader2 className="size-8 animate-spin" />
-                                            <p className="text-xs font-medium">Stüdyo fotoğrafı işleniyor...</p>
-                                            <p className="text-[11px] text-muted-foreground">Işık ve zemin optimize ediliyor</p>
+                                            <p className="text-xs font-medium">
+                                                Stüdyo fotoğrafı işleniyor...
+                                            </p>
+                                            <p className="text-[11px] text-muted-foreground">
+                                                Işık ve zemin optimize ediliyor
+                                            </p>
                                         </div>
                                     ) : aiGeneratedPreview ? (
                                         <>
@@ -536,14 +619,20 @@ export function MediaGalleryAiStudio({ images, setImages, productName }: Props) 
                                                 alt="AI Result"
                                                 className="size-full object-cover"
                                             />
-                                            <Badge variant="success" className="absolute top-2 left-2 text-[10px]">
+                                            <Badge
+                                                variant="success"
+                                                className="absolute top-2 left-2 text-[10px]"
+                                            >
                                                 Stüdyo Çekimi Hazır
                                             </Badge>
                                         </>
                                     ) : (
                                         <div className="flex flex-col items-center justify-center gap-1.5 text-muted-foreground">
                                             <ImageIcon className="size-8 opacity-40" />
-                                            <p className="text-xs">Konsept seçip "Dönüştür"e tıklayın</p>
+                                            <p className="text-xs">
+                                                Konsept seçip "Dönüştür"e
+                                                tıklayın
+                                            </p>
                                         </div>
                                     )}
                                 </div>
@@ -552,24 +641,32 @@ export function MediaGalleryAiStudio({ images, setImages, productName }: Props) 
 
                         {/* Presets Selection (Non-overflowing, clean responsive grid) */}
                         <div className="space-y-2">
-                            <Label className="text-xs font-medium">Stüdyo Konsepti Seçin</Label>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            <Label className="text-xs font-medium">
+                                Stüdyo Konsepti Seçin
+                            </Label>
+                            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                                 {AI_STUDIO_PRESETS.map((preset) => (
                                     <button
                                         key={preset.id}
                                         type="button"
-                                        onClick={() => setSelectedPreset(preset.id)}
+                                        onClick={() =>
+                                            setSelectedPreset(preset.id)
+                                        }
                                         className={cn(
-                                            'flex items-start gap-2.5 p-2.5 rounded-lg border text-left transition-all text-xs min-w-0',
+                                            'flex min-w-0 items-start gap-2.5 rounded-lg border p-2.5 text-left text-xs transition-all',
                                             selectedPreset === preset.id
-                                                ? 'border-primary bg-primary/10 text-foreground font-medium ring-1 ring-primary/40'
-                                                : 'border-border bg-card hover:bg-secondary/60 text-muted-foreground'
+                                                ? 'border-primary bg-primary/10 font-medium text-foreground ring-1 ring-primary/40'
+                                                : 'border-border bg-card text-muted-foreground hover:bg-secondary/60',
                                         )}
                                     >
-                                        <span className="text-base shrink-0">{preset.icon}</span>
+                                        <span className="shrink-0 text-base">
+                                            {preset.icon}
+                                        </span>
                                         <div className="min-w-0 flex-1">
-                                            <p className="font-semibold text-foreground truncate">{preset.label}</p>
-                                            <p className="text-[11px] text-muted-foreground line-clamp-2 leading-tight mt-0.5">
+                                            <p className="truncate font-semibold text-foreground">
+                                                {preset.label}
+                                            </p>
+                                            <p className="mt-0.5 line-clamp-2 text-[11px] leading-tight text-muted-foreground">
                                                 {preset.description}
                                             </p>
                                         </div>
@@ -585,14 +682,16 @@ export function MediaGalleryAiStudio({ images, setImages, productName }: Props) 
                             </Label>
                             <Input
                                 value={aiCustomInstruction}
-                                onChange={(e) => setAiCustomInstruction(e.target.value)}
+                                onChange={(e) =>
+                                    setAiCustomInstruction(e.target.value)
+                                }
                                 placeholder="Örn: Arkaya hafif buğu ekle, ürünü hafif açılı konumlandır..."
-                                className="text-xs h-8"
+                                className="h-8 text-xs"
                             />
                         </div>
                     </div>
 
-                    <DialogFooter className="flex-col sm:flex-row gap-2 sm:justify-between pt-2 border-t border-border">
+                    <DialogFooter className="flex-col gap-2 border-t border-border pt-2 sm:flex-row sm:justify-between">
                         <Button
                             type="button"
                             variant="outline"
@@ -620,7 +719,9 @@ export function MediaGalleryAiStudio({ images, setImages, productName }: Props) 
                                     ) : (
                                         <>
                                             <Wand2 className="size-3.5" />
-                                            {targetImage ? 'Fotoğrafı Dönüştür' : 'AI Fotoğrafı Üret'}
+                                            {targetImage
+                                                ? 'Fotoğrafı Dönüştür'
+                                                : 'AI Fotoğrafı Üret'}
                                         </>
                                     )}
                                 </Button>
@@ -632,7 +733,7 @@ export function MediaGalleryAiStudio({ images, setImages, productName }: Props) 
                                         size="sm"
                                         onClick={handleExecuteAiRefactor}
                                         disabled={isGeneratingAi}
-                                        className="text-xs gap-1"
+                                        className="gap-1 text-xs"
                                     >
                                         <RefreshCw className="size-3" />
                                         Tekrar Üret
@@ -643,7 +744,9 @@ export function MediaGalleryAiStudio({ images, setImages, productName }: Props) 
                                             type="button"
                                             variant="default"
                                             size="sm"
-                                            onClick={() => handleApplyResult('replace')}
+                                            onClick={() =>
+                                                handleApplyResult('replace')
+                                            }
                                             className="text-xs"
                                         >
                                             Orijinaliyle Değiştir
@@ -655,7 +758,7 @@ export function MediaGalleryAiStudio({ images, setImages, productName }: Props) 
                                         variant="outline"
                                         size="sm"
                                         onClick={() => handleApplyResult('add')}
-                                        className="text-xs gap-1"
+                                        className="gap-1 text-xs"
                                     >
                                         <Plus className="size-3" />
                                         Galeriye Ekle
@@ -665,10 +768,12 @@ export function MediaGalleryAiStudio({ images, setImages, productName }: Props) 
                                         type="button"
                                         variant="secondary"
                                         size="sm"
-                                        onClick={() => handleApplyResult('cover')}
-                                        className="text-xs gap-1"
+                                        onClick={() =>
+                                            handleApplyResult('cover')
+                                        }
+                                        className="gap-1 text-xs"
                                     >
-                                        <Star className="size-3 text-warning fill-current" />
+                                        <Star className="size-3 fill-current text-warning" />
                                         Kapak Yap
                                     </Button>
                                 </>

@@ -51,6 +51,12 @@ it('her panel ekrani sahip rolu icin render oluyor', function (): void {
             continue;
         }
 
+        // OAuth/MCP uclari da ekran degil: Inertia render etmezler, makineyle
+        // konusurlar ve kendi testleri var (tests/Feature/Mcp).
+        if (str_starts_with($name, 'passport.') || str_starts_with($name, 'mcp.')) {
+            continue;
+        }
+
         $screens[$name] = $path;
     }
 
@@ -59,7 +65,10 @@ it('her panel ekrani sahip rolu icin render oluyor', function (): void {
     $broken = [];
 
     foreach ($screens as $name => $path) {
-        $status = $this->actingAs($owner)->get("/test/{$path}")->status();
+        // getStatusCode(), status() degil: ikincisi yalnizca Illuminate
+        // yanitlarinda var, cikip gelen bir Symfony yaniti dongusu komple
+        // dusururdu.
+        $status = $this->actingAs($owner)->get("/test/{$path}")->getStatusCode();
 
         // 200 render, 302 kimlik/onay yonlendirmesi (login, sifre onayi) —
         // ikisi de saglikli. 4xx/5xx bir ekranin olu oldugunu soyler.

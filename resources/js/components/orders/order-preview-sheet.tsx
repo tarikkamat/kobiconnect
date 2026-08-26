@@ -134,14 +134,26 @@ export function OrderPreviewSheet({
     const [loading, setLoading] = useState(false);
     const [copied, setCopied] = useState(false);
 
+    // Acilan siparis degisince onceki detay atilir. Bu sifirlama effect'te
+    // setState demekti; basamakli render uretiyordu. React'in onerdigi yol
+    // render sirasinda ayarlamak: https://react.dev/learn/you-might-not-need-an-effect
+    const detailKey = open && order ? order.id : null;
+    const [lastDetailKey, setLastDetailKey] = useState(detailKey);
+
+    if (detailKey !== lastDetailKey) {
+        setLastDetailKey(detailKey);
+        setDetail(null);
+        // Yukleme bayragi da burada acilir; effect govdesinde senkron
+        // setState basamakli render demek.
+        setLoading(detailKey !== null);
+    }
+
     useEffect(() => {
         if (!open || !order) {
-            setDetail(null);
             return;
         }
 
         let isMounted = true;
-        setLoading(true);
 
         fetch(show.url({ order: order.id }), {
             headers: {
@@ -191,7 +203,7 @@ export function OrderPreviewSheet({
         <Sheet open={open} onOpenChange={onOpenChange}>
             <SheetContent
                 side="right"
-                className="w-full overflow-y-auto sm:max-w-xl md:max-w-2xl font-sans p-6 sm:p-8"
+                className="w-full overflow-y-auto p-6 font-sans sm:max-w-xl sm:p-8 md:max-w-2xl"
             >
                 {/* Header */}
                 <SheetHeader className="border-b border-border pb-5">
@@ -243,7 +255,10 @@ export function OrderPreviewSheet({
                             label={order.statusLabel}
                         />
                         {order.externalStatus && (
-                            <Badge variant="outline" className="text-xs font-normal text-muted-foreground">
+                            <Badge
+                                variant="outline"
+                                className="text-xs font-normal text-muted-foreground"
+                            >
                                 Pazaryeri: {order.externalStatus}
                             </Badge>
                         )}
@@ -264,7 +279,8 @@ export function OrderPreviewSheet({
                                 <strong className="font-semibold">
                                     Ödeme Onayı Bekleniyor:
                                 </strong>{' '}
-                                Stok ayrılmıştır ancak ödeme onaylanana kadar paketi kargoya vermeyiniz.
+                                Stok ayrılmıştır ancak ödeme onaylanana kadar
+                                paketi kargoya vermeyiniz.
                             </div>
                         </div>
                     )}
@@ -276,30 +292,38 @@ export function OrderPreviewSheet({
                                 <strong className="font-semibold">
                                     {order.unmatchedCount} adet satır
                                 </strong>{' '}
-                                katalogdaki ürün varyantlarıyla eşleşmedi. Eşleştirme yapılana kadar bu satırlar için stok düşülemez.
+                                katalogdaki ürün varyantlarıyla eşleşmedi.
+                                Eşleştirme yapılana kadar bu satırlar için stok
+                                düşülemez.
                             </div>
                         </div>
                     )}
 
                     {/* Müşteri ve Teslimat Bilgisi */}
-                    <div className="rounded-xl border border-border bg-card p-4 space-y-3">
-                        <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    <div className="space-y-3 rounded-xl border border-border bg-card p-4">
+                        <div className="flex items-center gap-2 text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                             <User className="size-3.5" />
                             <span>Müşteri & Teslimat Bilgisi (KVKK)</span>
                         </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                        <div className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
                             <div>
-                                <span className="block text-xs text-muted-foreground">Alıcı Adı:</span>
+                                <span className="block text-xs text-muted-foreground">
+                                    Alıcı Adı:
+                                </span>
                                 <span className="font-medium text-foreground">
                                     {customer?.name ?? order.customer ?? '—'}
                                 </span>
                             </div>
                             <div>
-                                <span className="block text-xs text-muted-foreground">Teslimat Şehir / İlçe:</span>
+                                <span className="block text-xs text-muted-foreground">
+                                    Teslimat Şehir / İlçe:
+                                </span>
                                 <div className="flex items-center gap-1 font-medium text-foreground">
-                                    <MapPin className="size-3.5 text-muted-foreground shrink-0" />
+                                    <MapPin className="size-3.5 shrink-0 text-muted-foreground" />
                                     <span>
-                                        {[customer?.district, customer?.city].filter(Boolean).join(', ') ||
+                                        {[customer?.district, customer?.city]
+                                            .filter(Boolean)
+                                            .join(', ') ||
                                             order.customerLocation ||
                                             '—'}
                                     </span>
@@ -307,17 +331,21 @@ export function OrderPreviewSheet({
                             </div>
                             {customer?.phone && (
                                 <div>
-                                    <span className="block text-xs text-muted-foreground">İletişim Telefon:</span>
+                                    <span className="block text-xs text-muted-foreground">
+                                        İletişim Telefon:
+                                    </span>
                                     <div className="flex items-center gap-1 font-mono text-sm text-foreground">
-                                        <Phone className="size-3 text-muted-foreground shrink-0" />
+                                        <Phone className="size-3 shrink-0 text-muted-foreground" />
                                         <span>{customer.phone}</span>
                                     </div>
                                 </div>
                             )}
                             {customer?.email && (
                                 <div>
-                                    <span className="block text-xs text-muted-foreground">E-posta Adresi:</span>
-                                    <span className="font-sans text-xs text-foreground truncate block">
+                                    <span className="block text-xs text-muted-foreground">
+                                        E-posta Adresi:
+                                    </span>
+                                    <span className="block truncate font-sans text-xs text-foreground">
                                         {customer.email}
                                     </span>
                                 </div>
@@ -348,25 +376,41 @@ export function OrderPreviewSheet({
                                         key={line.id}
                                         className="flex items-start justify-between gap-4 p-4 text-sm"
                                     >
-                                        <div className="flex items-start gap-3 min-w-0 flex-1">
+                                        <div className="flex min-w-0 flex-1 items-start gap-3">
                                             <div className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-border bg-secondary/50 text-muted-foreground">
                                                 <Package className="size-4.5" />
                                             </div>
                                             <div className="min-w-0 flex-1 space-y-1">
-                                                <div className="font-medium text-foreground line-clamp-1">
-                                                    {line.productName || line.sku || 'Ürün'}
+                                                <div className="line-clamp-1 font-medium text-foreground">
+                                                    {line.productName ||
+                                                        line.sku ||
+                                                        'Ürün'}
                                                 </div>
-                                                <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground font-mono">
-                                                    <span>SKU: {line.sku || '—'}</span>
-                                                    {line.barcode && <span>Barkod: {line.barcode}</span>}
+                                                <div className="flex flex-wrap items-center gap-2 font-mono text-xs text-muted-foreground">
+                                                    <span>
+                                                        SKU: {line.sku || '—'}
+                                                    </span>
+                                                    {line.barcode && (
+                                                        <span>
+                                                            Barkod:{' '}
+                                                            {line.barcode}
+                                                        </span>
+                                                    )}
                                                 </div>
                                                 <div className="pt-0.5">
                                                     {line.matched ? (
-                                                        <Badge variant="outline" className="text-[11px] text-success border-success/30 bg-success/5 font-normal">
-                                                            Katalogla Eşleşti ({line.variantSku})
+                                                        <Badge
+                                                            variant="outline"
+                                                            className="border-success/30 bg-success/5 text-[11px] font-normal text-success"
+                                                        >
+                                                            Katalogla Eşleşti (
+                                                            {line.variantSku})
                                                         </Badge>
                                                     ) : (
-                                                        <Badge variant="destructive" className="text-[11px]">
+                                                        <Badge
+                                                            variant="destructive"
+                                                            className="text-[11px]"
+                                                        >
                                                             Eşleşmemiş Satır
                                                         </Badge>
                                                     )}
@@ -374,11 +418,11 @@ export function OrderPreviewSheet({
                                             </div>
                                         </div>
 
-                                        <div className="text-right shrink-0">
+                                        <div className="shrink-0 text-right">
                                             <div className="font-semibold text-foreground tabular-nums">
                                                 {line.unitPrice}
                                             </div>
-                                            <div className="text-xs text-muted-foreground font-mono">
+                                            <div className="font-mono text-xs text-muted-foreground">
                                                 x {line.quantity} adet
                                             </div>
                                             {line.commission && (
@@ -400,7 +444,7 @@ export function OrderPreviewSheet({
                     {/* Kargo ve Teslimat Bilgisi */}
                     {packages.length > 0 && (
                         <div className="space-y-3">
-                            <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                            <h3 className="flex items-center gap-2 text-sm font-semibold text-foreground">
                                 <Truck className="size-4 text-muted-foreground" />
                                 <span>Kargo ve Teslimat</span>
                             </h3>
@@ -408,11 +452,12 @@ export function OrderPreviewSheet({
                                 {packages.map((pkg) => (
                                     <div
                                         key={pkg.id}
-                                        className="rounded-xl border border-border bg-card p-4 text-xs space-y-2"
+                                        className="space-y-2 rounded-xl border border-border bg-card p-4 text-xs"
                                     >
                                         <div className="flex items-center justify-between">
-                                            <span className="font-semibold text-sm text-foreground">
-                                                {pkg.cargoProvider ?? 'Kargo Firması'}
+                                            <span className="text-sm font-semibold text-foreground">
+                                                {pkg.cargoProvider ??
+                                                    'Kargo Firması'}
                                             </span>
                                             <OrderStatusBadge
                                                 status={pkg.status}
@@ -421,7 +466,9 @@ export function OrderPreviewSheet({
                                         </div>
                                         {pkg.trackingNumber && (
                                             <div className="flex items-center justify-between pt-1">
-                                                <span className="text-muted-foreground">Takip Numarası:</span>
+                                                <span className="text-muted-foreground">
+                                                    Takip Numarası:
+                                                </span>
                                                 <span className="font-mono font-medium text-foreground tabular-nums">
                                                     {pkg.trackingNumber}
                                                 </span>
@@ -433,7 +480,7 @@ export function OrderPreviewSheet({
                                                     href={pkg.trackingLink}
                                                     target="_blank"
                                                     rel="noreferrer noopener"
-                                                    className="inline-flex items-center gap-1 text-xs text-primary font-medium underline-offset-4 hover:underline"
+                                                    className="inline-flex items-center gap-1 text-xs font-medium text-primary underline-offset-4 hover:underline"
                                                 >
                                                     Kargo Takip Sayfası
                                                     <ExternalLink className="size-3.5" />
@@ -447,44 +494,61 @@ export function OrderPreviewSheet({
                     )}
 
                     {/* Finansal & Tutar Özeti */}
-                    <div className="rounded-xl border border-border bg-card p-4 space-y-3">
-                        <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    <div className="space-y-3 rounded-xl border border-border bg-card p-4">
+                        <div className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                             Finansal Özet & Kesintiler
                         </div>
-                        <div className="space-y-2 text-sm divide-y divide-border/60">
+                        <div className="space-y-2 divide-y divide-border/60 text-sm">
                             <div className="space-y-1.5 pb-2">
                                 {financials ? (
                                     <>
-                                        <div className="flex justify-between text-muted-foreground text-xs">
+                                        <div className="flex justify-between text-xs text-muted-foreground">
                                             <span>Brüt Tutar:</span>
-                                            <span className="tabular-nums font-medium text-foreground">{financials.gross}</span>
+                                            <span className="font-medium text-foreground tabular-nums">
+                                                {financials.gross}
+                                            </span>
                                         </div>
                                         {financials.discount !== '0,00 ₺' && (
-                                            <div className="flex justify-between text-muted-foreground text-xs">
+                                            <div className="flex justify-between text-xs text-muted-foreground">
                                                 <span>İndirimler:</span>
-                                                <span className="tabular-nums font-medium text-destructive">-{financials.discount}</span>
+                                                <span className="font-medium text-destructive tabular-nums">
+                                                    -{financials.discount}
+                                                </span>
                                             </div>
                                         )}
                                         {financials.commission !== '0,00 ₺' && (
-                                            <div className="flex justify-between text-muted-foreground text-xs">
-                                                <span>Pazaryeri Komisyonu:</span>
-                                                <span className="tabular-nums font-medium text-destructive">-{financials.commission}</span>
+                                            <div className="flex justify-between text-xs text-muted-foreground">
+                                                <span>
+                                                    Pazaryeri Komisyonu:
+                                                </span>
+                                                <span className="font-medium text-destructive tabular-nums">
+                                                    -{financials.commission}
+                                                </span>
                                             </div>
                                         )}
                                     </>
                                 ) : (
                                     Object.entries(totals).map(([key, val]) => (
-                                        <div key={key} className="flex justify-between text-muted-foreground text-xs">
-                                            <span>{TOTAL_LABELS[key] ?? key}:</span>
-                                            <span className="tabular-nums font-medium text-foreground">{val}</span>
+                                        <div
+                                            key={key}
+                                            className="flex justify-between text-xs text-muted-foreground"
+                                        >
+                                            <span>
+                                                {TOTAL_LABELS[key] ?? key}:
+                                            </span>
+                                            <span className="font-medium text-foreground tabular-nums">
+                                                {val}
+                                            </span>
                                         </div>
                                     ))
                                 )}
                             </div>
 
                             <div className="flex items-center justify-between pt-2">
-                                <span className="font-semibold text-sm text-foreground">Toplam Ödenen:</span>
-                                <span className="font-bold text-base text-foreground tabular-nums">
+                                <span className="text-sm font-semibold text-foreground">
+                                    Toplam Ödenen:
+                                </span>
+                                <span className="text-base font-bold text-foreground tabular-nums">
                                     {financials?.netSales ?? order.total ?? '—'}
                                 </span>
                             </div>
@@ -492,7 +556,9 @@ export function OrderPreviewSheet({
                             {financials?.netPayout && (
                                 <div className="flex items-center justify-between pt-2 text-xs font-medium text-success">
                                     <span>Satıcıya Geçecek Tahmini Tutar:</span>
-                                    <span className="font-bold text-sm tabular-nums">{financials.netPayout}</span>
+                                    <span className="text-sm font-bold tabular-nums">
+                                        {financials.netPayout}
+                                    </span>
                                 </div>
                             )}
                         </div>
@@ -501,7 +567,7 @@ export function OrderPreviewSheet({
 
                 {/* Footer */}
                 <SheetFooter className="mt-2 border-t border-border pt-4">
-                    <Button asChild className="w-full font-sans h-10">
+                    <Button asChild className="h-10 w-full font-sans">
                         <Link href={show({ order: order.id })} instant>
                             Tüm Detay Sayfasına Git
                             <ExternalLink className="ml-2 size-4" />

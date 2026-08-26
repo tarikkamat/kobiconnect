@@ -22,7 +22,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import { ProductImageItem } from './media-gallery-ai-studio';
+import type { ProductImageItem } from './media-gallery-ai-studio';
 
 export type VariantItem = {
     id: number;
@@ -106,19 +106,27 @@ export function AttributeVariantMatrix({
     // Add Value to Attribute
     const handleAddValue = (attrId: string, val: string) => {
         const trimmed = val.trim();
-        if (!trimmed) return;
+
+        if (!trimmed) {
+            return;
+        }
+
         setAttributes((prev) =>
             prev.map((attr) => {
                 if (attr.id === attrId) {
-                    if (attr.values.includes(trimmed)) return attr;
+                    if (attr.values.includes(trimmed)) {
+                        return attr;
+                    }
+
                     return {
                         ...attr,
                         values: [...attr.values, trimmed],
                         currentInput: '',
                     };
                 }
+
                 return attr;
-            })
+            }),
         );
     };
 
@@ -127,20 +135,26 @@ export function AttributeVariantMatrix({
         setAttributes((prev) =>
             prev.map((attr) =>
                 attr.id === attrId
-                    ? { ...attr, values: attr.values.filter((v) => v !== valToRemove) }
-                    : attr
-            )
+                    ? {
+                          ...attr,
+                          values: attr.values.filter((v) => v !== valToRemove),
+                      }
+                    : attr,
+            ),
         );
     };
 
     // Cartesian Product Variant Generator (WooCommerce-Style)
     const handleGenerateVariantsFromAttributes = () => {
         const validAttrs = attributes.filter(
-            (a) => a.name.trim() !== '' && a.values.length > 0
+            (a) => a.name.trim() !== '' && a.values.length > 0,
         );
 
         if (validAttrs.length === 0) {
-            toast.error('Lütfen en az bir nitelik adı ve değeri girin (örn: Beden -> S, M).');
+            toast.error(
+                'Lütfen en az bir nitelik adı ve değeri girin (örn: Beden -> S, M).',
+            );
+
             return;
         }
 
@@ -148,7 +162,7 @@ export function AttributeVariantMatrix({
         const cartesian = (arrays: string[][]): string[][] => {
             return arrays.reduce<string[][]>(
                 (acc, curr) => acc.flatMap((c) => curr.map((n) => [...c, n])),
-                [[]]
+                [[]],
             );
         };
 
@@ -158,6 +172,7 @@ export function AttributeVariantMatrix({
 
         if (combinations.length === 0) {
             toast.error('Kombinasyon üretilemedi.');
+
             return;
         }
 
@@ -190,7 +205,9 @@ export function AttributeVariantMatrix({
         });
 
         setVariants(newVariants);
-        toast.success(`${newVariants.length} adet varyant başarıyla oluşturuldu!`);
+        toast.success(
+            `${newVariants.length} adet varyant başarıyla oluşturuldu!`,
+        );
     };
 
     // Add Single Manual Variant
@@ -211,11 +228,14 @@ export function AttributeVariantMatrix({
     return (
         <div className="space-y-4">
             {/* Mode Switcher */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pb-1">
+            <div className="flex flex-col gap-2 pb-1 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                    <h3 className="text-sm font-semibold text-foreground">Ürün Türü ve Varyant Yapısı</h3>
+                    <h3 className="text-sm font-semibold text-foreground">
+                        Ürün Türü ve Varyant Yapısı
+                    </h3>
                     <p className="text-xs text-muted-foreground">
-                        Tekil ürün girişi veya beden/renk gibi niteliklerden çoklu varyant oluşturma.
+                        Tekil ürün girişi veya beden/renk gibi niteliklerden
+                        çoklu varyant oluşturma.
                     </p>
                 </div>
 
@@ -223,14 +243,22 @@ export function AttributeVariantMatrix({
                     type="single"
                     variant="outline"
                     value={mode}
-                    onValueChange={(val) => val && setMode(val as 'simple' | 'variants')}
+                    onValueChange={(val) =>
+                        val && setMode(val as 'simple' | 'variants')
+                    }
                     className="self-start sm:self-auto"
                 >
-                    <ToggleGroupItem value="simple" className="text-xs h-8 px-3 gap-1.5">
+                    <ToggleGroupItem
+                        value="simple"
+                        className="h-8 gap-1.5 px-3 text-xs"
+                    >
                         <Package className="size-3.5" />
                         Basit Ürün (Tek)
                     </ToggleGroupItem>
-                    <ToggleGroupItem value="variants" className="text-xs h-8 px-3 gap-1.5">
+                    <ToggleGroupItem
+                        value="variants"
+                        className="h-8 gap-1.5 px-3 text-xs"
+                    >
                         <Layers className="size-3.5" />
                         Nitelikli Varyantlar
                     </ToggleGroupItem>
@@ -241,11 +269,15 @@ export function AttributeVariantMatrix({
 
             {/* 1. SIMPLE PRODUCT MODE */}
             {mode === 'simple' && (
-                <div className="space-y-4 animate-in fade-in duration-150">
-                    <div className="rounded-xl border border-border/80 bg-secondary/15 p-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="animate-in space-y-4 duration-150 fade-in">
+                    <div className="grid grid-cols-1 gap-4 rounded-xl border border-border/80 bg-secondary/15 p-4 sm:grid-cols-2 md:grid-cols-4">
                         <div className="grid gap-1.5">
-                            <Label htmlFor="simple-sku" className="text-xs font-medium">
-                                SKU (Stok Kodu) <span className="text-destructive">*</span>
+                            <Label
+                                htmlFor="simple-sku"
+                                className="text-xs font-medium"
+                            >
+                                SKU (Stok Kodu){' '}
+                                <span className="text-destructive">*</span>
                             </Label>
                             <Input
                                 id="simple-sku"
@@ -254,28 +286,38 @@ export function AttributeVariantMatrix({
                                 value={simpleSku}
                                 onChange={(e) => setSimpleSku(e.target.value)}
                                 placeholder="Örn: TSH-BLK-M"
-                                className="font-mono tabular-nums text-xs uppercase"
+                                className="font-mono text-xs uppercase tabular-nums"
                             />
                             <InputError message={errors['variants.0.sku']} />
                         </div>
 
                         <div className="grid gap-1.5">
-                            <Label htmlFor="simple-barcode" className="text-xs font-medium">
+                            <Label
+                                htmlFor="simple-barcode"
+                                className="text-xs font-medium"
+                            >
                                 Barkod
                             </Label>
                             <Input
                                 id="simple-barcode"
                                 name="variants[0][barcode]"
                                 value={simpleBarcode}
-                                onChange={(e) => setSimpleBarcode(e.target.value)}
+                                onChange={(e) =>
+                                    setSimpleBarcode(e.target.value)
+                                }
                                 placeholder="8690000000000"
-                                className="font-mono tabular-nums text-xs"
+                                className="font-mono text-xs tabular-nums"
                             />
-                            <InputError message={errors['variants.0.barcode']} />
+                            <InputError
+                                message={errors['variants.0.barcode']}
+                            />
                         </div>
 
                         <div className="grid gap-1.5">
-                            <Label htmlFor="simple-price" className="text-xs font-medium">
+                            <Label
+                                htmlFor="simple-price"
+                                className="text-xs font-medium"
+                            >
                                 Liste Fiyatı (TRY)
                             </Label>
                             <Input
@@ -287,13 +329,18 @@ export function AttributeVariantMatrix({
                                 value={simplePrice}
                                 onChange={(e) => setSimplePrice(e.target.value)}
                                 placeholder="0,00"
-                                className="font-mono tabular-nums text-xs"
+                                className="font-mono text-xs tabular-nums"
                             />
-                            <InputError message={errors['variants.0.list_price']} />
+                            <InputError
+                                message={errors['variants.0.list_price']}
+                            />
                         </div>
 
                         <div className="grid gap-1.5">
-                            <Label htmlFor="simple-stock" className="text-xs font-medium">
+                            <Label
+                                htmlFor="simple-stock"
+                                className="text-xs font-medium"
+                            >
                                 Başlangıç Stoğu
                             </Label>
                             <Input
@@ -304,9 +351,11 @@ export function AttributeVariantMatrix({
                                 value={simpleStock}
                                 onChange={(e) => setSimpleStock(e.target.value)}
                                 placeholder="0"
-                                className="font-mono tabular-nums text-xs"
+                                className="font-mono text-xs tabular-nums"
                             />
-                            <InputError message={errors['variants.0.on_hand']} />
+                            <InputError
+                                message={errors['variants.0.on_hand']}
+                            />
                         </div>
                     </div>
                 </div>
@@ -314,14 +363,15 @@ export function AttributeVariantMatrix({
 
             {/* 2. MULTI-VARIANT MODE (WooCommerce Style) */}
             {mode === 'variants' && (
-                <div className="space-y-6 animate-in fade-in duration-150">
+                <div className="animate-in space-y-6 duration-150 fade-in">
                     {/* Attribute Generator Box */}
-                    <div className="rounded-xl border border-primary/20 bg-linear-to-b from-primary/5 via-transparent to-transparent p-4 space-y-4">
-                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                    <div className="space-y-4 rounded-xl border border-primary/20 bg-linear-to-b from-primary/5 via-transparent to-transparent p-4">
+                        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                             <div className="flex items-center gap-2">
                                 <Sparkles className="size-4 text-primary" />
                                 <h4 className="text-xs font-semibold text-foreground">
-                                    Nitelik Tanımlama (WooCommerce Stili Varyant Üretici)
+                                    Nitelik Tanımlama (WooCommerce Stili Varyant
+                                    Üretici)
                                 </h4>
                             </div>
                             <Button
@@ -329,7 +379,7 @@ export function AttributeVariantMatrix({
                                 variant="outline"
                                 size="sm"
                                 onClick={handleAddAttribute}
-                                className="text-xs h-7 gap-1"
+                                className="h-7 gap-1 text-xs"
                             >
                                 <Plus className="size-3" />
                                 Nitelik Ekle
@@ -337,17 +387,19 @@ export function AttributeVariantMatrix({
                         </div>
 
                         <p className="text-xs text-muted-foreground">
-                            Beden, Renk vb. nitelikler ve değerler ekleyin; sistem tüm varyant kombinasyonlarını otomatik olarak oluştursun.
+                            Beden, Renk vb. nitelikler ve değerler ekleyin;
+                            sistem tüm varyant kombinasyonlarını otomatik olarak
+                            oluştursun.
                         </p>
 
                         <div className="space-y-3">
                             {attributes.map((attr) => (
                                 <div
                                     key={attr.id}
-                                    className="p-3 rounded-lg border border-border bg-card flex flex-col sm:flex-row sm:items-center gap-3"
+                                    className="flex flex-col gap-3 rounded-lg border border-border bg-card p-3 sm:flex-row sm:items-center"
                                 >
-                                    <div className="w-full sm:w-44 shrink-0">
-                                        <Label className="text-[11px] text-muted-foreground block mb-1">
+                                    <div className="w-full shrink-0 sm:w-44">
+                                        <Label className="mb-1 block text-[11px] text-muted-foreground">
                                             Nitelik Adı
                                         </Label>
                                         <Input
@@ -356,30 +408,41 @@ export function AttributeVariantMatrix({
                                                 const val = e.target.value;
                                                 setAttributes((prev) =>
                                                     prev.map((a) =>
-                                                        a.id === attr.id ? { ...a, name: val } : a
-                                                    )
+                                                        a.id === attr.id
+                                                            ? {
+                                                                  ...a,
+                                                                  name: val,
+                                                              }
+                                                            : a,
+                                                    ),
                                                 );
                                             }}
                                             placeholder="Örn: Beden, Renk"
-                                            className="text-xs h-8 font-medium"
+                                            className="h-8 text-xs font-medium"
                                         />
                                     </div>
 
-                                    <div className="flex-1 min-w-0">
-                                        <Label className="text-[11px] text-muted-foreground block mb-1">
-                                            Değerler / Seçenekler (Virgül veya Enter ile ekleyin)
+                                    <div className="min-w-0 flex-1">
+                                        <Label className="mb-1 block text-[11px] text-muted-foreground">
+                                            Değerler / Seçenekler (Virgül veya
+                                            Enter ile ekleyin)
                                         </Label>
-                                        <div className="flex flex-wrap items-center gap-1.5 p-1.5 rounded-md border border-input bg-background min-h-8">
+                                        <div className="flex min-h-8 flex-wrap items-center gap-1.5 rounded-md border border-input bg-background p-1.5">
                                             {attr.values.map((v) => (
                                                 <Badge
                                                     key={v}
                                                     variant="secondary"
-                                                    className="text-xs font-normal gap-1 pl-2 pr-1 h-5"
+                                                    className="h-5 gap-1 pr-1 pl-2 text-xs font-normal"
                                                 >
                                                     {v}
                                                     <button
                                                         type="button"
-                                                        onClick={() => handleRemoveValue(attr.id, v)}
+                                                        onClick={() =>
+                                                            handleRemoveValue(
+                                                                attr.id,
+                                                                v,
+                                                            )
+                                                        }
                                                         className="hover:text-destructive"
                                                     >
                                                         <X className="size-3" />
@@ -391,23 +454,37 @@ export function AttributeVariantMatrix({
                                                 value={attr.currentInput}
                                                 onChange={(e) => {
                                                     const val = e.target.value;
+
                                                     if (val.includes(',')) {
-                                                        const parts = val.split(',');
-                                                        parts.forEach((p) => handleAddValue(attr.id, p));
+                                                        const parts =
+                                                            val.split(',');
+                                                        parts.forEach((p) =>
+                                                            handleAddValue(
+                                                                attr.id,
+                                                                p,
+                                                            ),
+                                                        );
                                                     } else {
                                                         setAttributes((prev) =>
                                                             prev.map((a) =>
                                                                 a.id === attr.id
-                                                                    ? { ...a, currentInput: val }
-                                                                    : a
-                                                            )
+                                                                    ? {
+                                                                          ...a,
+                                                                          currentInput:
+                                                                              val,
+                                                                      }
+                                                                    : a,
+                                                            ),
                                                         );
                                                     }
                                                 }}
                                                 onKeyDown={(e) => {
                                                     if (e.key === 'Enter') {
                                                         e.preventDefault();
-                                                        handleAddValue(attr.id, attr.currentInput);
+                                                        handleAddValue(
+                                                            attr.id,
+                                                            attr.currentInput,
+                                                        );
                                                     }
                                                 }}
                                                 placeholder={
@@ -415,7 +492,7 @@ export function AttributeVariantMatrix({
                                                         ? 'Örn: S, M, L, XL yazıp Enter basın'
                                                         : '+ Ekle'
                                                 }
-                                                className="text-xs bg-transparent border-0 outline-hidden flex-1 min-w-28 h-5 px-1"
+                                                className="h-5 min-w-28 flex-1 border-0 bg-transparent px-1 text-xs outline-hidden"
                                             />
                                         </div>
                                     </div>
@@ -424,8 +501,10 @@ export function AttributeVariantMatrix({
                                         type="button"
                                         variant="ghost"
                                         size="icon"
-                                        onClick={() => handleRemoveAttribute(attr.id)}
-                                        className="size-8 self-end sm:self-center shrink-0 text-muted-foreground hover:text-destructive"
+                                        onClick={() =>
+                                            handleRemoveAttribute(attr.id)
+                                        }
+                                        className="size-8 shrink-0 self-end text-muted-foreground hover:text-destructive sm:self-center"
                                         title="Niteliği Sil"
                                     >
                                         <Trash2 className="size-3.5" />
@@ -439,7 +518,7 @@ export function AttributeVariantMatrix({
                                 type="button"
                                 onClick={handleGenerateVariantsFromAttributes}
                                 size="sm"
-                                className="text-xs gap-1.5"
+                                className="gap-1.5 text-xs"
                             >
                                 <Sparkles className="size-3.5" />
                                 Niteliklerden Varyantları Otomatik Oluştur
@@ -455,7 +534,8 @@ export function AttributeVariantMatrix({
                                     Varyant Listesi ({variants.length} adet)
                                 </h4>
                                 <span className="text-[11px] text-muted-foreground">
-                                    (Her biri ayrı fiyat, stok ve görsele sahip bağımsız ürün birimidir)
+                                    (Her biri ayrı fiyat, stok ve görsele sahip
+                                    bağımsız ürün birimidir)
                                 </span>
                             </div>
                             <Button
@@ -463,7 +543,7 @@ export function AttributeVariantMatrix({
                                 variant="outline"
                                 size="sm"
                                 onClick={handleAddManualVariant}
-                                className="text-xs h-7 gap-1"
+                                className="h-7 gap-1 text-xs"
                             >
                                 <Plus className="size-3" />
                                 Manuel Varyant Ekle
@@ -471,11 +551,15 @@ export function AttributeVariantMatrix({
                         </div>
 
                         {variants.length === 0 ? (
-                            <div className="p-8 rounded-xl border border-dashed border-border text-center space-y-2 text-muted-foreground">
-                                <Layers className="size-8 mx-auto opacity-40" />
-                                <p className="text-xs font-medium">Henüz varyant oluşturulmadı.</p>
+                            <div className="space-y-2 rounded-xl border border-dashed border-border p-8 text-center text-muted-foreground">
+                                <Layers className="mx-auto size-8 opacity-40" />
+                                <p className="text-xs font-medium">
+                                    Henüz varyant oluşturulmadı.
+                                </p>
                                 <p className="text-[11px]">
-                                    Yukarıdaki nitelikleri tanımlayıp "Otomatik Oluştur" butonuna basabilir veya manuel ekleyebilirsiniz.
+                                    Yukarıdaki nitelikleri tanımlayıp "Otomatik
+                                    Oluştur" butonuna basabilir veya manuel
+                                    ekleyebilirsiniz.
                                 </p>
                             </div>
                         ) : (
@@ -483,24 +567,37 @@ export function AttributeVariantMatrix({
                                 {variants.map((v, position) => (
                                     <div
                                         key={v.id}
-                                        className="p-3.5 rounded-xl border border-border bg-card transition-all space-y-3 shadow-xs"
+                                        className="space-y-3 rounded-xl border border-border bg-card p-3.5 shadow-xs transition-all"
                                     >
                                         {/* Variant Header info */}
                                         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/60 pb-2">
                                             <div className="flex flex-wrap items-center gap-1.5">
-                                                <Badge variant="outline" className="text-xs font-mono font-semibold">
+                                                <Badge
+                                                    variant="outline"
+                                                    className="font-mono text-xs font-semibold"
+                                                >
                                                     #{position + 1}
                                                 </Badge>
                                                 {v.attributes &&
-                                                    Object.entries(v.attributes).map(([attrName, attrVal]) => (
-                                                        <Badge
-                                                            key={attrName}
-                                                            variant="secondary"
-                                                            className="text-xs font-normal"
-                                                        >
-                                                            {attrName}: <strong className="ml-1">{attrVal}</strong>
-                                                        </Badge>
-                                                    ))}
+                                                    Object.entries(
+                                                        v.attributes,
+                                                    ).map(
+                                                        ([
+                                                            attrName,
+                                                            attrVal,
+                                                        ]) => (
+                                                            <Badge
+                                                                key={attrName}
+                                                                variant="secondary"
+                                                                className="text-xs font-normal"
+                                                            >
+                                                                {attrName}:{' '}
+                                                                <strong className="ml-1">
+                                                                    {attrVal}
+                                                                </strong>
+                                                            </Badge>
+                                                        ),
+                                                    )}
                                             </div>
 
                                             <Button
@@ -508,9 +605,15 @@ export function AttributeVariantMatrix({
                                                 variant="ghost"
                                                 size="sm"
                                                 onClick={() =>
-                                                    setVariants((prev) => prev.filter((item) => item.id !== v.id))
+                                                    setVariants((prev) =>
+                                                        prev.filter(
+                                                            (item) =>
+                                                                item.id !==
+                                                                v.id,
+                                                        ),
+                                                    )
                                                 }
-                                                className="text-xs h-6 text-muted-foreground hover:text-destructive gap-1 px-2"
+                                                className="h-6 gap-1 px-2 text-xs text-muted-foreground hover:text-destructive"
                                             >
                                                 <Trash2 className="size-3" />
                                                 Kaldır
@@ -519,14 +622,16 @@ export function AttributeVariantMatrix({
 
                                         {/* Hidden attributes inputs */}
                                         {v.attributes &&
-                                            Object.entries(v.attributes).map(([k, val]) => (
-                                                <input
-                                                    key={k}
-                                                    type="hidden"
-                                                    name={`variants[${position}][attributes][${k}]`}
-                                                    value={val}
-                                                />
-                                            ))}
+                                            Object.entries(v.attributes).map(
+                                                ([k, val]) => (
+                                                    <input
+                                                        key={k}
+                                                        type="hidden"
+                                                        name={`variants[${position}][attributes][${k}]`}
+                                                        value={val}
+                                                    />
+                                                ),
+                                            )}
                                         <input
                                             type="hidden"
                                             name={`variants[${position}][image_url]`}
@@ -534,14 +639,14 @@ export function AttributeVariantMatrix({
                                         />
 
                                         {/* Variant Main Fields */}
-                                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
+                                        <div className="grid grid-cols-1 items-end gap-3 sm:grid-cols-12">
                                             {/* Image Assignment */}
-                                            <div className="sm:col-span-3 space-y-1">
+                                            <div className="space-y-1 sm:col-span-3">
                                                 <Label className="text-[11px] text-muted-foreground">
                                                     Varyant Görseli
                                                 </Label>
                                                 <div className="flex items-center gap-2">
-                                                    <div className="size-8 rounded-md border border-border bg-secondary/30 flex items-center justify-center overflow-hidden shrink-0">
+                                                    <div className="flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-md border border-border bg-secondary/30">
                                                         {v.imageUrl ? (
                                                             <img
                                                                 src={v.imageUrl}
@@ -553,85 +658,147 @@ export function AttributeVariantMatrix({
                                                         )}
                                                     </div>
                                                     <Select
-                                                        value={v.imageUrl || 'none'}
-                                                        onValueChange={(val) => {
-                                                            const newUrl = val === 'none' ? undefined : val;
-                                                            setVariants((prev) =>
-                                                                prev.map((item) =>
-                                                                    item.id === v.id
-                                                                        ? { ...item, imageUrl: newUrl }
-                                                                        : item
-                                                                )
+                                                        value={
+                                                            v.imageUrl || 'none'
+                                                        }
+                                                        onValueChange={(
+                                                            val,
+                                                        ) => {
+                                                            const newUrl =
+                                                                val === 'none'
+                                                                    ? undefined
+                                                                    : val;
+                                                            setVariants(
+                                                                (prev) =>
+                                                                    prev.map(
+                                                                        (
+                                                                            item,
+                                                                        ) =>
+                                                                            item.id ===
+                                                                            v.id
+                                                                                ? {
+                                                                                      ...item,
+                                                                                      imageUrl:
+                                                                                          newUrl,
+                                                                                  }
+                                                                                : item,
+                                                                    ),
                                                             );
                                                         }}
                                                     >
-                                                        <SelectTrigger className="text-xs h-8 flex-1">
+                                                        <SelectTrigger className="h-8 flex-1 text-xs">
                                                             <SelectValue placeholder="Görsel Seç" />
                                                         </SelectTrigger>
                                                         <SelectContent>
-                                                            <SelectItem value="none" className="text-xs">
-                                                                Görselsiz / Genel Kapak
+                                                            <SelectItem
+                                                                value="none"
+                                                                className="text-xs"
+                                                            >
+                                                                Görselsiz /
+                                                                Genel Kapak
                                                             </SelectItem>
-                                                            {galleryImages.map((img, i) => (
-                                                                <SelectItem
-                                                                    key={img.id}
-                                                                    value={img.url}
-                                                                    className="text-xs"
-                                                                >
-                                                                    Görsel #{i + 1} {i === 0 ? '(Kapak)' : ''}
-                                                                </SelectItem>
-                                                            ))}
+                                                            {galleryImages.map(
+                                                                (img, i) => (
+                                                                    <SelectItem
+                                                                        key={
+                                                                            img.id
+                                                                        }
+                                                                        value={
+                                                                            img.url
+                                                                        }
+                                                                        className="text-xs"
+                                                                    >
+                                                                        Görsel #
+                                                                        {i + 1}{' '}
+                                                                        {i === 0
+                                                                            ? '(Kapak)'
+                                                                            : ''}
+                                                                    </SelectItem>
+                                                                ),
+                                                            )}
                                                         </SelectContent>
                                                     </Select>
                                                 </div>
                                             </div>
 
                                             {/* SKU */}
-                                            <div className="sm:col-span-3 space-y-1">
+                                            <div className="space-y-1 sm:col-span-3">
                                                 <Label className="text-[11px] text-muted-foreground">
-                                                    SKU <span className="text-destructive">*</span>
+                                                    SKU{' '}
+                                                    <span className="text-destructive">
+                                                        *
+                                                    </span>
                                                 </Label>
                                                 <Input
                                                     name={`variants[${position}][sku]`}
                                                     required
                                                     value={v.sku}
                                                     onChange={(e) => {
-                                                        const val = e.target.value;
+                                                        const val =
+                                                            e.target.value;
                                                         setVariants((prev) =>
                                                             prev.map((item) =>
-                                                                item.id === v.id ? { ...item, sku: val } : item
-                                                            )
+                                                                item.id === v.id
+                                                                    ? {
+                                                                          ...item,
+                                                                          sku: val,
+                                                                      }
+                                                                    : item,
+                                                            ),
                                                         );
                                                     }}
                                                     placeholder="SKU-001"
-                                                    className="text-xs h-8 font-mono uppercase"
+                                                    className="h-8 font-mono text-xs uppercase"
                                                 />
-                                                <InputError message={errors[`variants.${position}.sku`]} />
+                                                <InputError
+                                                    message={
+                                                        errors[
+                                                            `variants.${position}.sku`
+                                                        ]
+                                                    }
+                                                />
                                             </div>
 
                                             {/* Barcode */}
-                                            <div className="sm:col-span-2 space-y-1">
-                                                <Label className="text-[11px] text-muted-foreground">Barkod</Label>
+                                            <div className="space-y-1 sm:col-span-2">
+                                                <Label className="text-[11px] text-muted-foreground">
+                                                    Barkod
+                                                </Label>
                                                 <Input
                                                     name={`variants[${position}][barcode]`}
                                                     value={v.barcode}
                                                     onChange={(e) => {
-                                                        const val = e.target.value;
+                                                        const val =
+                                                            e.target.value;
                                                         setVariants((prev) =>
                                                             prev.map((item) =>
-                                                                item.id === v.id ? { ...item, barcode: val } : item
-                                                            )
+                                                                item.id === v.id
+                                                                    ? {
+                                                                          ...item,
+                                                                          barcode:
+                                                                              val,
+                                                                      }
+                                                                    : item,
+                                                            ),
                                                         );
                                                     }}
                                                     placeholder="Barkod"
-                                                    className="text-xs h-8 font-mono"
+                                                    className="h-8 font-mono text-xs"
                                                 />
-                                                <InputError message={errors[`variants.${position}.barcode`]} />
+                                                <InputError
+                                                    message={
+                                                        errors[
+                                                            `variants.${position}.barcode`
+                                                        ]
+                                                    }
+                                                />
                                             </div>
 
                                             {/* Price */}
-                                            <div className="sm:col-span-2 space-y-1">
-                                                <Label className="text-[11px] text-muted-foreground">Fiyat (TRY)</Label>
+                                            <div className="space-y-1 sm:col-span-2">
+                                                <Label className="text-[11px] text-muted-foreground">
+                                                    Fiyat (TRY)
+                                                </Label>
                                                 <Input
                                                     type="number"
                                                     step="0.01"
@@ -639,39 +806,65 @@ export function AttributeVariantMatrix({
                                                     name={`variants[${position}][list_price]`}
                                                     value={v.price}
                                                     onChange={(e) => {
-                                                        const val = e.target.value;
+                                                        const val =
+                                                            e.target.value;
                                                         setVariants((prev) =>
                                                             prev.map((item) =>
-                                                                item.id === v.id ? { ...item, price: val } : item
-                                                            )
+                                                                item.id === v.id
+                                                                    ? {
+                                                                          ...item,
+                                                                          price: val,
+                                                                      }
+                                                                    : item,
+                                                            ),
                                                         );
                                                     }}
                                                     placeholder="0,00"
-                                                    className="text-xs h-8 font-mono"
+                                                    className="h-8 font-mono text-xs"
                                                 />
-                                                <InputError message={errors[`variants.${position}.list_price`]} />
+                                                <InputError
+                                                    message={
+                                                        errors[
+                                                            `variants.${position}.list_price`
+                                                        ]
+                                                    }
+                                                />
                                             </div>
 
                                             {/* Stock */}
-                                            <div className="sm:col-span-2 space-y-1">
-                                                <Label className="text-[11px] text-muted-foreground">Stok</Label>
+                                            <div className="space-y-1 sm:col-span-2">
+                                                <Label className="text-[11px] text-muted-foreground">
+                                                    Stok
+                                                </Label>
                                                 <Input
                                                     type="number"
                                                     min="0"
                                                     name={`variants[${position}][on_hand]`}
                                                     value={v.stock}
                                                     onChange={(e) => {
-                                                        const val = e.target.value;
+                                                        const val =
+                                                            e.target.value;
                                                         setVariants((prev) =>
                                                             prev.map((item) =>
-                                                                item.id === v.id ? { ...item, stock: val } : item
-                                                            )
+                                                                item.id === v.id
+                                                                    ? {
+                                                                          ...item,
+                                                                          stock: val,
+                                                                      }
+                                                                    : item,
+                                                            ),
                                                         );
                                                     }}
                                                     placeholder="0"
-                                                    className="text-xs h-8 font-mono"
+                                                    className="h-8 font-mono text-xs"
                                                 />
-                                                <InputError message={errors[`variants.${position}.on_hand`]} />
+                                                <InputError
+                                                    message={
+                                                        errors[
+                                                            `variants.${position}.on_hand`
+                                                        ]
+                                                    }
+                                                />
                                             </div>
                                         </div>
                                     </div>

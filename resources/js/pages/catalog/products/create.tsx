@@ -2,7 +2,6 @@ import { Form, Head, Link } from '@inertiajs/react';
 import {
     ArrowLeft,
     FolderTree,
-    Layers,
     Loader2,
     Package,
     Save,
@@ -13,18 +12,12 @@ import {
 import { useState } from 'react';
 import { toast } from 'sonner';
 import ProductController from '@/actions/App/Http/Controllers/Catalog/ProductController';
-import {
-    AttributeVariantMatrix,
-    VariantItem,
-} from '@/components/catalog/attribute-variant-matrix';
-import {
-    ChannelConnectionItem,
-    ChannelPricingManager,
-} from '@/components/catalog/channel-pricing-manager';
-import {
-    MediaGalleryAiStudio,
-    ProductImageItem,
-} from '@/components/catalog/media-gallery-ai-studio';
+import type { VariantItem } from '@/components/catalog/attribute-variant-matrix';
+import { AttributeVariantMatrix } from '@/components/catalog/attribute-variant-matrix';
+import type { ChannelConnectionItem } from '@/components/catalog/channel-pricing-manager';
+import { ChannelPricingManager } from '@/components/catalog/channel-pricing-manager';
+import type { ProductImageItem } from '@/components/catalog/media-gallery-ai-studio';
+import { MediaGalleryAiStudio } from '@/components/catalog/media-gallery-ai-studio';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import {
@@ -112,15 +105,15 @@ export default function ProductCreate({
     const handleGenerateAiSeo = async () => {
         if (!name.trim()) {
             toast.error('Lütfen önce bir ürün adı girin.');
+
             return;
         }
 
         setIsGeneratingSeo(true);
+
         try {
             const selectedBrand =
                 brands.find((b) => b.id === brandId)?.name || 'Genel';
-            const selectedCategory =
-                categories.find((c) => c.id === categoryId)?.name || 'Genel';
 
             setAiSeoResults({
                 trendyol_title: `${selectedBrand !== 'Genel' ? selectedBrand + ' ' : ''}${name} - Orijinal & Faturalı`,
@@ -313,137 +306,23 @@ export default function ProductCreate({
                                     </CardContent>
                                 </Card>
 
-                                {/* 3. Stock, Attributes & WooCommerce-Style Variants */}
-                                <Card className="gap-0 overflow-hidden border-border bg-card py-0 shadow-xs">
-                                    <CardHeader className="border-b border-border bg-muted/40 px-4 py-3">
-                                        <CardTitle className="flex items-center gap-2 text-sm font-semibold">
-                                            <Layers className="size-4 text-primary" />
-                                            Stok & Nitelik Varyantları
-                                        </CardTitle>
-                                        <CardDescription className="text-xs">
-                                            Tekil ürün veya Beden/Renk gibi
-                                            niteliklere göre varyant matrisi
-                                            oluşturun.
-                                        </CardDescription>
-                                    </CardHeader>
-                                    <CardContent className="space-y-4 p-4">
-                                        {/* Toggle Simple vs Multi-variant Mode */}
-                                        <div className="flex w-fit rounded-lg border border-border bg-muted/30 p-1">
-                                            <button
-                                                type="button"
-                                                onClick={() =>
-                                                    setVariantMode('simple')
-                                                }
-                                                className={`rounded-md px-3 py-1.5 text-xs font-semibold transition-all ${
-                                                    variantMode === 'simple'
-                                                        ? 'bg-card text-foreground shadow-xs'
-                                                        : 'text-muted-foreground hover:text-foreground'
-                                                }`}
-                                            >
-                                                Tekil Ürün (Varyantsız)
-                                            </button>
-                                            <button
-                                                type="button"
-                                                onClick={() =>
-                                                    setVariantMode('variants')
-                                                }
-                                                className={`rounded-md px-3 py-1.5 text-xs font-semibold transition-all ${
-                                                    variantMode === 'variants'
-                                                        ? 'bg-card text-foreground shadow-xs'
-                                                        : 'text-muted-foreground hover:text-foreground'
-                                                }`}
-                                            >
-                                                Çoklu Varyant (Nitelik Matrisi)
-                                            </button>
-                                        </div>
-
-                                        {variantMode === 'simple' ? (
-                                            <div className="grid grid-cols-1 gap-3 pt-2 sm:grid-cols-2">
-                                                <div className="grid gap-1.5">
-                                                    <Label className="text-xs font-medium">
-                                                        Stok Kodu (SKU){' '}
-                                                        <span className="text-destructive">
-                                                            *
-                                                        </span>
-                                                    </Label>
-                                                    <Input
-                                                        name="variants[0][sku]"
-                                                        value={simpleSku}
-                                                        onChange={(e) =>
-                                                            setSimpleSku(
-                                                                e.target.value,
-                                                            )
-                                                        }
-                                                        placeholder="Örn: TSHIRT-BLK-M"
-                                                        className="h-9 font-mono text-xs"
-                                                        required
-                                                    />
-                                                </div>
-
-                                                <div className="grid gap-1.5">
-                                                    <Label className="text-xs font-medium">
-                                                        Barkod (EAN/GTIN)
-                                                    </Label>
-                                                    <Input
-                                                        name="variants[0][barcode]"
-                                                        value={simpleBarcode}
-                                                        onChange={(e) =>
-                                                            setSimpleBarcode(
-                                                                e.target.value,
-                                                            )
-                                                        }
-                                                        placeholder="Örn: 8690000000000"
-                                                        className="h-9 font-mono text-xs"
-                                                    />
-                                                </div>
-
-                                                <div className="grid gap-1.5">
-                                                    <Label className="text-xs font-medium">
-                                                        Satış Fiyatı (₺)
-                                                    </Label>
-                                                    <Input
-                                                        type="number"
-                                                        step="0.01"
-                                                        name="variants[0][list_price]"
-                                                        value={simplePrice}
-                                                        onChange={(e) =>
-                                                            setSimplePrice(
-                                                                e.target.value,
-                                                            )
-                                                        }
-                                                        placeholder="0.00"
-                                                        className="h-9 font-mono text-xs"
-                                                    />
-                                                </div>
-
-                                                <div className="grid gap-1.5">
-                                                    <Label className="text-xs font-medium">
-                                                        Açılış Stok Adedi
-                                                    </Label>
-                                                    <Input
-                                                        type="number"
-                                                        name="variants[0][on_hand]"
-                                                        value={simpleStock}
-                                                        onChange={(e) =>
-                                                            setSimpleStock(
-                                                                e.target.value,
-                                                            )
-                                                        }
-                                                        placeholder="0"
-                                                        className="h-9 font-mono text-xs"
-                                                    />
-                                                </div>
-                                            </div>
-                                        ) : (
-                                            <div className="pt-2">
-                                                <AttributeVariantMatrix
-                                                    variants={variants}
-                                                    setVariants={setVariants}
-                                                />
-                                            </div>
-                                        )}
-                                    </CardContent>
-                                </Card>
+                                <AttributeVariantMatrix
+                                    mode={variantMode}
+                                    setMode={setVariantMode}
+                                    simpleSku={simpleSku}
+                                    setSimpleSku={setSimpleSku}
+                                    simpleBarcode={simpleBarcode}
+                                    setSimpleBarcode={setSimpleBarcode}
+                                    simplePrice={simplePrice}
+                                    setSimplePrice={setSimplePrice}
+                                    simpleStock={simpleStock}
+                                    setSimpleStock={setSimpleStock}
+                                    variants={variants}
+                                    setVariants={setVariants}
+                                    galleryImages={images}
+                                    productName={name}
+                                    errors={errors}
+                                />
 
                                 {/* 4. Marketplace Pricing & Connections */}
                                 <Card className="gap-0 overflow-hidden border-border bg-card py-0 shadow-xs">

@@ -14,6 +14,7 @@ use App\Observers\InventoryItemObserver;
 use App\Observers\PriceObserver;
 use App\Support\TenantUserProvider;
 use Carbon\CarbonImmutable;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
@@ -22,6 +23,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Number;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
+use Laravel\Passport\Passport;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -53,6 +55,20 @@ class AppServiceProvider extends ServiceProvider
         // cozulmeye kalkilirsa "relation users does not exist" olur. Bkz.
         // App\Support\TenantUserProvider.
         Auth::provider('tenant-eloquent', fn ($app, array $config): TenantUserProvider => new TenantUserProvider($app['hash'], $config['model']));
+
+        // MCP istemcisinin (Claude vb.) tarayicida gordugu onay ekrani. Paket
+        // gorunumu vendor:publish --tag=mcp-views ile alindi.
+        Passport::authorizationView(
+            /** @param array<string, mixed> $parameters */
+            fn (array $parameters): Response => response()->view('mcp.authorize', $parameters)
+        );
+
+        // ZORUNLU: Passport anahtarlari varsayilan olarak storage_path() ile
+        // aranir, FilesystemTenancyBootstrapper ise o yolu tenant basina
+        // soneklendirir (storage/tenant{id}/...). Sabitlemezsek her tenant
+        // istegi "Invalid key supplied" ile 500 doner. Imza anahtari zaten
+        // uygulamanin tamamina aittir, tenant'a degil.
+        Passport::loadKeysFrom(base_path('storage'));
 
         // Horizon central domain'de yasar; orada tenant kullanicisi ve dolayisiyla
         // rol yoktur. Bu yuzden yetki rol degil operator listesiyle verilir.

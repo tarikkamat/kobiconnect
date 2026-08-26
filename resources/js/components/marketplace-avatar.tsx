@@ -24,13 +24,13 @@ export function MarketplaceLogo({
     height?: string;
 }) {
     return (
-        <div className={cn('inline-flex items-center shrink-0', className)}>
+        <div className={cn('inline-flex shrink-0 items-center', className)}>
             <img
                 src={`/apps/${code}.svg`}
                 alt={name ?? code}
                 loading="lazy"
                 className={cn(
-                    'w-auto max-w-[85px] max-h-7 object-contain object-left',
+                    'max-h-7 w-auto max-w-[85px] object-contain object-left',
                     height,
                     imageClassName,
                 )}
@@ -61,13 +61,13 @@ export function MarketplaceAvatar({
         <AppIcon
             app={{ logo: `/apps/${code}.svg`, name: name ?? code }}
             className={cn(
-                'shrink-0 ring-1 ring-border bg-white',
+                'shrink-0 bg-white ring-1 ring-border',
                 size === 'sm' && 'size-7 rounded-full p-0.5',
                 size === 'md' && 'size-8 rounded-full p-0.5',
                 size === 'lg' && 'size-10 rounded-full p-1',
                 className,
             )}
-            imageClassName={cn('w-full h-full object-contain', imageClassName)}
+            imageClassName={cn('h-full w-full object-contain', imageClassName)}
         />
     );
 }
@@ -114,7 +114,7 @@ export function MarketplaceAvatarStack({
                                 name={channel.name}
                                 size={size}
                                 className={cn(
-                                    'rounded-full ring-2 ring-background outline outline-1 outline-border bg-white',
+                                    'rounded-full bg-white ring-2 ring-background outline outline-1 outline-border',
                                     channel.state === 'failed' &&
                                         'outline-2 outline-destructive',
                                 )}

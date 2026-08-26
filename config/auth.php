@@ -42,6 +42,14 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+
+        // MCP sunucusunun guard'i. Ayni 'users' saglayicisini kullanir, yani
+        // token da tenant semasindaki kullaniciya cozulur; oauth_* tablolari
+        // tenant semasindadir (config/passport.php).
+        'api' => [
+            'driver' => 'passport',
+            'provider' => 'users',
+        ],
     ],
 
     /*

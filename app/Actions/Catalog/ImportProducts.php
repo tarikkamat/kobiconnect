@@ -233,7 +233,7 @@ final class ImportProducts
             }
 
             foreach ($productData->images as $position => $imageUrl) {
-                if (is_string($imageUrl) && $imageUrl !== '') {
+                if ($imageUrl !== '') {
                     ProductImage::create([
                         'product_id' => $product->getKey(),
                         'variant_id' => null,

@@ -6,7 +6,6 @@ import {
     baseChartOptions,
     Chart,
     ChartCard,
-    type ChartColors,
     formatCompactCurrency,
     formatCurrency,
     formatDay,
@@ -14,10 +13,9 @@ import {
     NEGATIVE_COLOR,
     useChartColors,
 } from '@/components/dashboard/chart-kit';
-import {
-    ReportHeader,
-    type ConnectionItem,
-} from '@/components/reports/report-header';
+import type { ChartColors } from '@/components/dashboard/chart-kit';
+import { ReportHeader } from '@/components/reports/report-header';
+import type { ConnectionItem } from '@/components/reports/report-header';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { index as reportsRoute } from '@/routes/reports';
@@ -82,7 +80,9 @@ function sparkOptions(
             animations: { enabled: false },
             parentHeightOffset: 0,
         },
-        colors: [customColor ?? (positive ? colors.palette[0] : NEGATIVE_COLOR)],
+        colors: [
+            customColor ?? (positive ? colors.palette[0] : NEGATIVE_COLOR),
+        ],
         stroke: { curve: 'smooth', width: 1.5 },
         fill: { type: 'solid', opacity: 0.14 },
         tooltip: { enabled: false },
@@ -109,10 +109,6 @@ function sparkOptions(
             labels: { show: false },
             axisBorder: { show: false },
             axisTicks: { show: false },
-            padding: {
-                top: 0,
-                bottom: 0,
-            },
         },
     };
 }
@@ -213,7 +209,8 @@ export default function ReportsIndex({
         ];
     }, [salesTrend]);
 
-    const totalShippingAndPenalties = kpis.rawShippingTotal + kpis.rawTotalPenalties;
+    const totalShippingAndPenalties =
+        kpis.rawShippingTotal + kpis.rawTotalPenalties;
 
     return (
         <>
@@ -232,18 +229,21 @@ export default function ReportsIndex({
                 {/* Dashboard-style KPI Strip with Sparklines */}
                 <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                     {/* Gross Sales */}
-                    <Card className="gap-0 overflow-hidden py-0 border-border bg-card">
+                    <Card className="gap-0 overflow-hidden border-border bg-card py-0">
                         <CardContent className="px-4 pt-4 pb-0">
                             <div className="flex items-start justify-between gap-2">
                                 <p className="text-sm text-muted-foreground">
                                     Toplam Brüt Satış
                                 </p>
-                                <Badge variant="success" className="font-mono tabular-nums">
+                                <Badge
+                                    variant="success"
+                                    className="font-mono tabular-nums"
+                                >
                                     {kpis.orderCount} sipariş
                                 </Badge>
                             </div>
 
-                            <p className="mt-1.5 font-mono text-[28px] leading-none font-medium tabular-nums text-foreground">
+                            <p className="mt-1.5 font-mono text-[28px] leading-none font-medium text-foreground tabular-nums">
                                 {kpis.grossSales}
                             </p>
 
@@ -252,14 +252,20 @@ export default function ReportsIndex({
                             </p>
                         </CardContent>
 
-                        <div className="mt-3 h-14 overflow-hidden [&_.apexcharts-canvas]:!block [&_.apexcharts-canvas_svg]:!block [&_.apexcharts-canvas_svg]:!w-full [&_.apexcharts-canvas_svg]:!h-[56px]">
+                        <div className="mt-3 h-14 overflow-hidden [&_.apexcharts-canvas]:!block [&_.apexcharts-canvas_svg]:!block [&_.apexcharts-canvas_svg]:!h-[56px] [&_.apexcharts-canvas_svg]:!w-full">
                             <Chart
                                 type="area"
-                                options={sparkOptions(colors, true, colors.palette[0])}
+                                options={sparkOptions(
+                                    colors,
+                                    true,
+                                    colors.palette[0],
+                                )}
                                 series={[
                                     {
                                         name: 'Brüt Satış',
-                                        data: salesTrend.map((r) => r.rawGrossSales),
+                                        data: salesTrend.map(
+                                            (r) => r.rawGrossSales,
+                                        ),
                                     },
                                 ]}
                                 height={56}
@@ -269,18 +275,21 @@ export default function ReportsIndex({
                     </Card>
 
                     {/* Marketplace Commission */}
-                    <Card className="gap-0 overflow-hidden py-0 border-border bg-card">
+                    <Card className="gap-0 overflow-hidden border-border bg-card py-0">
                         <CardContent className="px-4 pt-4 pb-0">
                             <div className="flex items-start justify-between gap-2">
                                 <p className="text-sm text-muted-foreground">
                                     Pazaryeri Komisyonu
                                 </p>
-                                <Badge variant="destructive" className="font-mono tabular-nums">
+                                <Badge
+                                    variant="destructive"
+                                    className="font-mono tabular-nums"
+                                >
                                     %{kpis.avgCommissionRate}
                                 </Badge>
                             </div>
 
-                            <p className="mt-1.5 font-mono text-[28px] leading-none font-medium tabular-nums text-rose-500">
+                            <p className="mt-1.5 font-mono text-[28px] leading-none font-medium text-rose-500 tabular-nums">
                                 {kpis.commissionTotal}
                             </p>
 
@@ -289,14 +298,16 @@ export default function ReportsIndex({
                             </p>
                         </CardContent>
 
-                        <div className="mt-3 h-14 overflow-hidden [&_.apexcharts-canvas]:!block [&_.apexcharts-canvas_svg]:!block [&_.apexcharts-canvas_svg]:!w-full [&_.apexcharts-canvas_svg]:!h-[56px]">
+                        <div className="mt-3 h-14 overflow-hidden [&_.apexcharts-canvas]:!block [&_.apexcharts-canvas_svg]:!block [&_.apexcharts-canvas_svg]:!h-[56px] [&_.apexcharts-canvas_svg]:!w-full">
                             <Chart
                                 type="area"
                                 options={sparkOptions(colors, false, '#f04438')}
                                 series={[
                                     {
                                         name: 'Komisyon',
-                                        data: salesTrend.map((r) => r.rawCommissionTotal),
+                                        data: salesTrend.map(
+                                            (r) => r.rawCommissionTotal,
+                                        ),
                                     },
                                 ]}
                                 height={56}
@@ -306,40 +317,48 @@ export default function ReportsIndex({
                     </Card>
 
                     {/* Shipping & Penalties */}
-                    <Card className="gap-0 overflow-hidden py-0 border-border bg-card">
+                    <Card className="gap-0 overflow-hidden border-border bg-card py-0">
                         <CardContent className="px-4 pt-4 pb-0">
                             <div className="flex items-start justify-between gap-2">
                                 <p className="text-sm text-muted-foreground">
                                     Kargo & Cezalar
                                 </p>
                                 {kpis.rawTotalPenalties > 0 ? (
-                                    <Badge variant="destructive" className="font-mono tabular-nums">
+                                    <Badge
+                                        variant="destructive"
+                                        className="font-mono tabular-nums"
+                                    >
                                         Ceza: {kpis.totalPenalties}
                                     </Badge>
                                 ) : (
-                                    <Badge variant="secondary" className="font-mono tabular-nums">
+                                    <Badge
+                                        variant="secondary"
+                                        className="font-mono tabular-nums"
+                                    >
                                         Kargo
                                     </Badge>
                                 )}
                             </div>
 
-                            <p className="mt-1.5 font-mono text-[28px] leading-none font-medium tabular-nums text-amber-500">
+                            <p className="mt-1.5 font-mono text-[28px] leading-none font-medium text-amber-500 tabular-nums">
                                 {formatCurrency(totalShippingAndPenalties)}
                             </p>
 
-                            <p className="mt-1 text-xs text-muted-foreground truncate">
+                            <p className="mt-1 truncate text-xs text-muted-foreground">
                                 Kargo: {kpis.shippingTotal}
                             </p>
                         </CardContent>
 
-                        <div className="mt-3 h-14 overflow-hidden [&_.apexcharts-canvas]:!block [&_.apexcharts-canvas_svg]:!block [&_.apexcharts-canvas_svg]:!w-full [&_.apexcharts-canvas_svg]:!h-[56px]">
+                        <div className="mt-3 h-14 overflow-hidden [&_.apexcharts-canvas]:!block [&_.apexcharts-canvas_svg]:!block [&_.apexcharts-canvas_svg]:!h-[56px] [&_.apexcharts-canvas_svg]:!w-full">
                             <Chart
                                 type="area"
                                 options={sparkOptions(colors, false, '#f59e0b')}
                                 series={[
                                     {
                                         name: 'Kargo & Ceza',
-                                        data: salesTrend.map((r) => r.rawShippingAndPenalty),
+                                        data: salesTrend.map(
+                                            (r) => r.rawShippingAndPenalty,
+                                        ),
                                     },
                                 ]}
                                 height={56}
@@ -349,18 +368,21 @@ export default function ReportsIndex({
                     </Card>
 
                     {/* Net Earnings */}
-                    <Card className="gap-0 overflow-hidden py-0 border-border bg-card">
+                    <Card className="gap-0 overflow-hidden border-border bg-card py-0">
                         <CardContent className="px-4 pt-4 pb-0">
                             <div className="flex items-start justify-between gap-2">
                                 <p className="text-sm text-muted-foreground">
                                     Net Hakediş (Kazanç)
                                 </p>
-                                <Badge variant="success" className="font-mono tabular-nums">
+                                <Badge
+                                    variant="success"
+                                    className="font-mono tabular-nums"
+                                >
                                     Sepet: {kpis.avgOrderValue}
                                 </Badge>
                             </div>
 
-                            <p className="mt-1.5 font-mono text-[28px] leading-none font-medium tabular-nums text-emerald-500">
+                            <p className="mt-1.5 font-mono text-[28px] leading-none font-medium text-emerald-500 tabular-nums">
                                 {kpis.netEarnings}
                             </p>
 
@@ -369,14 +391,16 @@ export default function ReportsIndex({
                             </p>
                         </CardContent>
 
-                        <div className="mt-3 h-14 overflow-hidden [&_.apexcharts-canvas]:!block [&_.apexcharts-canvas_svg]:!block [&_.apexcharts-canvas_svg]:!w-full [&_.apexcharts-canvas_svg]:!h-[56px]">
+                        <div className="mt-3 h-14 overflow-hidden [&_.apexcharts-canvas]:!block [&_.apexcharts-canvas_svg]:!block [&_.apexcharts-canvas_svg]:!h-[56px] [&_.apexcharts-canvas_svg]:!w-full">
                             <Chart
                                 type="area"
                                 options={sparkOptions(colors, true, '#18e299')}
                                 series={[
                                     {
                                         name: 'Net Kazanç',
-                                        data: salesTrend.map((r) => r.rawNetEarnings),
+                                        data: salesTrend.map(
+                                            (r) => r.rawNetEarnings,
+                                        ),
                                     },
                                 ]}
                                 height={56}

@@ -1,9 +1,7 @@
 import { Head } from '@inertiajs/react';
 import { CheckCircle2, Clock, ShoppingBag, XCircle } from 'lucide-react';
-import {
-    ReportHeader,
-    type ConnectionItem,
-} from '@/components/reports/report-header';
+import { ReportHeader } from '@/components/reports/report-header';
+import type { ConnectionItem } from '@/components/reports/report-header';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import {
@@ -32,7 +30,9 @@ type Props = {
     statusDistribution: StatusItem[];
 };
 
-function getStatusBadgeVariant(status: string): 'default' | 'secondary' | 'outline' | 'destructive' {
+function getStatusBadgeVariant(
+    status: string,
+): 'default' | 'secondary' | 'outline' | 'destructive' {
     switch (status) {
         case 'delivered':
         case 'invoiced':
@@ -61,10 +61,22 @@ export default function ReportsOrders({
     const deliveredCount =
         statusDistribution.find((s) => s.status === 'delivered')?.count ?? 0;
     const cancelledOrReturnedCount = statusDistribution
-        .filter((s) => ['cancelled', 'returned', 'undelivered', 'unsupplied'].includes(s.status))
+        .filter((s) =>
+            ['cancelled', 'returned', 'undelivered', 'unsupplied'].includes(
+                s.status,
+            ),
+        )
         .reduce((sum, item) => sum + item.count, 0);
     const inProgressCount = statusDistribution
-        .filter((s) => ['created', 'picking', 'shipped', 'at_collection_point', 'invoiced'].includes(s.status))
+        .filter((s) =>
+            [
+                'created',
+                'picking',
+                'shipped',
+                'at_collection_point',
+                'invoiced',
+            ].includes(s.status),
+        )
         .reduce((sum, item) => sum + item.count, 0);
 
     return (
@@ -83,34 +95,36 @@ export default function ReportsOrders({
 
                 {/* Status Summary KPI Cards */}
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                    <Card className="gap-0 border-border bg-card py-0 overflow-hidden">
+                    <Card className="gap-0 overflow-hidden border-border bg-card py-0">
                         <CardContent className="px-4 py-4">
                             <div className="flex items-center justify-between">
-                                <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                                <span className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Toplam Sipariş
                                 </span>
                                 <div className="flex size-7 items-center justify-center rounded-md bg-primary/10 text-primary">
                                     <ShoppingBag className="size-3.5" />
                                 </div>
                             </div>
-                            <div className="mt-2 text-2xl font-bold font-mono tracking-tight text-foreground tabular-nums">
+                            <div className="mt-2 font-mono text-2xl font-bold tracking-tight text-foreground tabular-nums">
                                 {totalOrders} adet
                             </div>
-                            <p className="mt-1 text-xs text-muted-foreground">Seçilen dönem toplamı</p>
+                            <p className="mt-1 text-xs text-muted-foreground">
+                                Seçilen dönem toplamı
+                            </p>
                         </CardContent>
                     </Card>
 
-                    <Card className="gap-0 border-border bg-card py-0 overflow-hidden">
+                    <Card className="gap-0 overflow-hidden border-border bg-card py-0">
                         <CardContent className="px-4 py-4">
                             <div className="flex items-center justify-between">
-                                <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                                <span className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Teslim Edilen
                                 </span>
                                 <div className="flex size-7 items-center justify-center rounded-md bg-emerald-500/10 text-emerald-500">
                                     <CheckCircle2 className="size-3.5" />
                                 </div>
                             </div>
-                            <div className="mt-2 text-2xl font-bold font-mono tracking-tight text-emerald-500 tabular-nums">
+                            <div className="mt-2 font-mono text-2xl font-bold tracking-tight text-emerald-500 tabular-nums">
                                 {deliveredCount} adet
                             </div>
                             <p className="mt-1 text-xs text-muted-foreground">
@@ -121,34 +135,36 @@ export default function ReportsOrders({
                         </CardContent>
                     </Card>
 
-                    <Card className="gap-0 border-border bg-card py-0 overflow-hidden">
+                    <Card className="gap-0 overflow-hidden border-border bg-card py-0">
                         <CardContent className="px-4 py-4">
                             <div className="flex items-center justify-between">
-                                <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                                <span className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Süreci Devam Eden
                                 </span>
                                 <div className="flex size-7 items-center justify-center rounded-md bg-sky-500/10 text-sky-500">
                                     <Clock className="size-3.5" />
                                 </div>
                             </div>
-                            <div className="mt-2 text-2xl font-bold font-mono tracking-tight text-sky-500 tabular-nums">
+                            <div className="mt-2 font-mono text-2xl font-bold tracking-tight text-sky-500 tabular-nums">
                                 {inProgressCount} adet
                             </div>
-                            <p className="mt-1 text-xs text-muted-foreground">Hazırlanan / Kargoda</p>
+                            <p className="mt-1 text-xs text-muted-foreground">
+                                Hazırlanan / Kargoda
+                            </p>
                         </CardContent>
                     </Card>
 
-                    <Card className="gap-0 border-border bg-card py-0 overflow-hidden">
+                    <Card className="gap-0 overflow-hidden border-border bg-card py-0">
                         <CardContent className="px-4 py-4">
                             <div className="flex items-center justify-between">
-                                <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                                <span className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     İptal / İade
                                 </span>
                                 <div className="flex size-7 items-center justify-center rounded-md bg-rose-500/10 text-rose-500">
                                     <XCircle className="size-3.5" />
                                 </div>
                             </div>
-                            <div className="mt-2 text-2xl font-bold font-mono tracking-tight text-rose-500 tabular-nums">
+                            <div className="mt-2 font-mono text-2xl font-bold tracking-tight text-rose-500 tabular-nums">
                                 {cancelledOrReturnedCount} adet
                             </div>
                             <p className="mt-1 text-xs text-muted-foreground">
@@ -168,10 +184,14 @@ export default function ReportsOrders({
                                 Tüm Operasyonel Statülerin Dökümü
                             </h3>
                             <p className="text-xs text-muted-foreground">
-                                Siparişlerin statü bazında adetsel dağılımı ve toplam içindeki payı.
+                                Siparişlerin statü bazında adetsel dağılımı ve
+                                toplam içindeki payı.
                             </p>
                         </div>
-                        <Badge variant="outline" className="font-mono text-xs tabular-nums">
+                        <Badge
+                            variant="outline"
+                            className="font-mono text-xs tabular-nums"
+                        >
                             {statusDistribution.length} farklı durum
                         </Badge>
                     </div>
@@ -181,23 +201,32 @@ export default function ReportsOrders({
                             <TableRow className="border-b border-border hover:bg-transparent">
                                 <TableHead>Statü Adı</TableHead>
                                 <TableHead>Teknik Kod</TableHead>
-                                <TableHead className="text-right">Sipariş Adedi</TableHead>
-                                <TableHead className="text-right">Dağılım Oranı</TableHead>
+                                <TableHead className="text-right">
+                                    Sipariş Adedi
+                                </TableHead>
+                                <TableHead className="text-right">
+                                    Dağılım Oranı
+                                </TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {statusDistribution.length > 0 ? (
                                 statusDistribution.map((item) => (
                                     <TableRow key={item.status}>
-                                        <TableCell className="font-medium text-xs">
-                                            <Badge variant={getStatusBadgeVariant(item.status)} className="text-xs font-normal">
+                                        <TableCell className="text-xs font-medium">
+                                            <Badge
+                                                variant={getStatusBadgeVariant(
+                                                    item.status,
+                                                )}
+                                                className="text-xs font-normal"
+                                            >
                                                 {item.label}
                                             </Badge>
                                         </TableCell>
                                         <TableCell className="font-mono text-xs text-muted-foreground">
                                             {item.status}
                                         </TableCell>
-                                        <TableCell className="font-mono font-semibold text-xs text-right text-foreground tabular-nums">
+                                        <TableCell className="text-right font-mono text-xs font-semibold text-foreground tabular-nums">
                                             {item.count} adet
                                         </TableCell>
                                         <TableCell className="text-right">
@@ -216,7 +245,8 @@ export default function ReportsOrders({
                                         colSpan={4}
                                         className="py-12 text-center text-xs text-muted-foreground"
                                     >
-                                        Seçilen tarih aralığında sipariş kaydı bulunamadı.
+                                        Seçilen tarih aralığında sipariş kaydı
+                                        bulunamadı.
                                     </TableCell>
                                 </TableRow>
                             )}

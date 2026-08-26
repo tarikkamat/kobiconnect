@@ -78,7 +78,7 @@ export function WarehouseDeleteDialog({
                                     {warehouse.name}
                                 </strong>{' '}
                                 deposunda{' '}
-                                <strong className="font-mono tabular-nums text-destructive">
+                                <strong className="font-mono text-destructive tabular-nums">
                                     {warehouse.onHandTotal}
                                 </strong>{' '}
                                 adet fiziksel stok (
@@ -96,7 +96,7 @@ export function WarehouseDeleteDialog({
                                     {warehouse.name}
                                 </strong>{' '}
                                 (
-                                <span className="font-mono tabular-nums text-xs">
+                                <span className="font-mono text-xs tabular-nums">
                                     {warehouse.code}
                                 </span>
                                 ) deposunu silmek istediğinize emin misiniz? Bu
@@ -106,7 +106,7 @@ export function WarehouseDeleteDialog({
                     </DialogDescription>
                 </DialogHeader>
 
-                <DialogFooter className="gap-2 sm:gap-0 pt-3">
+                <DialogFooter className="gap-2 pt-3 sm:gap-0">
                     <Button
                         type="button"
                         variant="outline"

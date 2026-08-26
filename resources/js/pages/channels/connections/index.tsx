@@ -196,16 +196,18 @@ export default function ConnectionsIndex({
     };
 
     const handleEdit = (conn: ConnectionItem) => {
-        const targetMarketplace =
-            marketplaces.find((m) => m.value === conn.marketplace) ?? {
-                value: conn.marketplace,
-                label: conn.marketplaceLabel,
-                logo: conn.logo,
-                logoScale: conn.logoScale,
-                logoDarkInvert: conn.logoDarkInvert,
-                capabilities: [],
-                fields: [],
-            };
+        const targetMarketplace = marketplaces.find(
+            (m) => m.value === conn.marketplace,
+        ) ?? {
+            value: conn.marketplace,
+            label: conn.marketplaceLabel,
+            // Varsayilanlar sunucudaki AppCatalog::present() ile ayni.
+            logo: conn.logo ?? `/apps/${conn.marketplace}.svg`,
+            logoScale: conn.logoScale ?? 1,
+            logoDarkInvert: conn.logoDarkInvert ?? false,
+            capabilities: [],
+            fields: [],
+        };
 
         setActiveDrawer({
             marketplace: targetMarketplace,
@@ -305,16 +307,14 @@ export default function ConnectionsIndex({
                                         <span>{marketplace.label}</span>
                                     </DropdownMenuItem>
                                 ))}
-                                <div className="border-t border-border mt-1 pt-1">
+                                <div className="mt-1 border-t border-border pt-1">
                                     <DropdownMenuItem asChild>
                                         <Link
                                             href={appsRoute()}
                                             className="cursor-pointer gap-2 py-2 text-xs text-muted-foreground hover:text-foreground"
                                         >
                                             <Layers className="size-3.5" />
-                                            <span>
-                                                Uygulama Mağazasına Git
-                                            </span>
+                                            <span>Uygulama Mağazasına Git</span>
                                         </Link>
                                     </DropdownMenuItem>
                                 </div>
@@ -398,7 +398,7 @@ export default function ConnectionsIndex({
                         )}
                     </div>
 
-                    <div className="text-xs text-muted-foreground self-end sm:self-auto">
+                    <div className="self-end text-xs text-muted-foreground sm:self-auto">
                         <strong className="font-mono font-semibold text-foreground tabular-nums">
                             {filteredConnections.length}
                         </strong>{' '}
@@ -430,11 +430,7 @@ export default function ConnectionsIndex({
                                     Filtreleri Temizle
                                 </Button>
                             ) : (
-                                <Button
-                                    asChild
-                                    size="sm"
-                                    className="gap-1.5"
-                                >
+                                <Button asChild size="sm" className="gap-1.5">
                                     <Link href={appsRoute()}>
                                         <Plus className="size-3.5" />
                                         Uygulama Mağazasına Git
@@ -495,12 +491,12 @@ export default function ConnectionsIndex({
                                                         <Store className="size-4 text-muted-foreground" />
                                                     )}
                                                 </div>
-                                                <div className="space-y-0.5 min-w-0">
-                                                    <p className="font-semibold text-foreground truncate">
+                                                <div className="min-w-0 space-y-0.5">
+                                                    <p className="truncate font-semibold text-foreground">
                                                         {conn.name}
                                                     </p>
                                                     {conn.lastHealthError && (
-                                                        <div className="flex items-center gap-1 text-[11px] text-destructive truncate max-w-xs">
+                                                        <div className="flex max-w-xs items-center gap-1 truncate text-[11px] text-destructive">
                                                             <TriangleAlert className="size-3 shrink-0" />
                                                             <span className="truncate">
                                                                 {
@@ -517,7 +513,7 @@ export default function ConnectionsIndex({
                                         <TableCell>
                                             <Badge
                                                 variant="outline"
-                                                className="font-medium text-xs bg-secondary/50"
+                                                className="bg-secondary/50 text-xs font-medium"
                                             >
                                                 {conn.marketplaceLabel}
                                             </Badge>
@@ -561,7 +557,7 @@ export default function ConnectionsIndex({
                                                 <Button
                                                     variant="outline"
                                                     size="sm"
-                                                    className="h-8 gap-1 text-xs bg-background/50 hover:bg-background"
+                                                    className="h-8 gap-1 bg-background/50 text-xs hover:bg-background"
                                                     title="Canlı API bağlantısını test et"
                                                     disabled={
                                                         testingId === conn.id
@@ -584,7 +580,7 @@ export default function ConnectionsIndex({
                                                     check={canManage}
                                                     variant="outline"
                                                     size="sm"
-                                                    className="h-8 gap-1 text-xs bg-background/50 hover:bg-background"
+                                                    className="h-8 gap-1 bg-background/50 text-xs hover:bg-background"
                                                     onClick={() =>
                                                         handleEdit(conn)
                                                     }
@@ -597,7 +593,7 @@ export default function ConnectionsIndex({
                                                     check={canManage}
                                                     variant="ghost"
                                                     size="icon"
-                                                    className="size-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                                                    className="size-8 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
                                                     title="Bağlantıyı sil"
                                                     onClick={() =>
                                                         setPendingDelete(conn)
@@ -631,8 +627,10 @@ export default function ConnectionsIndex({
             >
                 <DialogContent className="sm:max-w-md">
                     <DialogHeader>
-                        <DialogTitle>Mağaza Bağlantısı Silinsin mi?</DialogTitle>
-                        <DialogDescription className="text-xs leading-relaxed mt-1">
+                        <DialogTitle>
+                            Mağaza Bağlantısı Silinsin mi?
+                        </DialogTitle>
+                        <DialogDescription className="mt-1 text-xs leading-relaxed">
                             <strong>{pendingDelete?.name}</strong> bağlantısı ve
                             kayıtlı API anahtarları silinecektir. Bu işlem geri
                             alınamaz.

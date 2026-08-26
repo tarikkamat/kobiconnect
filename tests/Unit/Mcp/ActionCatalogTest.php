@@ -57,13 +57,16 @@ it('bilinmeyen action reddedilir', function (): void {
     ActionCatalog::describe('nope.nope');
 })->throws(InvalidArgumentException::class);
 
-it('MCP sunucusu tenant yolunda ve oturum arkasinda kayitli', function (): void {
+it('MCP sunucusu tenant yolunda ve OAuth guard arkasinda kayitli', function (): void {
     $route = Mcp::getWebServer('{tenant}/mcp');
 
     expect($route)->not->toBeNull()
         ->and($route->getAction('uses'))->not->toBeNull()
-        ->and($route->middleware())->toContain('auth', 'verified')
-        ->and($route->middleware())->toContain(InitializeTenancyByPath::class);
+        ->and($route->middleware())->toContain('auth:api', 'verified')
+        ->and($route->middleware())->toContain(InitializeTenancyByPath::class)
+        // Bearer token oturum istemez; `web` girerse CSRF ve gereksiz bir
+        // session baslatilir.
+        ->and($route->middleware())->not->toContain('web');
 });
 
 it('sunucu uc araci yayinlar', function (): void {
@@ -71,9 +74,10 @@ it('sunucu uc araci yayinlar', function (): void {
         ->toHaveCount(3);
 });
 
-it('MCP ucu CSRF dogrulamasindan muaf, panel uclari degil', function (): void {
-    // MCP istemcisi tarayici degildir: ne CSRF token'i ne Sec-Fetch-Site
-    // basligi gonderir, muafiyet olmadan her cagri 419 doner.
+it('OAuth token ucu CSRF dogrulamasindan muaf, onay formu degil', function (): void {
+    // Token takasini istemci sunucusu yapar: ne CSRF token'i ne
+    // Sec-Fetch-Site basligi gonderir, muafiyet olmadan 419 doner. Onay
+    // formu ise gercek bir tarayici POST'udur, korumali kalmali.
     $middleware = new PreventRequestForgery(app(), app('encrypter'));
 
     $isExcluded = Closure::bind(
@@ -82,6 +86,7 @@ it('MCP ucu CSRF dogrulamasindan muaf, panel uclari degil', function (): void {
         PreventRequestForgery::class,
     );
 
-    expect($isExcluded(Request::create('/1005/mcp', 'POST')))->toBeTrue()
+    expect($isExcluded(Request::create('/1005/oauth/token', 'POST')))->toBeTrue()
+        ->and($isExcluded(Request::create('/1005/oauth/authorize', 'POST')))->toBeFalse()
         ->and($isExcluded(Request::create('/1005/orders', 'POST')))->toBeFalse();
 });

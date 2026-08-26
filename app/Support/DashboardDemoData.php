@@ -39,7 +39,7 @@ final class DashboardDemoData
     /** @var list<array{key: string, label: string, logo: string}>|null */
     private ?array $series = null;
 
-    /** @var list<array<string, mixed>>|null */
+    /** @var list<array{date: string, channels: array<string, array{orders: int, revenue: float, returns: int}>}>|null */
     private ?array $matrix = null;
 
     private ?CarbonImmutable $from = null;
@@ -120,7 +120,7 @@ final class DashboardDemoData
             'demo' => true,
             'items' => [
                 $this->kpi('revenue', 'Ciro', $this->money($current['revenue']), $current['revenue'], $previous['revenue'], 'revenue'),
-                $this->kpi('orders', 'Sipariş', Number::format($current['orders'], locale: 'tr'), (float) $current['orders'], (float) $previous['orders'], 'orders'),
+                $this->kpi('orders', 'Sipariş', $this->quantity($current['orders']), (float) $current['orders'], (float) $previous['orders'], 'orders'),
                 $this->kpi('basket', 'Ortalama sepet', $this->money($basket), $basket, $previousBasket, 'revenue'),
                 // Iadede ARTIS kotudur; yon bilerek ters cevrilir.
                 $this->kpi('returns', 'İade oranı', $this->percent($returnRate), $returnRate, $previousReturnRate, 'returns', inverted: true),
@@ -196,9 +196,9 @@ final class DashboardDemoData
         return [
             'demo' => true,
             'totals' => [
-                'orders' => Number::format((int) array_sum(array_column($rows, 'orders')), locale: 'tr'),
+                'orders' => $this->quantity((int) array_sum(array_column($rows, 'orders'))),
                 'revenue' => $this->money((float) array_sum(array_column($rows, 'revenue'))),
-                'returns' => Number::format((int) array_sum(array_column($rows, 'returns')), locale: 'tr'),
+                'returns' => $this->quantity((int) array_sum(array_column($rows, 'returns'))),
             ],
             'rows' => $rows,
         ];
@@ -431,6 +431,11 @@ final class DashboardDemoData
     private function percent(float $value): string
     {
         return (string) Number::percentage($value, 1, locale: 'tr');
+    }
+
+    private function quantity(int $value): string
+    {
+        return (string) Number::format($value, locale: 'tr');
     }
 
     private function today(): CarbonImmutable

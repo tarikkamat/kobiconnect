@@ -25,7 +25,15 @@ final class CreateProduct
      *     brand_id?: int|null,
      *     category_id?: int|null,
      *     status: string,
-     *     variants: list<array{sku: string, barcode?: string|null, list_price?: float|string|null, on_hand?: int|string|null}>,
+     *     variants: list<array{
+     *         sku: string,
+     *         barcode?: string|null,
+     *         attributes?: array<string, mixed>|null,
+     *         image_url?: string|null,
+     *         list_price?: float|string|null,
+     *         on_hand?: int|string|null,
+     *     }>,
+     *     channel_ids?: list<int>|null,
      *     images?: list<array{url: string, position?: int|null}>|null
      * }  $data
      */

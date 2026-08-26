@@ -58,7 +58,7 @@ export function AppIcon({
     return (
         <div
             className={cn(
-                'flex items-center justify-center bg-white overflow-hidden',
+                'flex items-center justify-center overflow-hidden bg-white',
                 app.logoDarkInvert !== undefined && 'bg-transparent',
                 className,
             )}
@@ -73,7 +73,7 @@ export function AppIcon({
                         : { scale: app.logoScale }
                 }
                 className={cn(
-                    'w-full h-full object-contain',
+                    'h-full w-full object-contain',
                     app.logoDarkInvert && 'dark:brightness-0 dark:invert',
                     imageClassName,
                 )}
@@ -108,7 +108,7 @@ export function AppCard({
                     >
                         <AppIcon
                             app={app}
-                            className="size-full rounded-xl px-6 bg-transparent"
+                            className="size-full rounded-xl bg-transparent px-6"
                             imageClassName="max-h-10 max-w-[140px]"
                         />
 
@@ -118,10 +118,12 @@ export function AppCard({
                                     ? `${app.installed} bağlantı kurulu`
                                     : 'Kurulu'
                             }
-                            className="absolute top-2 right-2 flex size-6 items-center justify-center rounded-full bg-primary text-primary-foreground font-mono text-[11px] font-medium"
+                            className="absolute top-2 right-2 flex size-6 items-center justify-center rounded-full bg-primary font-mono text-[11px] font-medium text-primary-foreground"
                         >
                             {app.installed > 1 ? (
-                                <span className="tabular-nums">{app.installed}</span>
+                                <span className="tabular-nums">
+                                    {app.installed}
+                                </span>
                             ) : (
                                 <Check className="size-3.5" />
                             )}
@@ -165,14 +167,14 @@ export function AppCard({
         <PermissionButton
             check={check}
             variant="outline"
-            className="relative h-24 w-full rounded-xl border border-border bg-card p-0 hover:border-foreground/30 hover:bg-secondary disabled:opacity-100 transition-colors"
+            className="relative h-24 w-full rounded-xl border border-border bg-card p-0 transition-colors hover:border-foreground/30 hover:bg-secondary disabled:opacity-100"
             title={app.name}
             aria-label={`${app.name} aktifleştir`}
             onClick={() => onInstall(app)}
         >
             <AppIcon
                 app={app}
-                className="size-full rounded-xl px-6 bg-transparent"
+                className="size-full rounded-xl bg-transparent px-6"
                 imageClassName="max-h-10 max-w-[140px]"
             />
 
@@ -188,5 +190,3 @@ export function AppCard({
         </PermissionButton>
     );
 }
-
-

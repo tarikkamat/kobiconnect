@@ -19,13 +19,9 @@ import { PermissionButton } from '@/components/catalog/permission-button';
 import { toastError } from '@/components/catalog/toast-error';
 import { EmptyState } from '@/components/empty-state';
 import Heading from '@/components/heading';
-import {
-    WarehouseDeleteDialog,
-} from '@/components/inventory/warehouse-delete-dialog';
+import { WarehouseDeleteDialog } from '@/components/inventory/warehouse-delete-dialog';
 import type { WarehouseFormData } from '@/components/inventory/warehouse-form-dialog';
-import {
-    WarehouseFormDialog,
-} from '@/components/inventory/warehouse-form-dialog';
+import { WarehouseFormDialog } from '@/components/inventory/warehouse-form-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -84,6 +80,7 @@ export default function WarehouseIndex({
     // İstemci taraflı anlık arama / filtreleme
     const filteredWarehouses = useMemo(() => {
         const query = search.trim().toLowerCase();
+
         if (!query) {
             return warehouses;
         }
@@ -156,7 +153,7 @@ export default function WarehouseIndex({
                         description="Stok ve sipariş operasyonlarının yürütüldüğü fiziksel veya sanal depolar. En az bir depo bulunmalıdır."
                     />
 
-                    <div className="flex items-center gap-2 shrink-0">
+                    <div className="flex shrink-0 items-center gap-2">
                         <PermissionButton
                             check={canManage}
                             onClick={() => setCreateDialogOpen(true)}
@@ -170,11 +167,11 @@ export default function WarehouseIndex({
 
                 {/* Özet Şeridi */}
                 {warehouses.length > 0 && (
-                    <div className="flex flex-wrap items-center gap-3 text-xs sm:text-sm text-muted-foreground border-y border-border/60 py-3">
+                    <div className="flex flex-wrap items-center gap-3 border-y border-border/60 py-3 text-xs text-muted-foreground sm:text-sm">
                         <div className="flex items-center gap-1.5">
                             <Building2 className="size-4 text-muted-foreground/70" />
                             <span>Toplam:</span>
-                            <span className="font-semibold text-foreground font-mono tabular-nums">
+                            <span className="font-mono font-semibold text-foreground tabular-nums">
                                 {warehouses.length} depo
                             </span>
                         </div>
@@ -182,7 +179,7 @@ export default function WarehouseIndex({
                         <span className="text-border">•</span>
 
                         <div className="flex items-center gap-1.5">
-                            <Star className="size-3.5 text-amber-500 fill-amber-500/20" />
+                            <Star className="size-3.5 fill-amber-500/20 text-amber-500" />
                             <span>Varsayılan:</span>
                             <span className="font-medium text-foreground">
                                 {defaultWarehouse?.name ?? '—'}
@@ -194,7 +191,7 @@ export default function WarehouseIndex({
                         <div className="flex items-center gap-1.5">
                             <Boxes className="size-4 text-muted-foreground/70" />
                             <span>Toplam Stok:</span>
-                            <span className="font-semibold text-foreground font-mono tabular-nums">
+                            <span className="font-mono font-semibold text-foreground tabular-nums">
                                 {totals.onHand.toLocaleString('tr-TR')} adet
                             </span>
                         </div>
@@ -210,7 +207,7 @@ export default function WarehouseIndex({
                                 placeholder="Depo adı, kod veya şehir ara..."
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
-                                className="pl-9 pr-8"
+                                className="pr-8 pl-9"
                             />
                             {search && (
                                 <button
@@ -225,9 +222,9 @@ export default function WarehouseIndex({
                         </div>
 
                         {search && (
-                            <div className="text-xs text-muted-foreground font-mono tabular-nums shrink-0">
-                                {filteredWarehouses.length} / {warehouses.length}{' '}
-                                depo
+                            <div className="shrink-0 font-mono text-xs text-muted-foreground tabular-nums">
+                                {filteredWarehouses.length} /{' '}
+                                {warehouses.length} depo
                             </div>
                         )}
                     </div>
@@ -266,7 +263,7 @@ export default function WarehouseIndex({
                         }
                     />
                 ) : (
-                    <div className="overflow-hidden rounded-lg border border-border shadow-xs bg-card">
+                    <div className="overflow-hidden rounded-lg border border-border bg-card shadow-xs">
                         <Table>
                             <TableHeader>
                                 <TableRow className="bg-muted/40 hover:bg-muted/40">
@@ -318,7 +315,7 @@ export default function WarehouseIndex({
                                                     </div>
                                                     {warehouse.address.line && (
                                                         <span
-                                                            className="text-xs text-muted-foreground truncate max-w-[260px]"
+                                                            className="max-w-[260px] truncate text-xs text-muted-foreground"
                                                             title={
                                                                 warehouse
                                                                     .address
@@ -336,7 +333,7 @@ export default function WarehouseIndex({
                                             </TableCell>
 
                                             <TableCell>
-                                                <span className="inline-flex items-center rounded border border-border/60 bg-muted/60 px-2 py-0.5 font-mono text-xs tabular-nums text-foreground">
+                                                <span className="inline-flex items-center rounded border border-border/60 bg-muted/60 px-2 py-0.5 font-mono text-xs text-foreground tabular-nums">
                                                     {warehouse.code}
                                                 </span>
                                             </TableCell>
@@ -354,13 +351,13 @@ export default function WarehouseIndex({
                                                 )}
                                             </TableCell>
 
-                                            <TableCell className="text-right font-mono tabular-nums text-muted-foreground">
+                                            <TableCell className="text-right font-mono text-muted-foreground tabular-nums">
                                                 {warehouse.itemCount.toLocaleString(
                                                     'tr-TR',
                                                 )}
                                             </TableCell>
 
-                                            <TableCell className="text-right font-mono tabular-nums font-medium text-foreground">
+                                            <TableCell className="text-right font-mono font-medium text-foreground tabular-nums">
                                                 {warehouse.onHandTotal.toLocaleString(
                                                     'tr-TR',
                                                 )}
@@ -428,7 +425,7 @@ export default function WarehouseIndex({
                                                                         )
                                                                     }
                                                                 >
-                                                                    <Check className="size-4 mr-2" />
+                                                                    <Check className="mr-2 size-4" />
                                                                     Varsayılan
                                                                     Yap
                                                                 </DropdownMenuItem>
@@ -439,7 +436,7 @@ export default function WarehouseIndex({
                                                                 <Link
                                                                     href={stockIndex()}
                                                                 >
-                                                                    <ExternalLink className="size-4 mr-2" />
+                                                                    <ExternalLink className="mr-2 size-4" />
                                                                     Stokları Gör
                                                                 </Link>
                                                             </DropdownMenuItem>
@@ -453,7 +450,7 @@ export default function WarehouseIndex({
                                                                     )
                                                                 }
                                                             >
-                                                                <Pencil className="size-4 mr-2" />
+                                                                <Pencil className="mr-2 size-4" />
                                                                 Depoyu Düzenle
                                                             </DropdownMenuItem>
                                                             <DropdownMenuSeparator />
@@ -468,7 +465,7 @@ export default function WarehouseIndex({
                                                                     )
                                                                 }
                                                             >
-                                                                <Trash2 className="size-4 mr-2 text-destructive" />
+                                                                <Trash2 className="mr-2 size-4 text-destructive" />
                                                                 Depoyu Sil
                                                             </DropdownMenuItem>
                                                         </DropdownMenuContent>

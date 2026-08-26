@@ -64,6 +64,20 @@ class ProductVariant extends Model
     }
 
     /**
+     * `attributes` kolonunun tipli okumasi. Kolon `@property` ile
+     * belgelenemiyor (Eloquent'in korumali `$attributes` dizisiyle cakisir),
+     * bu yuzden statik analizin gorebildigi tek dogru yol burasi.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function attributeValues(): ?array
+    {
+        $values = $this->getAttribute('attributes');
+
+        return is_array($values) ? $values : null;
+    }
+
+    /**
      * Get the attributes that should be cast.
      *
      * @return array<string, string>
