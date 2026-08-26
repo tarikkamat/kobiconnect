@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Catalog\DynamicCategoryController;
+use App\Http\Controllers\Catalog\PriceListController;
 use App\Http\Controllers\Catalog\ProductController;
 use Illuminate\Support\Facades\Route;
 
@@ -28,4 +30,13 @@ Route::prefix('catalog')->group(function (): void {
     Route::post('products/bulk', [ProductController::class, 'bulkUpdate'])->name('products.bulk-update');
 
     Route::delete('products/{product}', [ProductController::class, 'destroy'])->name('products.destroy');
+
+    // Fiyat Listeleri
+    Route::get('price-lists/create', [PriceListController::class, 'create'])->name('price-lists.create');
+    Route::post('price-lists', [PriceListController::class, 'store'])->name('price-lists.store');
+    Route::post('price-lists/{priceList}/regenerate', [PriceListController::class, 'regenerate'])->name('price-lists.regenerate');
+    Route::patch('price-lists/{priceList}/items/{priceListItem}', [PriceListController::class, 'updateItem'])->name('price-lists.update-item');
+
+    // Dinamik Kategoriler
+    Route::post('dynamic-categories/{dynamicCategory}/evaluate', [DynamicCategoryController::class, 'evaluate'])->name('dynamic-categories.evaluate');
 });

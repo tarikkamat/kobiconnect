@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 
@@ -27,11 +28,12 @@ use Illuminate\Support\Carbon;
  * @property string|null $description
  * @property int|null $brand_id
  * @property int|null $category_id
+ * @property int|null $unit_id
  * @property ProductStatus $status
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
-#[Fillable(['name', 'description', 'brand_id', 'category_id', 'status', 'attributes'])]
+#[Fillable(['name', 'description', 'brand_id', 'category_id', 'unit_id', 'status', 'attributes'])]
 #[Hidden(['search_vector'])]
 class Product extends Model
 {
@@ -48,6 +50,27 @@ class Product extends Model
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class);
+    }
+
+    /** @return BelongsTo<Unit, $this> */
+    public function unit(): BelongsTo
+    {
+        return $this->belongsTo(Unit::class);
+    }
+
+    /** @return BelongsToMany<Tag, $this> */
+    public function tags(): BelongsToMany
+    {
+        return $this->belongsToMany(Tag::class, 'product_tag');
+    }
+
+    /** @return BelongsToMany<ProductGroup, $this> */
+    public function groups(): BelongsToMany
+    {
+        return $this->belongsToMany(ProductGroup::class, 'product_group_product')
+            ->withPivot('position')
+            ->withTimestamps()
+            ->orderByPivot('position');
     }
 
     /** @return HasMany<ProductVariant, $this> */

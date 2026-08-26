@@ -20,9 +20,13 @@ use App\Models\Category;
 use App\Models\ChannelConnection;
 use App\Models\ChannelListing;
 use App\Models\InventoryItem;
+use App\Models\Price;
 use App\Models\Product;
+use App\Models\ProductGroup;
 use App\Models\ProductImage;
 use App\Models\ProductVariant;
+use App\Models\Tag;
+use App\Models\Unit;
 use App\Models\Warehouse;
 use App\Support\AppTime;
 use App\Support\Money;
@@ -72,6 +76,8 @@ class ProductController extends Controller
         $products = Product::query()
             ->with([
                 'brand:id,name',
+                'unit:id,name,short_name',
+                'tags:id,name,slug',
                 'variants:id,product_id',
                 'variants.inventoryItems:id,variant_id,available',
                 'variants.prices:id,variant_id,currency,list_price',
@@ -101,6 +107,8 @@ class ProductController extends Controller
                 'status' => $product->status->value,
                 'statusLabel' => $product->status->label(),
                 'brand' => $product->brand?->name,
+                'unit' => $product->unit?->short_name,
+                'tags' => $product->tags->pluck('name')->all(),
                 'variantCount' => $product->variants->count(),
                 'stock' => $this->availableStock($product->variants),
                 'price' => $this->lowestPrice($product->variants),
@@ -171,6 +179,9 @@ class ProductController extends Controller
         return Inertia::render('catalog/products/create', [
             'brands' => Brand::query()->orderBy('name')->get(['id', 'name']),
             'categories' => Category::query()->orderBy('path')->get(['id', 'name']),
+            'units' => Unit::query()->orderBy('name')->get(['id', 'name', 'short_name']),
+            'tags' => Tag::query()->orderBy('name')->get(['id', 'name', 'slug']),
+            'productGroups' => ProductGroup::query()->orderBy('name')->get(['id', 'name']),
             'statuses' => ProductStatus::options(),
             'channelConnections' => ChannelConnection::query()
                 ->active()
@@ -196,7 +207,7 @@ class ProductController extends Controller
     {
         Gate::authorize('create', Product::class);
 
-        /** @var array{name: string, description?: string|null, brand_id?: int|null, category_id?: int|null, status: string, variants: list<array{sku: string, barcode?: string|null, list_price?: float|string|null, on_hand?: int|string|null}>} $data */
+        /** @var array{name: string, description?: string|null, brand_id?: int|null, category_id?: int|null, unit_id?: int|null, status: string, variants: list<array{sku: string, barcode?: string|null, list_price?: float|string|null, on_hand?: int|string|null}>, channel_ids?: list<int>|null, tag_ids?: list<int>|null, group_ids?: list<int>|null} $data */
         $data = $request->validated();
 
         $product = $createProduct($data);
@@ -234,6 +245,9 @@ class ProductController extends Controller
         $product->load([
             'brand:id,name',
             'category:id,name',
+            'unit:id,name,short_name',
+            'tags:id,name',
+            'groups:id,name',
             'variants.inventoryItems',
             'variants.prices',
             'variants.images',
@@ -252,6 +266,9 @@ class ProductController extends Controller
                 'description' => $product->description,
                 'brandId' => $product->brand_id,
                 'categoryId' => $product->category_id,
+                'unitId' => $product->unit_id,
+                'tagIds' => $product->tags->pluck('id')->all(),
+                'groupIds' => $product->groups->pluck('id')->all(),
                 'status' => $product->status->value,
                 'statusLabel' => $product->status->label(),
                 // Silme uyarisinin dayanagi: bu urun pazaryerinde yayinda olabilir.
@@ -287,6 +304,9 @@ class ProductController extends Controller
             ],
             'brands' => Brand::query()->orderBy('name')->get(['id', 'name']),
             'categories' => Category::query()->orderBy('path')->get(['id', 'name']),
+            'units' => Unit::query()->orderBy('name')->get(['id', 'name', 'short_name']),
+            'tags' => Tag::query()->orderBy('name')->get(['id', 'name', 'slug']),
+            'productGroups' => ProductGroup::query()->orderBy('name')->get(['id', 'name']),
             'statuses' => ProductStatus::options(),
         ]);
     }
@@ -303,8 +323,17 @@ class ProductController extends Controller
                 'description' => $validated['description'] ?? null,
                 'brand_id' => $validated['brand_id'] ?? null,
                 'category_id' => $validated['category_id'] ?? null,
+                'unit_id' => $validated['unit_id'] ?? null,
                 'status' => $validated['status'],
             ]);
+
+            if (array_key_exists('tag_ids', $validated)) {
+                $product->tags()->sync($validated['tag_ids'] ?? []);
+            }
+
+            if (array_key_exists('group_ids', $validated)) {
+                $product->groups()->sync($validated['group_ids'] ?? []);
+            }
 
             if (array_key_exists('images', $validated)) {
                 $product->images()->delete();

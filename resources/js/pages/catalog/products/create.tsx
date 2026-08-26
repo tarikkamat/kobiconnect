@@ -47,6 +47,9 @@ type Props = {
     brands: { id: number; name: string }[];
     categories: { id: number; name: string }[];
     statuses: { value: string; label: string }[];
+    units?: { id: number; name: string; short_name: string }[];
+    tags?: { id: number; name: string; slug: string }[];
+    productGroups?: { id: number; name: string }[];
     channelConnections?: ChannelConnectionItem[];
     attributes?: DefinedAttributeItem[];
 };
@@ -57,6 +60,9 @@ export default function ProductCreate({
     brands,
     categories,
     statuses,
+    units = [],
+    tags = [],
+    productGroups = [],
     channelConnections = [],
     attributes = [],
 }: Props) {
@@ -65,6 +71,9 @@ export default function ProductCreate({
     const [description, setDescription] = useState('');
     const [brandId, setBrandId] = useState<number | null>(null);
     const [categoryId, setCategoryId] = useState<number | null>(null);
+    const [unitId, setUnitId] = useState<number | null>(null);
+    const [selectedTagIds, setSelectedTagIds] = useState<number[]>([]);
+    const [selectedGroupIds, setSelectedGroupIds] = useState<number[]>([]);
     const [status, setStatus] = useState<string>(
         statuses[0]?.value ?? 'active',
     );
@@ -197,6 +206,29 @@ export default function ProductCreate({
                                         value={idx}
                                     />
                                 </span>
+                            ))}
+
+                            {/* Hidden Unit, Tags, Groups Inputs */}
+                            <input
+                                type="hidden"
+                                name="unit_id"
+                                value={unitId ?? ''}
+                            />
+                            {selectedTagIds.map((id, i) => (
+                                <input
+                                    key={id}
+                                    type="hidden"
+                                    name={`tag_ids[${i}]`}
+                                    value={id}
+                                />
+                            ))}
+                            {selectedGroupIds.map((id, i) => (
+                                <input
+                                    key={id}
+                                    type="hidden"
+                                    name={`group_ids[${i}]`}
+                                    value={id}
+                                />
                             ))}
 
                             {/* LEFT COLUMN: Main Content (8 cols) */}
@@ -525,6 +557,155 @@ export default function ProductCreate({
                                                 message={errors.category_id}
                                             />
                                         </div>
+
+                                        {/* Ürün Birimi */}
+                                        <div className="grid gap-1.5">
+                                            <Label
+                                                htmlFor="unit_id"
+                                                className="text-xs font-medium"
+                                            >
+                                                Ürün Birimi
+                                            </Label>
+                                            <Select
+                                                value={
+                                                    unitId === null
+                                                        ? NONE
+                                                        : String(unitId)
+                                                }
+                                                onValueChange={(val) =>
+                                                    setUnitId(
+                                                        val === NONE
+                                                            ? null
+                                                            : Number(val),
+                                                    )
+                                                }
+                                            >
+                                                <SelectTrigger
+                                                    id="unit_id"
+                                                    className="h-9 text-xs"
+                                                >
+                                                    <SelectValue placeholder="Birim seçin (Adet, kg...)" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem
+                                                        value={NONE}
+                                                        className="text-xs"
+                                                    >
+                                                        Tanımsız
+                                                    </SelectItem>
+                                                    {units.map((u) => (
+                                                        <SelectItem
+                                                            key={u.id}
+                                                            value={String(u.id)}
+                                                            className="text-xs"
+                                                        >
+                                                            {u.name} (
+                                                            {u.short_name})
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+
+                                        {/* Etiketler */}
+                                        {tags.length > 0 && (
+                                            <div className="grid gap-1.5">
+                                                <Label className="text-xs font-medium">
+                                                    Etiketler
+                                                </Label>
+                                                <div className="flex max-h-28 flex-wrap gap-1.5 overflow-y-auto rounded-md border border-border bg-muted/20 p-1.5">
+                                                    {tags.map((t) => {
+                                                        const isSelected =
+                                                            selectedTagIds.includes(
+                                                                t.id,
+                                                            );
+
+                                                        return (
+                                                            <button
+                                                                key={t.id}
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    setSelectedTagIds(
+                                                                        (
+                                                                            prev,
+                                                                        ) =>
+                                                                            isSelected
+                                                                                ? prev.filter(
+                                                                                      (
+                                                                                          id,
+                                                                                      ) =>
+                                                                                          id !==
+                                                                                          t.id,
+                                                                                  )
+                                                                                : [
+                                                                                      ...prev,
+                                                                                      t.id,
+                                                                                  ],
+                                                                    );
+                                                                }}
+                                                                className={`cursor-pointer rounded-full px-2 py-0.5 text-[11px] font-medium transition-all ${
+                                                                    isSelected
+                                                                        ? 'bg-primary text-primary-foreground shadow-2xs'
+                                                                        : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                                                                }`}
+                                                            >
+                                                                {t.name}
+                                                            </button>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Ürün Grupları */}
+                                        {productGroups.length > 0 && (
+                                            <div className="grid gap-1.5">
+                                                <Label className="text-xs font-medium">
+                                                    Ürün Grupları
+                                                </Label>
+                                                <div className="flex max-h-28 flex-wrap gap-1.5 overflow-y-auto rounded-md border border-border bg-muted/20 p-1.5">
+                                                    {productGroups.map((g) => {
+                                                        const isSelected =
+                                                            selectedGroupIds.includes(
+                                                                g.id,
+                                                            );
+
+                                                        return (
+                                                            <button
+                                                                key={g.id}
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    setSelectedGroupIds(
+                                                                        (
+                                                                            prev,
+                                                                        ) =>
+                                                                            isSelected
+                                                                                ? prev.filter(
+                                                                                      (
+                                                                                          id,
+                                                                                      ) =>
+                                                                                          id !==
+                                                                                          g.id,
+                                                                                  )
+                                                                                : [
+                                                                                      ...prev,
+                                                                                      g.id,
+                                                                                  ],
+                                                                    );
+                                                                }}
+                                                                className={`cursor-pointer rounded-full px-2 py-0.5 text-[11px] font-medium transition-all ${
+                                                                    isSelected
+                                                                        ? 'bg-primary text-primary-foreground shadow-2xs'
+                                                                        : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                                                                }`}
+                                                            >
+                                                                {g.name}
+                                                            </button>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
+                                        )}
                                     </CardContent>
                                 </Card>
 

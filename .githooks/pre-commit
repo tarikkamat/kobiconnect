@@ -53,7 +53,7 @@ run() {
 }
 
 if [ -n "$phpfiles" ]; then
-    run phpstan vendor/bin/phpstan analyse --memory-limit=512M --no-progress
+    run phpstan vendor/bin/phpstan analyse --memory-limit=1G --no-progress
 fi
 
 if [ -n "$res" ]; then

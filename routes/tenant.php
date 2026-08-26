@@ -5,7 +5,12 @@ declare(strict_types=1);
 use App\Http\Controllers\Catalog\AttributeController;
 use App\Http\Controllers\Catalog\BrandController;
 use App\Http\Controllers\Catalog\CategoryController;
+use App\Http\Controllers\Catalog\DynamicCategoryController;
+use App\Http\Controllers\Catalog\PriceListController;
 use App\Http\Controllers\Catalog\ProductController;
+use App\Http\Controllers\Catalog\ProductGroupController;
+use App\Http\Controllers\Catalog\TagController;
+use App\Http\Controllers\Catalog\UnitController;
 use App\Http\Controllers\Catalog\VariantController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Settings\ProfileController;
@@ -65,6 +70,34 @@ Route::middleware(ConfigureTenantHost::class)->group(function (): void {
             Route::post('attributes', [AttributeController::class, 'store'])->name('attributes.store');
             Route::patch('attributes/{attribute}', [AttributeController::class, 'update'])->name('attributes.update');
             Route::delete('attributes/{attribute}', [AttributeController::class, 'destroy'])->name('attributes.destroy');
+
+            Route::get('tags', [TagController::class, 'index'])->name('tags.index');
+            Route::post('tags', [TagController::class, 'store'])->name('tags.store');
+            Route::patch('tags/{tag}', [TagController::class, 'update'])->name('tags.update');
+            Route::delete('tags/{tag}', [TagController::class, 'destroy'])->name('tags.destroy');
+
+            Route::get('units', [UnitController::class, 'index'])->name('units.index');
+            Route::post('units', [UnitController::class, 'store'])->name('units.store');
+            Route::patch('units/{unit}', [UnitController::class, 'update'])->name('units.update');
+            Route::delete('units/{unit}', [UnitController::class, 'destroy'])->name('units.destroy');
+
+            Route::get('product-groups', [ProductGroupController::class, 'index'])->name('product-groups.index');
+            Route::post('product-groups', [ProductGroupController::class, 'store'])->name('product-groups.store');
+            Route::get('product-groups/{productGroup}', [ProductGroupController::class, 'show'])->name('product-groups.show');
+            Route::patch('product-groups/{productGroup}', [ProductGroupController::class, 'update'])->name('product-groups.update');
+            Route::delete('product-groups/{productGroup}', [ProductGroupController::class, 'destroy'])->name('product-groups.destroy');
+
+            Route::get('dynamic-categories', [DynamicCategoryController::class, 'index'])->name('dynamic-categories.index');
+            Route::post('dynamic-categories', [DynamicCategoryController::class, 'store'])->name('dynamic-categories.store');
+            Route::get('dynamic-categories/{dynamicCategory}', [DynamicCategoryController::class, 'show'])->name('dynamic-categories.show');
+            Route::patch('dynamic-categories/{dynamicCategory}', [DynamicCategoryController::class, 'update'])->name('dynamic-categories.update');
+            Route::delete('dynamic-categories/{dynamicCategory}', [DynamicCategoryController::class, 'destroy'])->name('dynamic-categories.destroy');
+
+            Route::get('price-lists', [PriceListController::class, 'index'])->name('price-lists.index');
+            Route::post('price-lists', [PriceListController::class, 'store'])->name('price-lists.store');
+            Route::get('price-lists/{priceList}', [PriceListController::class, 'show'])->name('price-lists.show');
+            Route::patch('price-lists/{priceList}', [PriceListController::class, 'update'])->name('price-lists.update');
+            Route::delete('price-lists/{priceList}', [PriceListController::class, 'destroy'])->name('price-lists.destroy');
         });
     });
 

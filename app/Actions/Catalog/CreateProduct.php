@@ -24,6 +24,7 @@ final class CreateProduct
      *     description?: string|null,
      *     brand_id?: int|null,
      *     category_id?: int|null,
+     *     unit_id?: int|null,
      *     status: string,
      *     variants: list<array{
      *         sku: string,
@@ -34,6 +35,8 @@ final class CreateProduct
      *         on_hand?: int|string|null,
      *     }>,
      *     channel_ids?: list<int>|null,
+     *     tag_ids?: list<int>|null,
+     *     group_ids?: list<int>|null,
      *     images?: list<array{url: string, position?: int|null}>|null
      * }  $data
      */
@@ -45,8 +48,17 @@ final class CreateProduct
                 'description' => $data['description'] ?? null,
                 'brand_id' => $data['brand_id'] ?? null,
                 'category_id' => $data['category_id'] ?? null,
+                'unit_id' => $data['unit_id'] ?? null,
                 'status' => $data['status'],
             ]);
+
+            if (! empty($data['tag_ids'])) {
+                $product->tags()->sync($data['tag_ids']);
+            }
+
+            if (! empty($data['group_ids'])) {
+                $product->groups()->sync($data['group_ids']);
+            }
 
             // Stok her zaman bir depoya yazilir; varsayilan depo yoksa
             // varyant stoksuz dogar (envanter ekranindan girilebilir).

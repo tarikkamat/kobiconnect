@@ -23,6 +23,11 @@ class ProductUpdateRequest extends FormRequest
             'description' => ['nullable', 'string', 'max:20000'],
             'brand_id' => ['nullable', 'integer', Rule::exists('brands', 'id')],
             'category_id' => ['nullable', 'integer', Rule::exists('categories', 'id')],
+            'unit_id' => ['nullable', 'integer', Rule::exists('units', 'id')],
+            'tag_ids' => ['nullable', 'array'],
+            'tag_ids.*' => ['integer', Rule::exists('tags', 'id')],
+            'group_ids' => ['nullable', 'array'],
+            'group_ids.*' => ['integer', Rule::exists('product_groups', 'id')],
             'status' => ['required', Rule::enum(ProductStatus::class)],
 
             'variants' => ['nullable', 'array', 'max:50'],

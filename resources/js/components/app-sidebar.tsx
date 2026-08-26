@@ -31,8 +31,11 @@ import { index as brands } from '@/routes/brands';
 import { index as categories } from '@/routes/categories';
 import { index as claims } from '@/routes/claims';
 import { index as connections } from '@/routes/connections';
+import { index as dynamicCategories } from '@/routes/dynamic-categories';
 import { index as mapping } from '@/routes/mapping';
 import { index as orders } from '@/routes/orders';
+import { index as priceLists } from '@/routes/price-lists';
+import { index as productGroups } from '@/routes/product-groups';
 import { index as products } from '@/routes/products';
 import {
     channels as reportsChannels,
@@ -42,6 +45,8 @@ import {
     products as reportsProducts,
 } from '@/routes/reports';
 import { index as stock } from '@/routes/stock';
+import { index as tags } from '@/routes/tags';
+import { index as units } from '@/routes/units';
 import { index as warehouses } from '@/routes/warehouses';
 import type { NavItem } from '@/types';
 
@@ -100,7 +105,12 @@ function navGroups(): NavGroup[] {
                 { title: 'Ürünler', href: products() },
                 { title: 'Markalar', href: brands() },
                 { title: 'Kategoriler', href: categories() },
+                { title: 'Dinamik Kategoriler', href: dynamicCategories() },
                 { title: 'Nitelikler', href: attributes() },
+                { title: 'Ürün Grupları', href: productGroups() },
+                { title: 'Etiketler', href: tags() },
+                { title: 'Ürün Birimleri', href: units() },
+                { title: 'Fiyat Listeleri', href: priceLists() },
             ],
         },
         {
