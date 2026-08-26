@@ -54,6 +54,24 @@ class AttributeController extends Controller
         ]);
     }
 
+    public function create(): Response
+    {
+        Gate::authorize('create', Attribute::class);
+
+        return Inertia::render('catalog/attributes/create', [
+            'types' => array_map(fn (AttributeType $t): array => [
+                'value' => $t->value,
+                'label' => match ($t) {
+                    AttributeType::Text => 'Metin (Serbest Yazı)',
+                    AttributeType::Number => 'Sayısal Değer',
+                    AttributeType::Boolean => 'Mantıksal (Evet / Hayır)',
+                    AttributeType::Select => 'Seçim Kutusu (Tekli)',
+                    AttributeType::MultiSelect => 'Çoklu Seçim',
+                },
+            ], AttributeType::cases()),
+        ]);
+    }
+
     public function store(AttributeRequest $request): RedirectResponse
     {
         Gate::authorize('create', Attribute::class);
@@ -79,7 +97,39 @@ class AttributeController extends Controller
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Nitelik eklendi.']);
 
-        return back();
+        return to_route('attributes.index');
+    }
+
+    public function edit(Attribute $attribute): Response
+    {
+        Gate::authorize('update', $attribute);
+
+        $attribute->load(['values' => fn ($q) => $q->orderBy('position')->orderBy('id')]);
+
+        return Inertia::render('catalog/attributes/edit', [
+            'attribute' => [
+                'id' => $attribute->getKey(),
+                'name' => $attribute->name,
+                'code' => $attribute->code,
+                'type' => $attribute->type->value,
+                'isVariantDefining' => $attribute->is_variant_defining,
+                'values' => $attribute->values->map(fn (AttributeValue $v): array => [
+                    'id' => $v->getKey(),
+                    'value' => $v->value,
+                    'position' => $v->position,
+                ])->all(),
+            ],
+            'types' => array_map(fn (AttributeType $t): array => [
+                'value' => $t->value,
+                'label' => match ($t) {
+                    AttributeType::Text => 'Metin (Serbest Yazı)',
+                    AttributeType::Number => 'Sayısal Değer',
+                    AttributeType::Boolean => 'Mantıksal (Evet / Hayır)',
+                    AttributeType::Select => 'Seçim Kutusu (Tekli)',
+                    AttributeType::MultiSelect => 'Çoklu Seçim',
+                },
+            ], AttributeType::cases()),
+        ]);
     }
 
     public function update(AttributeRequest $request, Attribute $attribute): RedirectResponse
@@ -122,7 +172,7 @@ class AttributeController extends Controller
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Nitelik güncellendi.']);
 
-        return back();
+        return to_route('attributes.index');
     }
 
     public function destroy(Attribute $attribute): RedirectResponse

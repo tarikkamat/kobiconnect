@@ -13,6 +13,7 @@ use App\Models\ProductVariant;
 use App\Models\Tag;
 use App\Models\User;
 use Database\Seeders\TenantRoleSeeder;
+use Inertia\Testing\AssertableInertia;
 
 beforeEach(function (): void {
     $this->seed(TenantRoleSeeder::class);
@@ -83,4 +84,27 @@ it('matches products with ANY match type', function (): void {
     $cat = DynamicCategory::query()->first();
     expect($cat->products)->toHaveCount(2)
         ->and($cat->products->pluck('id')->all())->toContain($p1->id, $p2->id);
+});
+
+it('renders dynamic category create and edit pages', function (): void {
+    $cat = DynamicCategory::factory()->create(['name' => 'Fırsat Ürünleri']);
+
+    $this->actingAs($this->manager)
+        ->get(route('dynamic-categories.create'))
+        ->assertOk()
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->component('catalog/dynamic-categories/create')
+            ->has('fields')
+            ->has('operators')
+        );
+
+    $this->actingAs($this->manager)
+        ->get(route('dynamic-categories.edit', $cat))
+        ->assertOk()
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->component('catalog/dynamic-categories/edit')
+            ->where('category.name', 'Fırsat Ürünleri')
+            ->has('fields')
+            ->has('operators')
+        );
 });

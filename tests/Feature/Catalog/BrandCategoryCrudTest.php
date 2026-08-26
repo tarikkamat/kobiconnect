@@ -95,3 +95,37 @@ it('blocks catalog writes for a role that may only read', function (): void {
     expect(Brand::query()->count())->toBe(1)
         ->and(Category::query()->count())->toBe(0);
 });
+
+it('renders brand create and edit pages', function (): void {
+    $brand = Brand::factory()->create(['name' => 'Apple']);
+
+    $this->actingAs($this->manager)
+        ->get(route('brands.create'))
+        ->assertOk()
+        ->assertInertia(fn (AssertableInertia $page) => $page->component('catalog/brands/create'));
+
+    $this->actingAs($this->manager)
+        ->get(route('brands.edit', $brand))
+        ->assertOk()
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->component('catalog/brands/edit')
+            ->where('brand.name', 'Apple')
+        );
+});
+
+it('renders category create and edit pages', function (): void {
+    $category = Category::factory()->create(['name' => 'Telefonlar']);
+
+    $this->actingAs($this->manager)
+        ->get(route('categories.create'))
+        ->assertOk()
+        ->assertInertia(fn (AssertableInertia $page) => $page->component('catalog/categories/create'));
+
+    $this->actingAs($this->manager)
+        ->get(route('categories.edit', $category))
+        ->assertOk()
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->component('catalog/categories/edit')
+            ->where('category.name', 'Telefonlar')
+        );
+});

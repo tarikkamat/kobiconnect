@@ -52,3 +52,20 @@ it('nulls product unit_id when unit is deleted', function (): void {
     expect(Unit::query()->count())->toBe(0)
         ->and($product->refresh()->unit_id)->toBeNull();
 });
+
+it('renders unit create and edit pages', function (): void {
+    $unit = Unit::factory()->create(['name' => 'Koli', 'short_name' => 'kl']);
+
+    $this->actingAs($this->manager)
+        ->get(route('units.create'))
+        ->assertOk()
+        ->assertInertia(fn (AssertableInertia $page) => $page->component('catalog/units/create'));
+
+    $this->actingAs($this->manager)
+        ->get(route('units.edit', $unit))
+        ->assertOk()
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->component('catalog/units/edit')
+            ->where('unit.name', 'Koli')
+        );
+});

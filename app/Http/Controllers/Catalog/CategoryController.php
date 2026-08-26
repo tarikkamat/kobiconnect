@@ -38,6 +38,23 @@ class CategoryController extends Controller
         ]);
     }
 
+    public function create(): Response
+    {
+        Gate::authorize('create', Category::class);
+
+        return Inertia::render('catalog/categories/create', [
+            'categories' => Category::query()
+                ->orderBy('path')
+                ->get()
+                ->map(fn (Category $category): array => [
+                    'id' => $category->getKey(),
+                    'name' => $category->name,
+                    'depth' => substr_count($category->path, '/'),
+                ])
+                ->all(),
+        ]);
+    }
+
     public function store(CategoryRequest $request): RedirectResponse
     {
         Gate::authorize('create', Category::class);
@@ -60,13 +77,26 @@ class CategoryController extends Controller
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Kategori eklendi.']);
 
-        return back();
+        return to_route('categories.index');
     }
 
     /**
      * ponytail: ust kategori degistirilemez — torunlarin `path` degerlerini
      * yeniden yazmak gerekir. Tasima ihtiyaci dogdugunda ayri bir aksiyon olur.
      */
+    public function edit(Category $category): Response
+    {
+        Gate::authorize('update', $category);
+
+        return Inertia::render('catalog/categories/edit', [
+            'category' => [
+                'id' => $category->getKey(),
+                'name' => $category->name,
+                'parentId' => $category->parent_id,
+            ],
+        ]);
+    }
+
     public function update(CategoryRequest $request, Category $category): RedirectResponse
     {
         Gate::authorize('update', $category);
@@ -75,7 +105,7 @@ class CategoryController extends Controller
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Kategori güncellendi.']);
 
-        return back();
+        return to_route('categories.index');
     }
 
     public function destroy(Category $category): RedirectResponse

@@ -38,6 +38,23 @@ class ProductGroupController extends Controller
         ]);
     }
 
+    public function create(): Response
+    {
+        Gate::authorize('create', ProductGroup::class);
+
+        return Inertia::render('catalog/product-groups/create', [
+            'allProducts' => Product::query()
+                ->orderBy('name')
+                ->get(['id', 'name', 'status'])
+                ->map(fn (Product $p): array => [
+                    'id' => $p->getKey(),
+                    'name' => $p->name,
+                    'status' => $p->status->value,
+                ])
+                ->all(),
+        ]);
+    }
+
     public function store(ProductGroupRequest $request): RedirectResponse
     {
         Gate::authorize('create', ProductGroup::class);
@@ -61,7 +78,7 @@ class ProductGroupController extends Controller
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Ürün grubu eklendi.']);
 
-        return back();
+        return to_route('product-groups.index');
     }
 
     public function show(ProductGroup $productGroup): Response
@@ -106,6 +123,32 @@ class ProductGroupController extends Controller
         ]);
     }
 
+    public function edit(ProductGroup $productGroup): Response
+    {
+        Gate::authorize('update', $productGroup);
+
+        $productGroup->load(['products' => fn ($q) => $q->orderBy('product_group_product.position')]);
+
+        return Inertia::render('catalog/product-groups/edit', [
+            'group' => [
+                'id' => $productGroup->getKey(),
+                'name' => $productGroup->name,
+                'slug' => $productGroup->slug,
+                'description' => $productGroup->description,
+                'productIds' => $productGroup->products->pluck('id')->all(),
+            ],
+            'allProducts' => Product::query()
+                ->orderBy('name')
+                ->get(['id', 'name', 'status'])
+                ->map(fn (Product $p): array => [
+                    'id' => $p->getKey(),
+                    'name' => $p->name,
+                    'status' => $p->status->value,
+                ])
+                ->all(),
+        ]);
+    }
+
     public function update(ProductGroupRequest $request, ProductGroup $productGroup): RedirectResponse
     {
         Gate::authorize('update', $productGroup);
@@ -129,7 +172,7 @@ class ProductGroupController extends Controller
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Ürün grubu güncellendi.']);
 
-        return back();
+        return to_route('product-groups.index');
     }
 
     public function destroy(ProductGroup $productGroup): RedirectResponse

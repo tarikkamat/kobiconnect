@@ -33,6 +33,13 @@ class UnitController extends Controller
         ]);
     }
 
+    public function create(): Response
+    {
+        Gate::authorize('create', Unit::class);
+
+        return Inertia::render('catalog/units/create');
+    }
+
     public function store(UnitRequest $request): RedirectResponse
     {
         Gate::authorize('create', Unit::class);
@@ -41,7 +48,20 @@ class UnitController extends Controller
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Ürün birimi eklendi.']);
 
-        return back();
+        return to_route('units.index');
+    }
+
+    public function edit(Unit $unit): Response
+    {
+        Gate::authorize('update', $unit);
+
+        return Inertia::render('catalog/units/edit', [
+            'unit' => [
+                'id' => $unit->getKey(),
+                'name' => $unit->name,
+                'shortName' => $unit->short_name,
+            ],
+        ]);
     }
 
     public function update(UnitRequest $request, Unit $unit): RedirectResponse
@@ -52,7 +72,7 @@ class UnitController extends Controller
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Ürün birimi güncellendi.']);
 
-        return back();
+        return to_route('units.index');
     }
 
     public function destroy(Unit $unit): RedirectResponse

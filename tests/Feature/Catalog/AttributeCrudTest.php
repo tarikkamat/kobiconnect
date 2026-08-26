@@ -128,3 +128,25 @@ it('blocks attribute writes for a role that may only read', function (): void {
         ->post(route('attributes.store'), ['name' => 'İzinsiz', 'type' => 'text'])
         ->assertForbidden();
 });
+
+it('renders attribute create and edit pages', function (): void {
+    $attribute = Attribute::factory()->create([
+        'name' => 'Beden',
+        'code' => 'beden',
+        'type' => AttributeType::Select,
+    ]);
+
+    $this->actingAs($this->manager)
+        ->get(route('attributes.create'))
+        ->assertOk()
+        ->assertInertia(fn (AssertableInertia $page) => $page->component('catalog/attributes/create')->has('types'));
+
+    $this->actingAs($this->manager)
+        ->get(route('attributes.edit', $attribute))
+        ->assertOk()
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->component('catalog/attributes/edit')
+            ->where('attribute.name', 'Beden')
+            ->has('types')
+        );
+});

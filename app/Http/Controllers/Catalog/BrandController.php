@@ -33,6 +33,13 @@ class BrandController extends Controller
         ]);
     }
 
+    public function create(): Response
+    {
+        Gate::authorize('create', Brand::class);
+
+        return Inertia::render('catalog/brands/create');
+    }
+
     public function store(BrandRequest $request): RedirectResponse
     {
         Gate::authorize('create', Brand::class);
@@ -41,7 +48,20 @@ class BrandController extends Controller
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Marka eklendi.']);
 
-        return back();
+        return to_route('brands.index');
+    }
+
+    public function edit(Brand $brand): Response
+    {
+        Gate::authorize('update', $brand);
+
+        return Inertia::render('catalog/brands/edit', [
+            'brand' => [
+                'id' => $brand->getKey(),
+                'name' => $brand->name,
+                'slug' => $brand->slug,
+            ],
+        ]);
     }
 
     public function update(BrandRequest $request, Brand $brand): RedirectResponse
@@ -52,7 +72,7 @@ class BrandController extends Controller
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Marka güncellendi.']);
 
-        return back();
+        return to_route('brands.index');
     }
 
     public function destroy(Brand $brand): RedirectResponse

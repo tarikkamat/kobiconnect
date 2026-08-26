@@ -33,6 +33,13 @@ class TagController extends Controller
         ]);
     }
 
+    public function create(): Response
+    {
+        Gate::authorize('create', Tag::class);
+
+        return Inertia::render('catalog/tags/create');
+    }
+
     public function store(TagRequest $request): RedirectResponse
     {
         Gate::authorize('create', Tag::class);
@@ -41,7 +48,20 @@ class TagController extends Controller
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Etiket eklendi.']);
 
-        return back();
+        return to_route('tags.index');
+    }
+
+    public function edit(Tag $tag): Response
+    {
+        Gate::authorize('update', $tag);
+
+        return Inertia::render('catalog/tags/edit', [
+            'tag' => [
+                'id' => $tag->getKey(),
+                'name' => $tag->name,
+                'slug' => $tag->slug,
+            ],
+        ]);
     }
 
     public function update(TagRequest $request, Tag $tag): RedirectResponse
@@ -52,7 +72,7 @@ class TagController extends Controller
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Etiket güncellendi.']);
 
-        return back();
+        return to_route('tags.index');
     }
 
     public function destroy(Tag $tag): RedirectResponse

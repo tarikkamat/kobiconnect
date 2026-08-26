@@ -1,4 +1,4 @@
-import { Head } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 import {
     ArrowUpDown,
     Package,
@@ -12,7 +12,6 @@ import {
 import { useMemo, useState } from 'react';
 import { PermissionButton } from '@/components/catalog/permission-button';
 import { UnitDeleteDialog } from '@/components/catalog/unit-delete-dialog';
-import { UnitDialog } from '@/components/catalog/unit-dialog';
 import type { UnitRow } from '@/components/catalog/unit-dialog';
 import { EmptyState } from '@/components/empty-state';
 import Heading from '@/components/heading';
@@ -41,6 +40,8 @@ import {
     TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { usePermission } from '@/hooks/use-permission';
+import { index as definitions } from '@/routes/definitions';
+import { create, edit, index } from '@/routes/units';
 
 type SortOption = 'name-asc' | 'name-desc' | 'products-desc' | 'products-asc';
 
@@ -49,10 +50,6 @@ export default function UnitIndex({ units = [] }: { units: UnitRow[] }) {
 
     const [searchTerm, setSearchTerm] = useState('');
     const [sortOption, setSortOption] = useState<SortOption>('name-asc');
-
-    // Dialog state'leri
-    const [dialogOpen, setDialogOpen] = useState(false);
-    const [unitToEdit, setUnitToEdit] = useState<UnitRow | null>(null);
     const [unitToDelete, setUnitToDelete] = useState<UnitRow | null>(null);
 
     // Toplam istatistikler
@@ -100,16 +97,6 @@ export default function UnitIndex({ units = [] }: { units: UnitRow[] }) {
         });
     }, [units, searchTerm, sortOption]);
 
-    const openCreate = () => {
-        setUnitToEdit(null);
-        setDialogOpen(true);
-    };
-
-    const openEdit = (unit: UnitRow) => {
-        setUnitToEdit(unit);
-        setDialogOpen(true);
-    };
-
     const openDelete = (unit: UnitRow) => {
         setUnitToDelete(unit);
     };
@@ -124,7 +111,7 @@ export default function UnitIndex({ units = [] }: { units: UnitRow[] }) {
                     <div>
                         <Heading
                             title="Ürün Birimleri"
-                            description="Servis, adet, kg gibi özel birimler tanımlayarak ürün birim fiyatlarını detay ve satın alma adımlarında gösterin."
+                            description="Servis, adet gibi özel birimler tanımlayarak ürün birim fiyatlarını detay ve satın alma adımlarında gösterin."
                         />
                         {units.length > 0 && (
                             <div className="mt-1.5 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
@@ -158,32 +145,33 @@ export default function UnitIndex({ units = [] }: { units: UnitRow[] }) {
                         )}
                     </div>
 
-                    <PermissionButton
-                        check={canManage}
-                        type="button"
-                        onClick={openCreate}
-                        className="gap-1.5 self-start shadow-sm sm:self-auto"
-                    >
-                        <Plus className="size-4" />
-                        Yeni Birim
-                    </PermissionButton>
+                    {canManage && (
+                        <Button
+                            asChild
+                            className="gap-1.5 self-start shadow-sm sm:self-auto"
+                        >
+                            <Link href={create()}>
+                                <Plus className="size-4" />
+                                Yeni Birim
+                            </Link>
+                        </Button>
+                    )}
                 </div>
 
                 {units.length === 0 ? (
                     <EmptyState
                         icon={Scale}
                         title="Henüz ürün birimi eklenmemiş"
-                        description="Ürünlerinizi adet, servis, kilogram gibi birimlerle tanımlamak için ilk biriminizi ekleyin."
+                        description="Adet, kilogram, servis gibi birimler tanımlayarak ürünlerinizin fiyat ve stoklandırma birimlerini netleştirin."
                         action={
-                            <PermissionButton
-                                check={canManage}
-                                type="button"
-                                onClick={openCreate}
-                                className="gap-1.5"
-                            >
-                                <Plus className="size-4" />
-                                İlk Birimi Ekle
-                            </PermissionButton>
+                            canManage ? (
+                                <Button asChild className="gap-1.5">
+                                    <Link href={create()}>
+                                        <Plus className="size-4" />
+                                        İlk Birimi Ekle
+                                    </Link>
+                                </Button>
+                            ) : undefined
                         }
                     />
                 ) : (
@@ -198,7 +186,7 @@ export default function UnitIndex({ units = [] }: { units: UnitRow[] }) {
                                     onChange={(e) =>
                                         setSearchTerm(e.target.value)
                                     }
-                                    placeholder="Birim adı veya kısa kod ara..."
+                                    placeholder="Birim adı veya sembolü ara..."
                                     className="h-9 pr-8 pl-8.5"
                                     aria-label="Birim ara"
                                 />
@@ -296,11 +284,12 @@ export default function UnitIndex({ units = [] }: { units: UnitRow[] }) {
                             <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-border bg-card p-8 text-center">
                                 <Scale className="mb-2 size-8 text-muted-foreground/60" />
                                 <h3 className="text-sm font-medium">
-                                    Eşleşen birim bulunamadı
+                                    Eşleşen ürün birimi bulunamadı
                                 </h3>
                                 <p className="mt-1 max-w-sm text-xs text-muted-foreground">
                                     "{searchTerm}" aramasına uygun birim
-                                    bulunmuyor.
+                                    bulunmuyor. Yazımı kontrol edebilir veya
+                                    yeni bir birim oluşturabilirsiniz.
                                 </p>
                                 <Button
                                     type="button"
@@ -322,7 +311,7 @@ export default function UnitIndex({ units = [] }: { units: UnitRow[] }) {
                                                 Birim Adı
                                             </TableHead>
                                             <TableHead className="w-1/3">
-                                                Kısa Ad / Kod
+                                                Kısa Ad (Sembol)
                                             </TableHead>
                                             <TableHead className="w-28 text-right">
                                                 Bağlı Ürün
@@ -345,10 +334,10 @@ export default function UnitIndex({ units = [] }: { units: UnitRow[] }) {
                                                         </span>
                                                     </div>
                                                 </TableCell>
-                                                <TableCell>
+                                                <TableCell className="font-mono text-xs text-muted-foreground">
                                                     <Badge
                                                         variant="outline"
-                                                        className="font-mono text-xs"
+                                                        className="font-mono text-xs font-normal"
                                                     >
                                                         {unit.shortName}
                                                     </Badge>
@@ -372,32 +361,34 @@ export default function UnitIndex({ units = [] }: { units: UnitRow[] }) {
                                                         delayDuration={200}
                                                     >
                                                         <div className="flex items-center justify-end gap-1">
-                                                            <Tooltip>
-                                                                <TooltipTrigger
-                                                                    asChild
-                                                                >
-                                                                    <PermissionButton
-                                                                        check={
-                                                                            canManage
-                                                                        }
-                                                                        type="button"
-                                                                        variant="ghost"
-                                                                        size="icon"
-                                                                        className="size-7 text-muted-foreground hover:text-foreground"
-                                                                        aria-label={`${unit.name} düzenle`}
-                                                                        onClick={() =>
-                                                                            openEdit(
-                                                                                unit,
-                                                                            )
-                                                                        }
+                                                            {canManage && (
+                                                                <Tooltip>
+                                                                    <TooltipTrigger
+                                                                        asChild
                                                                     >
-                                                                        <Pencil className="size-3.5" />
-                                                                    </PermissionButton>
-                                                                </TooltipTrigger>
-                                                                <TooltipContent side="top">
-                                                                    Düzenle
-                                                                </TooltipContent>
-                                                            </Tooltip>
+                                                                        <Button
+                                                                            asChild
+                                                                            variant="ghost"
+                                                                            size="icon"
+                                                                            className="size-7 text-muted-foreground hover:text-foreground"
+                                                                            aria-label={`${unit.name} düzenle`}
+                                                                        >
+                                                                            <Link
+                                                                                href={edit(
+                                                                                    {
+                                                                                        unit: unit.id,
+                                                                                    },
+                                                                                )}
+                                                                            >
+                                                                                <Pencil className="size-3.5" />
+                                                                            </Link>
+                                                                        </Button>
+                                                                    </TooltipTrigger>
+                                                                    <TooltipContent side="top">
+                                                                        Düzenle
+                                                                    </TooltipContent>
+                                                                </Tooltip>
+                                                            )}
 
                                                             <Tooltip>
                                                                 <TooltipTrigger
@@ -438,13 +429,6 @@ export default function UnitIndex({ units = [] }: { units: UnitRow[] }) {
                 )}
             </div>
 
-            {/* Birim Ekleme / Düzenleme Modalı */}
-            <UnitDialog
-                open={dialogOpen}
-                onOpenChange={setDialogOpen}
-                unitToEdit={unitToEdit}
-            />
-
             {/* Birim Silme Onay Modalı */}
             <UnitDeleteDialog
                 unit={unitToDelete}
@@ -453,3 +437,16 @@ export default function UnitIndex({ units = [] }: { units: UnitRow[] }) {
         </>
     );
 }
+
+UnitIndex.layout = {
+    breadcrumbs: [
+        {
+            title: 'Tanımlamalar',
+            href: definitions(),
+        },
+        {
+            title: 'Ürün Birimleri',
+            href: index(),
+        },
+    ],
+};

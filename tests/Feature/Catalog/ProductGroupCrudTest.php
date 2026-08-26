@@ -61,3 +61,20 @@ it('updates product group products', function (): void {
 
     expect($group->refresh()->products->pluck('id')->all())->toBe([$p2->id]);
 });
+
+it('renders product group create and edit pages', function (): void {
+    $group = ProductGroup::factory()->create(['name' => 'Kış Koleksiyonu']);
+
+    $this->actingAs($this->manager)
+        ->get(route('product-groups.create'))
+        ->assertOk()
+        ->assertInertia(fn (AssertableInertia $page) => $page->component('catalog/product-groups/create'));
+
+    $this->actingAs($this->manager)
+        ->get(route('product-groups.edit', $group))
+        ->assertOk()
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->component('catalog/product-groups/edit')
+            ->where('group.name', 'Kış Koleksiyonu')
+        );
+});

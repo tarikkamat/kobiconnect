@@ -14,7 +14,6 @@ import { useMemo, useState } from 'react';
 import ProductGroupController from '@/actions/App/Http/Controllers/Catalog/ProductGroupController';
 import { PermissionButton } from '@/components/catalog/permission-button';
 import { ProductGroupDeleteDialog } from '@/components/catalog/product-group-delete-dialog';
-import { ProductGroupDialog } from '@/components/catalog/product-group-dialog';
 import type { ProductGroupRow } from '@/components/catalog/product-group-dialog';
 import { EmptyState } from '@/components/empty-state';
 import Heading from '@/components/heading';
@@ -43,6 +42,8 @@ import {
     TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { usePermission } from '@/hooks/use-permission';
+import { index as definitions } from '@/routes/definitions';
+import { create, edit, index } from '@/routes/product-groups';
 
 type SortOption = 'name-asc' | 'name-desc' | 'products-desc' | 'products-asc';
 
@@ -55,12 +56,6 @@ export default function ProductGroupIndex({
 
     const [searchTerm, setSearchTerm] = useState('');
     const [sortOption, setSortOption] = useState<SortOption>('name-asc');
-
-    // Dialog state'leri
-    const [dialogOpen, setDialogOpen] = useState(false);
-    const [groupToEdit, setGroupToEdit] = useState<ProductGroupRow | null>(
-        null,
-    );
     const [groupToDelete, setGroupToDelete] = useState<ProductGroupRow | null>(
         null,
     );
@@ -114,16 +109,6 @@ export default function ProductGroupIndex({
         });
     }, [groups, searchTerm, sortOption]);
 
-    const openCreate = () => {
-        setGroupToEdit(null);
-        setDialogOpen(true);
-    };
-
-    const openEdit = (group: ProductGroupRow) => {
-        setGroupToEdit(group);
-        setDialogOpen(true);
-    };
-
     const openDelete = (group: ProductGroupRow) => {
         setGroupToDelete(group);
     };
@@ -154,7 +139,7 @@ export default function ProductGroupIndex({
                                     <span className="font-mono font-semibold text-foreground tabular-nums">
                                         {totalProductsCount}
                                     </span>{' '}
-                                    bağlı ürün
+                                    grup içi ürün
                                 </span>
                                 {groupsWithProductsCount < groups.length && (
                                     <>
@@ -172,32 +157,33 @@ export default function ProductGroupIndex({
                         )}
                     </div>
 
-                    <PermissionButton
-                        check={canManage}
-                        type="button"
-                        onClick={openCreate}
-                        className="gap-1.5 self-start shadow-sm sm:self-auto"
-                    >
-                        <Plus className="size-4" />
-                        Yeni Ürün Grubu
-                    </PermissionButton>
+                    {canManage && (
+                        <Button
+                            asChild
+                            className="gap-1.5 self-start shadow-sm sm:self-auto"
+                        >
+                            <Link href={create()}>
+                                <Plus className="size-4" />
+                                Yeni Ürün Grubu
+                            </Link>
+                        </Button>
+                    )}
                 </div>
 
                 {groups.length === 0 ? (
                     <EmptyState
                         icon={Layers}
                         title="Henüz ürün grubu eklenmemiş"
-                        description="Ürünlerinizi kombin, koleksiyon veya ilgili ürünler olarak gruplamak için ilk grubunuzu ekleyin."
+                        description="Ürünlerinizi kombinlemek, benzer veya alternatif ürünler olarak eşleştirmek için ilk ürün grubunuzu oluşturun."
                         action={
-                            <PermissionButton
-                                check={canManage}
-                                type="button"
-                                onClick={openCreate}
-                                className="gap-1.5"
-                            >
-                                <Plus className="size-4" />
-                                İlk Grubu Ekle
-                            </PermissionButton>
+                            canManage ? (
+                                <Button asChild className="gap-1.5">
+                                    <Link href={create()}>
+                                        <Plus className="size-4" />
+                                        İlk Grubu Ekle
+                                    </Link>
+                                </Button>
+                            ) : undefined
                         }
                     />
                 ) : (
@@ -314,7 +300,8 @@ export default function ProductGroupIndex({
                                 </h3>
                                 <p className="mt-1 max-w-sm text-xs text-muted-foreground">
                                     "{searchTerm}" aramasına uygun grup
-                                    bulunmuyor.
+                                    bulunmuyor. Yazımı kontrol edebilir veya
+                                    yeni bir grup oluşturabilirsiniz.
                                 </p>
                                 <Button
                                     type="button"
@@ -341,10 +328,10 @@ export default function ProductGroupIndex({
                                             <TableHead className="w-1/4">
                                                 Açıklama
                                             </TableHead>
-                                            <TableHead className="w-24 text-right">
-                                                Ürünler
+                                            <TableHead className="w-28 text-right">
+                                                Ürün Sayısı
                                             </TableHead>
-                                            <TableHead className="w-28 pr-4 text-right">
+                                            <TableHead className="w-32 pr-4 text-right">
                                                 İşlemler
                                             </TableHead>
                                         </TableRow>
@@ -358,25 +345,19 @@ export default function ProductGroupIndex({
                                                             <div className="flex size-7 items-center justify-center rounded-md bg-muted/60 text-muted-foreground">
                                                                 <Layers className="size-3.5" />
                                                             </div>
-                                                            <Link
-                                                                href={ProductGroupController.show.url(
-                                                                    {
-                                                                        productGroup:
-                                                                            group.id,
-                                                                    },
-                                                                )}
-                                                                className="font-medium text-foreground hover:underline"
-                                                            >
+                                                            <span className="font-medium text-foreground">
                                                                 {group.name}
-                                                            </Link>
+                                                            </span>
                                                         </div>
                                                     </TableCell>
                                                     <TableCell className="font-mono text-xs text-muted-foreground tabular-nums">
                                                         {group.slug}
                                                     </TableCell>
-                                                    <TableCell className="text-xs text-muted-foreground">
-                                                        {group.description || (
-                                                            <span className="text-muted-foreground/50">
+                                                    <TableCell className="max-w-xs truncate text-xs text-muted-foreground">
+                                                        {group.description ? (
+                                                            group.description
+                                                        ) : (
+                                                            <span className="text-muted-foreground/40">
                                                                 -
                                                             </span>
                                                         )}
@@ -433,32 +414,35 @@ export default function ProductGroupIndex({
                                                                     </TooltipContent>
                                                                 </Tooltip>
 
-                                                                <Tooltip>
-                                                                    <TooltipTrigger
-                                                                        asChild
-                                                                    >
-                                                                        <PermissionButton
-                                                                            check={
-                                                                                canManage
-                                                                            }
-                                                                            type="button"
-                                                                            variant="ghost"
-                                                                            size="icon"
-                                                                            className="size-7 text-muted-foreground hover:text-foreground"
-                                                                            aria-label={`${group.name} düzenle`}
-                                                                            onClick={() =>
-                                                                                openEdit(
-                                                                                    group,
-                                                                                )
-                                                                            }
+                                                                {canManage && (
+                                                                    <Tooltip>
+                                                                        <TooltipTrigger
+                                                                            asChild
                                                                         >
-                                                                            <Pencil className="size-3.5" />
-                                                                        </PermissionButton>
-                                                                    </TooltipTrigger>
-                                                                    <TooltipContent side="top">
-                                                                        Düzenle
-                                                                    </TooltipContent>
-                                                                </Tooltip>
+                                                                            <Button
+                                                                                asChild
+                                                                                variant="ghost"
+                                                                                size="icon"
+                                                                                className="size-7 text-muted-foreground hover:text-foreground"
+                                                                                aria-label={`${group.name} düzenle`}
+                                                                            >
+                                                                                <Link
+                                                                                    href={edit(
+                                                                                        {
+                                                                                            productGroup:
+                                                                                                group.id,
+                                                                                        },
+                                                                                    )}
+                                                                                >
+                                                                                    <Pencil className="size-3.5" />
+                                                                                </Link>
+                                                                            </Button>
+                                                                        </TooltipTrigger>
+                                                                        <TooltipContent side="top">
+                                                                            Düzenle
+                                                                        </TooltipContent>
+                                                                    </Tooltip>
+                                                                )}
 
                                                                 <Tooltip>
                                                                     <TooltipTrigger
@@ -500,13 +484,6 @@ export default function ProductGroupIndex({
                 )}
             </div>
 
-            {/* Grup Ekleme / Düzenleme Modalı */}
-            <ProductGroupDialog
-                open={dialogOpen}
-                onOpenChange={setDialogOpen}
-                groupToEdit={groupToEdit}
-            />
-
             {/* Grup Silme Onay Modalı */}
             <ProductGroupDeleteDialog
                 group={groupToDelete}
@@ -515,3 +492,16 @@ export default function ProductGroupIndex({
         </>
     );
 }
+
+ProductGroupIndex.layout = {
+    breadcrumbs: [
+        {
+            title: 'Tanımlamalar',
+            href: definitions(),
+        },
+        {
+            title: 'Ürün Grupları',
+            href: index(),
+        },
+    ],
+};

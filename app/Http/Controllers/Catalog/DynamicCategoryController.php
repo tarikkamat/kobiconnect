@@ -65,6 +65,29 @@ class DynamicCategoryController extends Controller
         ]);
     }
 
+    public function create(): Response
+    {
+        Gate::authorize('create', DynamicCategory::class);
+
+        return Inertia::render('catalog/dynamic-categories/create', [
+            'fields' => array_map(fn (DynamicCategoryField $f): array => [
+                'value' => $f->value,
+                'label' => $f->label(),
+            ], DynamicCategoryField::cases()),
+            'operators' => array_map(fn (DynamicCategoryOperator $o): array => [
+                'value' => $o->value,
+                'label' => $o->label(),
+            ], DynamicCategoryOperator::cases()),
+            'matchTypes' => array_map(fn (DynamicCategoryMatchType $m): array => [
+                'value' => $m->value,
+                'label' => $m->label(),
+            ], DynamicCategoryMatchType::cases()),
+            'brands' => Brand::query()->orderBy('name')->get(['id', 'name']),
+            'productCategories' => Category::query()->orderBy('name')->get(['id', 'name']),
+            'tags' => Tag::query()->orderBy('name')->get(['id', 'name']),
+        ]);
+    }
+
     public function store(DynamicCategoryRequest $request, EvaluateDynamicCategory $evaluator): RedirectResponse
     {
         Gate::authorize('create', DynamicCategory::class);
@@ -98,7 +121,46 @@ class DynamicCategoryController extends Controller
             'message' => "Dinamik kategori oluşturuldu ({$matched} ürün eşleşti).",
         ]);
 
-        return back();
+        return to_route('dynamic-categories.index');
+    }
+
+    public function edit(DynamicCategory $dynamicCategory): Response
+    {
+        Gate::authorize('update', $dynamicCategory);
+
+        $dynamicCategory->load('conditions');
+
+        return Inertia::render('catalog/dynamic-categories/edit', [
+            'category' => [
+                'id' => $dynamicCategory->getKey(),
+                'name' => $dynamicCategory->name,
+                'slug' => $dynamicCategory->slug,
+                'matchType' => $dynamicCategory->match_type->value,
+                'matchTypeLabel' => $dynamicCategory->match_type->label(),
+                'description' => $dynamicCategory->description,
+                'conditions' => $dynamicCategory->conditions->map(fn (DynamicCategoryCondition $c): array => [
+                    'id' => $c->getKey(),
+                    'field' => $c->field->value,
+                    'operator' => $c->operator->value,
+                    'value' => $c->value,
+                ])->all(),
+            ],
+            'fields' => array_map(fn (DynamicCategoryField $f): array => [
+                'value' => $f->value,
+                'label' => $f->label(),
+            ], DynamicCategoryField::cases()),
+            'operators' => array_map(fn (DynamicCategoryOperator $o): array => [
+                'value' => $o->value,
+                'label' => $o->label(),
+            ], DynamicCategoryOperator::cases()),
+            'matchTypes' => array_map(fn (DynamicCategoryMatchType $m): array => [
+                'value' => $m->value,
+                'label' => $m->label(),
+            ], DynamicCategoryMatchType::cases()),
+            'brands' => Brand::query()->orderBy('name')->get(['id', 'name']),
+            'productCategories' => Category::query()->orderBy('name')->get(['id', 'name']),
+            'tags' => Tag::query()->orderBy('name')->get(['id', 'name']),
+        ]);
     }
 
     public function show(DynamicCategory $dynamicCategory): Response
@@ -188,7 +250,7 @@ class DynamicCategoryController extends Controller
             'message' => "Dinamik kategori güncellendi ({$matched} ürün eşleşti).",
         ]);
 
-        return back();
+        return to_route('dynamic-categories.index');
     }
 
     public function evaluate(DynamicCategory $dynamicCategory, EvaluateDynamicCategory $evaluator): RedirectResponse

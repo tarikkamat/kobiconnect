@@ -1,4 +1,4 @@
-import { Head } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import {
     ChevronsDownUp,
     ChevronsUpDown,
@@ -15,7 +15,6 @@ import {
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { CategoryDeleteDialog } from '@/components/catalog/category-delete-dialog';
-import { CategoryDialog } from '@/components/catalog/category-dialog';
 import type { CategoryRow } from '@/components/catalog/category-dialog';
 import { CategoryTreeNodeItem } from '@/components/catalog/category-tree-node';
 import type { CategoryTreeNode } from '@/components/catalog/category-tree-node';
@@ -41,7 +40,8 @@ import {
     TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { usePermission } from '@/hooks/use-permission';
-import { index } from '@/routes/categories';
+import { create, edit, index } from '@/routes/categories';
+import { index as definitions } from '@/routes/definitions';
 
 export default function CategoryIndex({
     categories,
@@ -59,12 +59,6 @@ export default function CategoryIndex({
         );
     });
 
-    // Dialog state'leri
-    const [dialogOpen, setDialogOpen] = useState(false);
-    const [categoryToEdit, setCategoryToEdit] = useState<CategoryRow | null>(
-        null,
-    );
-    const [defaultParentId, setDefaultParentId] = useState<number | null>(null);
     const [categoryToDelete, setCategoryToDelete] =
         useState<CategoryRow | null>(null);
 
@@ -101,97 +95,66 @@ export default function CategoryIndex({
         return map;
     }, [categories, categoryMap]);
 
-    // Ağaç veri yapısını inşa etme
-    const { treeData, totalProductsCount, rootCategoriesCount } =
-        useMemo(() => {
-            const roots: CategoryTreeNode[] = [];
-            const treeNodeMap = new Map<number, CategoryTreeNode>();
+    // Ağaç (Tree) veri yapısını oluşturma
+    const treeData = useMemo(() => {
+        const nodeMap = new Map<number, CategoryTreeNode>();
+        const roots: CategoryTreeNode[] = [];
 
-            let totalProducts = 0;
-            let rootCount = 0;
+        // 1. Düğüm nesnelerini ilkle
+        for (const cat of categories) {
+            nodeMap.set(cat.id, {
+                ...cat,
+                children: [],
+                totalProductCount: cat.productCount,
+            });
+        }
 
-            // Düğümleri hazırla
-            for (const cat of categories) {
-                totalProducts += cat.productCount;
+        // 2. Ebeveyn-çocuk ilişkilerini kur
+        for (const cat of categories) {
+            const node = nodeMap.get(cat.id)!;
 
-                if (cat.depth === 0) {
-                    rootCount++;
-                }
+            if (cat.parentId && nodeMap.has(cat.parentId)) {
+                nodeMap.get(cat.parentId)!.children.push(node);
+            } else {
+                roots.push(node);
+            }
+        }
 
-                treeNodeMap.set(cat.id, {
-                    ...cat,
-                    children: [],
-                    totalProductCount: cat.productCount,
-                });
+        // 3. Alt dalların ürün sayılarını yukarıya topla
+        const calculateTotalProducts = (node: CategoryTreeNode): number => {
+            let total = node.productCount;
+
+            for (const child of node.children) {
+                total += calculateTotalProducts(child);
             }
 
-            // Hiyerarşiyi bağla
-            for (const cat of categories) {
-                const node = treeNodeMap.get(cat.id)!;
+            node.totalProductCount = total;
 
-                if (cat.parentId === null || !treeNodeMap.has(cat.parentId)) {
-                    roots.push(node);
-                } else {
-                    const parent = treeNodeMap.get(cat.parentId)!;
-                    parent.children.push(node);
-                }
-            }
+            return total;
+        };
 
-            return {
-                treeData: roots,
-                totalProductsCount: totalProducts,
-                rootCategoriesCount: rootCount,
-            };
-        }, [categories]);
+        for (const root of roots) {
+            calculateTotalProducts(root);
+        }
 
-    // Arama filtrelemesi
+        return roots;
+    }, [categories]);
+
+    // Toplam istatistikler
+    const totalProductsCount = useMemo(
+        () => categories.reduce((sum, c) => sum + c.productCount, 0),
+        [categories],
+    );
+
+    const rootCategoriesCount = useMemo(
+        () => categories.filter((c) => c.depth === 0).length,
+        [categories],
+    );
+
+    // Tablo görünümü için filtrelenmiş liste
     const normalizedSearch = searchTerm.trim().toLocaleLowerCase('tr');
 
-    // Arama yapıldığında eşleşen ve ebeveyn düğümleri tespit etme
-    const { matchingCategoryIds, matchingAncestorIds } = useMemo(() => {
-        if (!normalizedSearch) {
-            return {
-                matchingCategoryIds: new Set<number>(),
-                matchingAncestorIds: new Set<number>(),
-            };
-        }
-
-        const matches = new Set<number>();
-        const ancestors = new Set<number>();
-
-        for (const cat of categories) {
-            const pathName = fullPathMap.get(cat.id) ?? cat.name;
-
-            if (pathName.toLocaleLowerCase('tr').includes(normalizedSearch)) {
-                matches.add(cat.id);
-                // Ata ID'lerini ekle
-                const pathIds = cat.path.split('/').map(Number);
-
-                for (const pid of pathIds) {
-                    if (pid !== cat.id) {
-                        ancestors.add(pid);
-                    }
-                }
-            }
-        }
-
-        return {
-            matchingCategoryIds: matches,
-            matchingAncestorIds: ancestors,
-        };
-    }, [categories, fullPathMap, normalizedSearch]);
-
-    // Arama varken aktif expanded ID'ler
-    const effectiveExpandedIds = useMemo(() => {
-        if (!normalizedSearch) {
-            return expandedIds;
-        }
-
-        return new Set([...expandedIds, ...matchingAncestorIds]);
-    }, [expandedIds, matchingAncestorIds, normalizedSearch]);
-
-    // Filtrelenmiş Tablo satırları
-    const filteredTableCategories = useMemo(() => {
+    const filteredCategories = useMemo(() => {
         if (!normalizedSearch) {
             return categories;
         }
@@ -225,24 +188,12 @@ export default function CategoryIndex({
         setExpandedIds(new Set());
     };
 
-    const openCreateRoot = () => {
-        setCategoryToEdit(null);
-        setDefaultParentId(null);
-        setDialogOpen(true);
-    };
-
-    const openAddChild = (parent: CategoryRow) => {
-        setCategoryToEdit(null);
-        setDefaultParentId(parent.id);
-        setDialogOpen(true);
-        // Otomatik genişlet
-        setExpandedIds((prev) => new Set([...prev, parent.id]));
+    const openAddChild = () => {
+        router.visit(create());
     };
 
     const openEdit = (category: CategoryRow) => {
-        setCategoryToEdit(category);
-        setDefaultParentId(null);
-        setDialogOpen(true);
+        router.visit(edit({ category: category.id }));
     };
 
     const openDelete = (category: CategoryRow) => {
@@ -259,7 +210,7 @@ export default function CategoryIndex({
                     <div>
                         <Heading
                             title="Kategoriler"
-                            description="Kendi kategori ağacınızı yönetin; ürünlerinizi sınıflandırın ve pazaryerleriyle eşleştirin."
+                            description="Ürünlerin hiyerarşik kategori ağacı ve pazaryeri eşlemeleri."
                         />
                         {categories.length > 0 && (
                             <div className="mt-1.5 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
@@ -270,8 +221,8 @@ export default function CategoryIndex({
                                     toplam kategori
                                 </span>
                                 <span>•</span>
-                                <span className="flex items-center gap-1">
-                                    <span className="font-mono font-semibold text-foreground tabular-nums">
+                                <span className="text-muted-foreground/80">
+                                    <span className="font-mono tabular-nums">
                                         {rootCategoriesCount}
                                     </span>{' '}
                                     ana dal
@@ -282,43 +233,44 @@ export default function CategoryIndex({
                                     <span className="font-mono font-semibold text-foreground tabular-nums">
                                         {totalProductsCount}
                                     </span>{' '}
-                                    bağlı ürün
+                                    ürün bağlantısı
                                 </span>
                             </div>
                         )}
                     </div>
 
-                    <PermissionButton
-                        check={canManage}
-                        type="button"
-                        onClick={openCreateRoot}
-                        className="gap-1.5 self-start shadow-sm sm:self-auto"
-                    >
-                        <Plus className="size-4" />
-                        Yeni Kategori
-                    </PermissionButton>
+                    {canManage && (
+                        <Button
+                            asChild
+                            className="gap-1.5 self-start shadow-sm sm:self-auto"
+                        >
+                            <Link href={create()}>
+                                <Plus className="size-4" />
+                                Yeni Kategori
+                            </Link>
+                        </Button>
+                    )}
                 </div>
 
                 {categories.length === 0 ? (
                     <EmptyState
                         icon={FolderTree}
                         title="Henüz kategori eklenmemiş"
-                        description="Ürünlerinizi sınıflandırmak ve pazaryeri kategorileriyle eşleştirmek için ilk ana kategorinizi oluşturun."
+                        description="Ürünlerinizi düzenlemek ve pazaryeri kategorileriyle eşleştirmek için hiyerarşik kategorilerinizi oluşturun."
                         action={
-                            <PermissionButton
-                                check={canManage}
-                                type="button"
-                                onClick={openCreateRoot}
-                                className="gap-1.5"
-                            >
-                                <Plus className="size-4" />
-                                İlk Kategoriyi Oluştur
-                            </PermissionButton>
+                            canManage ? (
+                                <Button asChild className="gap-1.5">
+                                    <Link href={create()}>
+                                        <Plus className="size-4" />
+                                        İlk Kategoriyi Ekle
+                                    </Link>
+                                </Button>
+                            ) : undefined
                         }
                     />
                 ) : (
                     <div className="flex flex-col gap-4">
-                        {/* Arama ve Görünüm Kontrol Çubuğu */}
+                        {/* Arama, Ağaç Genişletme ve Görünüm Kontrol Çubuğu */}
                         <div className="flex flex-col gap-3 rounded-lg border border-border bg-card p-3 shadow-xs sm:flex-row sm:items-center sm:justify-between">
                             {/* Arama Çubuğu */}
                             <div className="relative max-w-md flex-1">
@@ -328,7 +280,7 @@ export default function CategoryIndex({
                                     onChange={(e) =>
                                         setSearchTerm(e.target.value)
                                     }
-                                    placeholder="Kategori veya hiyerarşi ara..."
+                                    placeholder="Kategori adı veya hiyerarşi ara..."
                                     className="h-9 pr-8 pl-8.5"
                                     aria-label="Kategori ara"
                                 />
@@ -344,72 +296,92 @@ export default function CategoryIndex({
                                 )}
                             </div>
 
-                            {/* Görünüm ve Genişletme Düğmeleri */}
+                            {/* Görünüm ve Ağaç Düğmeleri */}
                             <div className="flex items-center gap-2 self-end sm:self-auto">
                                 {viewMode === 'tree' && (
-                                    <div className="flex items-center gap-1">
-                                        <Button
-                                            type="button"
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={expandAll}
-                                            className="h-8 gap-1 text-xs"
-                                        >
-                                            <ChevronsUpDown className="size-3.5" />
-                                            <span className="hidden sm:inline">
-                                                Tümünü Aç
-                                            </span>
-                                        </Button>
-                                        <Button
-                                            type="button"
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={collapseAll}
-                                            className="h-8 gap-1 text-xs"
-                                        >
-                                            <ChevronsDownUp className="size-3.5" />
-                                            <span className="hidden sm:inline">
-                                                Tümünü Kapat
-                                            </span>
-                                        </Button>
+                                    <div className="flex items-center gap-1 border-r border-border pr-2">
+                                        <TooltipProvider delayDuration={200}>
+                                            <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                    <Button
+                                                        type="button"
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        onClick={expandAll}
+                                                        className="h-8 px-2 text-xs"
+                                                        aria-label="Tümünü genişlet"
+                                                    >
+                                                        <ChevronsUpDown className="mr-1 size-3.5" />
+                                                        <span className="hidden md:inline">
+                                                            Tümünü Aç
+                                                        </span>
+                                                    </Button>
+                                                </TooltipTrigger>
+                                                <TooltipContent side="top">
+                                                    Tüm alt dalları genişlet
+                                                </TooltipContent>
+                                            </Tooltip>
+
+                                            <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                    <Button
+                                                        type="button"
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        onClick={collapseAll}
+                                                        className="h-8 px-2 text-xs"
+                                                        aria-label="Tümünü daralt"
+                                                    >
+                                                        <ChevronsDownUp className="mr-1 size-3.5" />
+                                                        <span className="hidden md:inline">
+                                                            Daralt
+                                                        </span>
+                                                    </Button>
+                                                </TooltipTrigger>
+                                                <TooltipContent side="top">
+                                                    Tüm alt dalları kapat
+                                                </TooltipContent>
+                                            </Tooltip>
+                                        </TooltipProvider>
                                     </div>
                                 )}
 
+                                {/* Ağaç / Tablo Görünüm Seçici */}
                                 <ToggleGroup
                                     type="single"
                                     value={viewMode}
-                                    onValueChange={(val) =>
-                                        val &&
-                                        setViewMode(val as 'tree' | 'table')
-                                    }
-                                    className="rounded-lg border border-border p-0.5"
+                                    onValueChange={(val) => {
+                                        if (val) {
+                                            setViewMode(
+                                                val as 'tree' | 'table',
+                                            );
+                                        }
+                                    }}
+                                    className="border border-border"
+                                    aria-label="Görünüm modu seçimi"
                                 >
                                     <ToggleGroupItem
                                         value="tree"
-                                        aria-label="Ağaç Görünümü"
-                                        className="h-7 gap-1.5 px-2.5 text-xs data-[state=on]:bg-muted data-[state=on]:text-foreground"
+                                        className="h-8 px-2.5 text-xs"
+                                        aria-label="Ağaç görünümü"
                                     >
-                                        <FolderTree className="size-3.5" />
-                                        <span className="hidden sm:inline">
-                                            Ağaç
-                                        </span>
+                                        <FolderTree className="mr-1.5 size-3.5" />
+                                        Ağaç
                                     </ToggleGroupItem>
                                     <ToggleGroupItem
                                         value="table"
-                                        aria-label="Tablo Görünümü"
-                                        className="h-7 gap-1.5 px-2.5 text-xs data-[state=on]:bg-muted data-[state=on]:text-foreground"
+                                        className="h-8 px-2.5 text-xs"
+                                        aria-label="Tablo görünümü"
                                     >
-                                        <List className="size-3.5" />
-                                        <span className="hidden sm:inline">
-                                            Tablo
-                                        </span>
+                                        <List className="mr-1.5 size-3.5" />
+                                        Tablo
                                     </ToggleGroupItem>
                                 </ToggleGroup>
                             </div>
                         </div>
 
                         {/* Arama Sonuç Durumu */}
-                        {normalizedSearch && (
+                        {searchTerm.trim() && (
                             <div className="flex items-center justify-between px-1 text-xs text-muted-foreground">
                                 <span>
                                     "
@@ -418,7 +390,7 @@ export default function CategoryIndex({
                                     </strong>
                                     " araması için{' '}
                                     <strong className="font-mono text-foreground tabular-nums">
-                                        {matchingCategoryIds.size}
+                                        {filteredCategories.length}
                                     </strong>{' '}
                                     kategori bulundu.
                                 </span>
@@ -435,7 +407,8 @@ export default function CategoryIndex({
                         )}
 
                         {/* Arama Sıfır Eşleşme Durumu */}
-                        {normalizedSearch && matchingCategoryIds.size === 0 ? (
+                        {searchTerm.trim() &&
+                        filteredCategories.length === 0 ? (
                             <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-border bg-card p-8 text-center">
                                 <FolderTree className="mb-2 size-8 text-muted-foreground/60" />
                                 <h3 className="text-sm font-medium">
@@ -457,42 +430,36 @@ export default function CategoryIndex({
                                 </Button>
                             </div>
                         ) : viewMode === 'tree' ? (
-                            /* Hiyerarşik Ağaç Görünümü */
-                            <div className="rounded-lg border border-border bg-card p-3 shadow-xs">
-                                <div className="space-y-1">
-                                    {treeData.map((node) => (
-                                        <CategoryTreeNodeItem
-                                            key={node.id}
-                                            node={node}
-                                            expandedIds={effectiveExpandedIds}
-                                            toggleExpand={toggleExpand}
-                                            onAddChild={openAddChild}
-                                            onEdit={openEdit}
-                                            onDelete={openDelete}
-                                            searchTerm={searchTerm}
-                                            canManage={canManage}
-                                            depth={0}
-                                        />
-                                    ))}
-                                </div>
+                            /* 1. Hiyerarşik Ağaç Görünümü (Tree View) */
+                            <div className="space-y-1 rounded-lg border border-border bg-card p-3 shadow-xs">
+                                {treeData.map((rootNode) => (
+                                    <CategoryTreeNodeItem
+                                        key={rootNode.id}
+                                        node={rootNode}
+                                        expandedIds={expandedIds}
+                                        toggleExpand={toggleExpand}
+                                        onAddChild={openAddChild}
+                                        onEdit={openEdit}
+                                        onDelete={openDelete}
+                                        searchTerm={searchTerm}
+                                        canManage={canManage}
+                                    />
+                                ))}
                             </div>
                         ) : (
-                            /* Tablo Görünümü (Tüm Liste + Hiyerarşik Yol) */
+                            /* 2. Tablo Görünümü (Table View) */
                             <div className="overflow-hidden rounded-lg border border-border bg-card shadow-xs">
                                 <Table>
                                     <TableHeader>
                                         <TableRow>
-                                            <TableHead className="w-1/3">
+                                            <TableHead className="w-2/5">
                                                 Kategori Adı
                                             </TableHead>
-                                            <TableHead className="w-1/3">
-                                                Hiyerarşi Yolu
+                                            <TableHead className="w-2/5">
+                                                Tam Yol (Hiyerarşi)
                                             </TableHead>
                                             <TableHead className="w-28 text-right">
-                                                Alt Kategori
-                                            </TableHead>
-                                            <TableHead className="w-24 text-right">
-                                                Ürün
+                                                Bağlı Ürün
                                             </TableHead>
                                             <TableHead className="w-28 pr-4 text-right">
                                                 İşlemler
@@ -500,10 +467,10 @@ export default function CategoryIndex({
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
-                                        {filteredTableCategories.map((cat) => {
-                                            const subCount = categories.filter(
-                                                (c) => c.parentId === cat.id,
-                                            ).length;
+                                        {filteredCategories.map((cat) => {
+                                            const fullPath =
+                                                fullPathMap.get(cat.id) ??
+                                                cat.name;
 
                                             return (
                                                 <TableRow key={cat.id}>
@@ -511,33 +478,26 @@ export default function CategoryIndex({
                                                         <div
                                                             className="flex items-center gap-2"
                                                             style={{
-                                                                paddingLeft: `${cat.depth * 1.25}rem`,
+                                                                paddingLeft: `${cat.depth * 16}px`,
                                                             }}
                                                         >
-                                                            <Folder className="size-4 shrink-0 text-amber-500/80" />
-                                                            <span className="font-medium">
+                                                            {cat.depth > 0 && (
+                                                                <span className="font-mono text-muted-foreground/60">
+                                                                    └─
+                                                                </span>
+                                                            )}
+                                                            <div className="flex size-6 items-center justify-center rounded-md bg-muted/60 text-muted-foreground">
+                                                                <Folder className="size-3" />
+                                                            </div>
+                                                            <span className="font-medium text-foreground">
                                                                 {cat.name}
                                                             </span>
                                                         </div>
                                                     </TableCell>
-                                                    <TableCell className="text-xs font-normal text-muted-foreground">
-                                                        {fullPathMap.get(
-                                                            cat.id,
-                                                        )}
+                                                    <TableCell className="text-xs text-muted-foreground">
+                                                        {fullPath}
                                                     </TableCell>
-                                                    <TableCell className="text-right font-mono text-xs text-muted-foreground tabular-nums">
-                                                        {subCount > 0 ? (
-                                                            <Badge
-                                                                variant="outline"
-                                                                className="font-mono text-xs tabular-nums"
-                                                            >
-                                                                {subCount}
-                                                            </Badge>
-                                                        ) : (
-                                                            '—'
-                                                        )}
-                                                    </TableCell>
-                                                    <TableCell className="text-right font-mono text-sm tabular-nums">
+                                                    <TableCell className="text-right font-mono text-xs tabular-nums">
                                                         {cat.productCount >
                                                         0 ? (
                                                             <Badge
@@ -559,61 +519,62 @@ export default function CategoryIndex({
                                                             delayDuration={200}
                                                         >
                                                             <div className="flex items-center justify-end gap-1">
-                                                                <Tooltip>
-                                                                    <TooltipTrigger
-                                                                        asChild
-                                                                    >
-                                                                        <PermissionButton
-                                                                            check={
-                                                                                canManage
-                                                                            }
-                                                                            type="button"
-                                                                            variant="ghost"
-                                                                            size="icon"
-                                                                            className="size-7 text-muted-foreground hover:text-foreground"
-                                                                            aria-label={`${cat.name} için alt kategori ekle`}
-                                                                            onClick={() =>
-                                                                                openAddChild(
-                                                                                    cat,
-                                                                                )
-                                                                            }
+                                                                {canManage && (
+                                                                    <Tooltip>
+                                                                        <TooltipTrigger
+                                                                            asChild
                                                                         >
-                                                                            <FolderPlus className="size-3.5" />
-                                                                        </PermissionButton>
-                                                                    </TooltipTrigger>
-                                                                    <TooltipContent side="top">
-                                                                        Alt
-                                                                        Kategori
-                                                                        Ekle
-                                                                    </TooltipContent>
-                                                                </Tooltip>
+                                                                            <Button
+                                                                                asChild
+                                                                                variant="ghost"
+                                                                                size="icon"
+                                                                                className="size-7 text-muted-foreground hover:text-foreground"
+                                                                                aria-label={`${cat.name} için alt kategori ekle`}
+                                                                            >
+                                                                                <Link
+                                                                                    href={create()}
+                                                                                >
+                                                                                    <FolderPlus className="size-3.5" />
+                                                                                </Link>
+                                                                            </Button>
+                                                                        </TooltipTrigger>
+                                                                        <TooltipContent side="top">
+                                                                            Alt
+                                                                            Kategori
+                                                                            Ekle
+                                                                        </TooltipContent>
+                                                                    </Tooltip>
+                                                                )}
 
-                                                                <Tooltip>
-                                                                    <TooltipTrigger
-                                                                        asChild
-                                                                    >
-                                                                        <PermissionButton
-                                                                            check={
-                                                                                canManage
-                                                                            }
-                                                                            type="button"
-                                                                            variant="ghost"
-                                                                            size="icon"
-                                                                            className="size-7 text-muted-foreground hover:text-foreground"
-                                                                            aria-label={`${cat.name} düzenle`}
-                                                                            onClick={() =>
-                                                                                openEdit(
-                                                                                    cat,
-                                                                                )
-                                                                            }
+                                                                {canManage && (
+                                                                    <Tooltip>
+                                                                        <TooltipTrigger
+                                                                            asChild
                                                                         >
-                                                                            <Pencil className="size-3.5" />
-                                                                        </PermissionButton>
-                                                                    </TooltipTrigger>
-                                                                    <TooltipContent side="top">
-                                                                        Düzenle
-                                                                    </TooltipContent>
-                                                                </Tooltip>
+                                                                            <Button
+                                                                                asChild
+                                                                                variant="ghost"
+                                                                                size="icon"
+                                                                                className="size-7 text-muted-foreground hover:text-foreground"
+                                                                                aria-label={`${cat.name} düzenle`}
+                                                                            >
+                                                                                <Link
+                                                                                    href={edit(
+                                                                                        {
+                                                                                            category:
+                                                                                                cat.id,
+                                                                                        },
+                                                                                    )}
+                                                                                >
+                                                                                    <Pencil className="size-3.5" />
+                                                                                </Link>
+                                                                            </Button>
+                                                                        </TooltipTrigger>
+                                                                        <TooltipContent side="top">
+                                                                            Düzenle
+                                                                        </TooltipContent>
+                                                                    </Tooltip>
+                                                                )}
 
                                                                 <Tooltip>
                                                                     <TooltipTrigger
@@ -655,15 +616,6 @@ export default function CategoryIndex({
                 )}
             </div>
 
-            {/* Kategori Ekleme / Düzenleme Modalı */}
-            <CategoryDialog
-                open={dialogOpen}
-                onOpenChange={setDialogOpen}
-                categories={categories}
-                categoryToEdit={categoryToEdit}
-                defaultParentId={defaultParentId}
-            />
-
             {/* Kategori Silme Onay Modalı */}
             <CategoryDeleteDialog
                 category={categoryToDelete}
@@ -676,6 +628,10 @@ export default function CategoryIndex({
 
 CategoryIndex.layout = {
     breadcrumbs: [
+        {
+            title: 'Tanımlamalar',
+            href: definitions(),
+        },
         {
             title: 'Kategoriler',
             href: index(),

@@ -1,4 +1,4 @@
-import { Head } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 import {
     ArrowUpDown,
     Package,
@@ -12,7 +12,6 @@ import {
 import { useMemo, useState } from 'react';
 import { PermissionButton } from '@/components/catalog/permission-button';
 import { TagDeleteDialog } from '@/components/catalog/tag-delete-dialog';
-import { TagDialog } from '@/components/catalog/tag-dialog';
 import type { TagRow } from '@/components/catalog/tag-dialog';
 import { EmptyState } from '@/components/empty-state';
 import Heading from '@/components/heading';
@@ -41,6 +40,8 @@ import {
     TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { usePermission } from '@/hooks/use-permission';
+import { index as definitions } from '@/routes/definitions';
+import { create, edit, index } from '@/routes/tags';
 
 type SortOption = 'name-asc' | 'name-desc' | 'products-desc' | 'products-asc';
 
@@ -49,10 +50,6 @@ export default function TagIndex({ tags = [] }: { tags: TagRow[] }) {
 
     const [searchTerm, setSearchTerm] = useState('');
     const [sortOption, setSortOption] = useState<SortOption>('name-asc');
-
-    // Dialog state'leri
-    const [dialogOpen, setDialogOpen] = useState(false);
-    const [tagToEdit, setTagToEdit] = useState<TagRow | null>(null);
     const [tagToDelete, setTagToDelete] = useState<TagRow | null>(null);
 
     // Toplam istatistikler
@@ -98,16 +95,6 @@ export default function TagIndex({ tags = [] }: { tags: TagRow[] }) {
         });
     }, [tags, searchTerm, sortOption]);
 
-    const openCreate = () => {
-        setTagToEdit(null);
-        setDialogOpen(true);
-    };
-
-    const openEdit = (tag: TagRow) => {
-        setTagToEdit(tag);
-        setDialogOpen(true);
-    };
-
     const openDelete = (tag: TagRow) => {
         setTagToDelete(tag);
     };
@@ -122,7 +109,7 @@ export default function TagIndex({ tags = [] }: { tags: TagRow[] }) {
                     <div>
                         <Heading
                             title="Etiketler"
-                            description="Ürünlerinizi etiketleyerek dışa aktarma ve filtreleme işlemlerini kolaylaştırın."
+                            description="Ürünlerinizi etiketleyerek filtrelemeyi ve dışa aktarma işlemlerini kolaylaştırın."
                         />
                         {tags.length > 0 && (
                             <div className="mt-1.5 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
@@ -138,7 +125,7 @@ export default function TagIndex({ tags = [] }: { tags: TagRow[] }) {
                                     <span className="font-mono font-semibold text-foreground tabular-nums">
                                         {totalProductsCount}
                                     </span>{' '}
-                                    bağlı ürün
+                                    etiketli ürün
                                 </span>
                                 {tagsWithProductsCount < tags.length && (
                                     <>
@@ -156,32 +143,33 @@ export default function TagIndex({ tags = [] }: { tags: TagRow[] }) {
                         )}
                     </div>
 
-                    <PermissionButton
-                        check={canManage}
-                        type="button"
-                        onClick={openCreate}
-                        className="gap-1.5 self-start shadow-sm sm:self-auto"
-                    >
-                        <Plus className="size-4" />
-                        Yeni Etiket
-                    </PermissionButton>
+                    {canManage && (
+                        <Button
+                            asChild
+                            className="gap-1.5 self-start shadow-sm sm:self-auto"
+                        >
+                            <Link href={create()}>
+                                <Plus className="size-4" />
+                                Yeni Etiket
+                            </Link>
+                        </Button>
+                    )}
                 </div>
 
                 {tags.length === 0 ? (
                     <EmptyState
                         icon={TagIcon}
                         title="Henüz etiket eklenmemiş"
-                        description="Ürünlerinizi filtrelemek ve dışa aktarmaları kolaylaştırmak için ilk etiketinizi ekleyin."
+                        description="Ürünlerinizi etiketlerine göre filtrelemek ve dışa aktarmak için ilk etiketinizi ekleyin."
                         action={
-                            <PermissionButton
-                                check={canManage}
-                                type="button"
-                                onClick={openCreate}
-                                className="gap-1.5"
-                            >
-                                <Plus className="size-4" />
-                                İlk Etiketi Ekle
-                            </PermissionButton>
+                            canManage ? (
+                                <Button asChild className="gap-1.5">
+                                    <Link href={create()}>
+                                        <Plus className="size-4" />
+                                        İlk Etiketi Ekle
+                                    </Link>
+                                </Button>
+                            ) : undefined
                         }
                     />
                 ) : (
@@ -298,7 +286,8 @@ export default function TagIndex({ tags = [] }: { tags: TagRow[] }) {
                                 </h3>
                                 <p className="mt-1 max-w-sm text-xs text-muted-foreground">
                                     "{searchTerm}" aramasına uygun etiket
-                                    bulunmuyor.
+                                    bulunmuyor. Yazımı kontrol edebilir veya
+                                    yeni bir etiket oluşturabilirsiniz.
                                 </p>
                                 <Button
                                     type="button"
@@ -365,32 +354,34 @@ export default function TagIndex({ tags = [] }: { tags: TagRow[] }) {
                                                         delayDuration={200}
                                                     >
                                                         <div className="flex items-center justify-end gap-1">
-                                                            <Tooltip>
-                                                                <TooltipTrigger
-                                                                    asChild
-                                                                >
-                                                                    <PermissionButton
-                                                                        check={
-                                                                            canManage
-                                                                        }
-                                                                        type="button"
-                                                                        variant="ghost"
-                                                                        size="icon"
-                                                                        className="size-7 text-muted-foreground hover:text-foreground"
-                                                                        aria-label={`${tag.name} düzenle`}
-                                                                        onClick={() =>
-                                                                            openEdit(
-                                                                                tag,
-                                                                            )
-                                                                        }
+                                                            {canManage && (
+                                                                <Tooltip>
+                                                                    <TooltipTrigger
+                                                                        asChild
                                                                     >
-                                                                        <Pencil className="size-3.5" />
-                                                                    </PermissionButton>
-                                                                </TooltipTrigger>
-                                                                <TooltipContent side="top">
-                                                                    Düzenle
-                                                                </TooltipContent>
-                                                            </Tooltip>
+                                                                        <Button
+                                                                            asChild
+                                                                            variant="ghost"
+                                                                            size="icon"
+                                                                            className="size-7 text-muted-foreground hover:text-foreground"
+                                                                            aria-label={`${tag.name} düzenle`}
+                                                                        >
+                                                                            <Link
+                                                                                href={edit(
+                                                                                    {
+                                                                                        tag: tag.id,
+                                                                                    },
+                                                                                )}
+                                                                            >
+                                                                                <Pencil className="size-3.5" />
+                                                                            </Link>
+                                                                        </Button>
+                                                                    </TooltipTrigger>
+                                                                    <TooltipContent side="top">
+                                                                        Düzenle
+                                                                    </TooltipContent>
+                                                                </Tooltip>
+                                                            )}
 
                                                             <Tooltip>
                                                                 <TooltipTrigger
@@ -431,13 +422,6 @@ export default function TagIndex({ tags = [] }: { tags: TagRow[] }) {
                 )}
             </div>
 
-            {/* Etiket Ekleme / Düzenleme Modalı */}
-            <TagDialog
-                open={dialogOpen}
-                onOpenChange={setDialogOpen}
-                tagToEdit={tagToEdit}
-            />
-
             {/* Etiket Silme Onay Modalı */}
             <TagDeleteDialog
                 tag={tagToDelete}
@@ -446,3 +430,16 @@ export default function TagIndex({ tags = [] }: { tags: TagRow[] }) {
         </>
     );
 }
+
+TagIndex.layout = {
+    breadcrumbs: [
+        {
+            title: 'Tanımlamalar',
+            href: definitions(),
+        },
+        {
+            title: 'Etiketler',
+            href: index(),
+        },
+    ],
+};

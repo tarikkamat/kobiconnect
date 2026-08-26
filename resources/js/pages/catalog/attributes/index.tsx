@@ -1,4 +1,4 @@
-import { Head } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 import {
     ArrowUpDown,
     Check,
@@ -14,7 +14,6 @@ import {
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { AttributeDeleteDialog } from '@/components/catalog/attribute-delete-dialog';
-import { AttributeDialog } from '@/components/catalog/attribute-dialog';
 import type {
     AttributeRow,
     AttributeTypeOption,
@@ -47,7 +46,8 @@ import {
     TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { usePermission } from '@/hooks/use-permission';
-import { index } from '@/routes/attributes';
+import { create, edit, index } from '@/routes/attributes';
+import { index as definitions } from '@/routes/definitions';
 
 type SortOption = 'name-asc' | 'name-desc' | 'values-desc' | 'values-asc';
 
@@ -62,12 +62,6 @@ export default function AttributeIndex({ attributes, types = [] }: Props) {
     const [searchTerm, setSearchTerm] = useState('');
     const [typeFilter, setTypeFilter] = useState<string>('all');
     const [sortOption, setSortOption] = useState<SortOption>('name-asc');
-
-    // Dialog states
-    const [dialogOpen, setDialogOpen] = useState(false);
-    const [attributeToEdit, setAttributeToEdit] = useState<AttributeRow | null>(
-        null,
-    );
     const [attributeToDelete, setAttributeToDelete] =
         useState<AttributeRow | null>(null);
 
@@ -120,63 +114,42 @@ export default function AttributeIndex({ attributes, types = [] }: Props) {
                 case 'name-desc':
                     return b.name.localeCompare(a.name, 'tr');
                 case 'values-desc':
-                    return b.valuesCount - a.valuesCount;
+                    return (
+                        (b.valuesCount || b.values.length) -
+                        (a.valuesCount || a.values.length)
+                    );
                 case 'values-asc':
-                    return a.valuesCount - b.valuesCount;
+                    return (
+                        (a.valuesCount || a.values.length) -
+                        (b.valuesCount || b.values.length)
+                    );
                 default:
                     return 0;
             }
         });
     }, [attributes, searchTerm, typeFilter, sortOption]);
 
-    const openCreate = () => {
-        setAttributeToEdit(null);
-        setDialogOpen(true);
-    };
-
-    const openEdit = (attr: AttributeRow) => {
-        setAttributeToEdit(attr);
-        setDialogOpen(true);
-    };
-
     const openDelete = (attr: AttributeRow) => {
         setAttributeToDelete(attr);
     };
 
-    const getTypeLabel = (typeKey: string) => {
-        const match = types.find((t) => t.value === typeKey);
+    const getTypeLabel = (typeValue: string) => {
+        const found = types.find((t) => t.value === typeValue);
 
-        if (match) {
-            return match.label;
-        }
-
-        switch (typeKey) {
-            case 'select':
-                return 'Seçim Kutusu';
-            case 'multi_select':
-                return 'Çoklu Seçim';
-            case 'text':
-                return 'Metin';
-            case 'number':
-                return 'Sayısal';
-            case 'boolean':
-                return 'Mantıksal';
-            default:
-                return typeKey;
-        }
+        return found ? found.label : typeValue;
     };
 
     return (
         <>
-            <Head title="Nitelikler" />
+            <Head title="Özel Alanlar ve Nitelikler" />
 
             <div className="flex flex-col gap-6 p-4 sm:p-6 lg:p-8">
                 {/* Üst Başlık ve İstatistik Bilgisi */}
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                         <Heading
-                            title="Nitelikler"
-                            description="Ürün varyantları ve pazaryeri eşlemelerinde kullanılan nitelik ve hazır seçenek tanımları."
+                            title="Özel Alanlar ve Nitelikler"
+                            description="Ürün varyasyonlarını oluşturmak (Beden, Renk vb.) veya ek teknik özellikler tanımlamak için kullanılır."
                         />
                         {attributes.length > 0 && (
                             <div className="mt-1.5 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
@@ -192,7 +165,7 @@ export default function AttributeIndex({ attributes, types = [] }: Props) {
                                     <span className="font-mono font-semibold text-foreground tabular-nums">
                                         {variantDefiningCount}
                                     </span>{' '}
-                                    varyant tanımlayıcı
+                                    varyant belirleyici
                                 </span>
                                 <span>•</span>
                                 <span className="flex items-center gap-1">
@@ -200,43 +173,44 @@ export default function AttributeIndex({ attributes, types = [] }: Props) {
                                     <span className="font-mono font-semibold text-foreground tabular-nums">
                                         {totalValuesCount}
                                     </span>{' '}
-                                    tanımlı değer
+                                    tanımlı değer seçeneği
                                 </span>
                             </div>
                         )}
                     </div>
 
-                    <PermissionButton
-                        check={canManage}
-                        type="button"
-                        onClick={openCreate}
-                        className="gap-1.5 self-start shadow-sm sm:self-auto"
-                    >
-                        <Plus className="size-4" />
-                        Yeni Nitelik
-                    </PermissionButton>
+                    {canManage && (
+                        <Button
+                            asChild
+                            className="gap-1.5 self-start shadow-sm sm:self-auto"
+                        >
+                            <Link href={create()}>
+                                <Plus className="size-4" />
+                                Yeni Özel Alan
+                            </Link>
+                        </Button>
+                    )}
                 </div>
 
                 {attributes.length === 0 ? (
                     <EmptyState
                         icon={SlidersHorizontal}
                         title="Henüz nitelik tanımlanmamış"
-                        description="Beden, Renk, Materyal vb. nitelikler ve seçeneklerini merkezi olarak tanımlayarak ürün oluştururken tek tıkla seçebilirsiniz."
+                        description="Ürünlerinize Beden, Renk, Materyal, Sezon gibi varyant ve filtreleme özellikleri eklemek için ilk niteliğinizi tanımlayın."
                         action={
-                            <PermissionButton
-                                check={canManage}
-                                type="button"
-                                onClick={openCreate}
-                                className="gap-1.5"
-                            >
-                                <Plus className="size-4" />
-                                İlk Niteliği Tanımla
-                            </PermissionButton>
+                            canManage ? (
+                                <Button asChild className="gap-1.5">
+                                    <Link href={create()}>
+                                        <Plus className="size-4" />
+                                        İlk Niteliği Tanımla
+                                    </Link>
+                                </Button>
+                            ) : undefined
                         }
                     />
                 ) : (
                     <div className="flex flex-col gap-4">
-                        {/* Arama, Filtre ve Sıralama Çubuğu */}
+                        {/* Arama ve Filtreleme Kontrol Çubuğu */}
                         <div className="flex flex-col gap-3 rounded-lg border border-border bg-card p-3 shadow-xs sm:flex-row sm:items-center sm:justify-between">
                             {/* Arama Çubuğu */}
                             <div className="relative max-w-md flex-1">
@@ -246,8 +220,8 @@ export default function AttributeIndex({ attributes, types = [] }: Props) {
                                     onChange={(e) =>
                                         setSearchTerm(e.target.value)
                                     }
-                                    placeholder="Nitelik adı, kod veya değer ara..."
-                                    className="h-9 pr-8 pl-8.5 text-xs"
+                                    placeholder="Nitelik adı, kodu veya değer ara..."
+                                    className="h-9 pr-8 pl-8.5"
                                     aria-label="Nitelik ara"
                                 />
                                 {searchTerm && (
@@ -262,100 +236,110 @@ export default function AttributeIndex({ attributes, types = [] }: Props) {
                                 )}
                             </div>
 
-                            {/* Tür Filtresi ve Sıralama */}
+                            {/* Tür ve Sıralama Seçicileri */}
                             <div className="flex flex-wrap items-center gap-2 self-end sm:self-auto">
-                                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                                    <ListFilter className="size-3.5" />
-                                    <span className="hidden md:inline">
-                                        Tür:
-                                    </span>
-                                </div>
-                                <Select
-                                    value={typeFilter}
-                                    onValueChange={setTypeFilter}
-                                >
-                                    <SelectTrigger
-                                        className="h-9 w-[150px] text-xs"
-                                        aria-label="Nitelik türü filtresi"
+                                {/* Tür Filtresi */}
+                                <div className="flex items-center gap-1.5">
+                                    <ListFilter className="size-3.5 text-muted-foreground" />
+                                    <Select
+                                        value={typeFilter}
+                                        onValueChange={setTypeFilter}
                                     >
-                                        <SelectValue placeholder="Tüm Türler" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem
-                                            value="all"
-                                            className="text-xs"
+                                        <SelectTrigger
+                                            className="h-9 w-[150px] text-xs"
+                                            aria-label="Tür filtresi"
                                         >
-                                            Tüm Türler
-                                        </SelectItem>
-                                        {types.map((t) => (
+                                            <SelectValue placeholder="Tüm Türler" />
+                                        </SelectTrigger>
+                                        <SelectContent>
                                             <SelectItem
-                                                key={t.value}
-                                                value={t.value}
+                                                value="all"
                                                 className="text-xs"
                                             >
-                                                {t.label}
+                                                Tüm Türler
                                             </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-
-                                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                                    <ArrowUpDown className="size-3.5" />
-                                    <span className="hidden md:inline">
-                                        Sırala:
-                                    </span>
+                                            {types.map((t) => (
+                                                <SelectItem
+                                                    key={t.value}
+                                                    value={t.value}
+                                                    className="text-xs"
+                                                >
+                                                    {t.label}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
                                 </div>
-                                <Select
-                                    value={sortOption}
-                                    onValueChange={(val) =>
-                                        setSortOption(val as SortOption)
-                                    }
-                                >
-                                    <SelectTrigger
-                                        className="h-9 w-[170px] text-xs"
-                                        aria-label="Sıralama ölçütü"
+
+                                {/* Sıralama */}
+                                <div className="flex items-center gap-1.5">
+                                    <ArrowUpDown className="size-3.5 text-muted-foreground" />
+                                    <Select
+                                        value={sortOption}
+                                        onValueChange={(val) =>
+                                            setSortOption(val as SortOption)
+                                        }
                                     >
-                                        <SelectValue placeholder="Sıralama" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem
-                                            value="name-asc"
-                                            className="text-xs"
+                                        <SelectTrigger
+                                            className="h-9 w-[170px] text-xs"
+                                            aria-label="Sıralama ölçütü"
                                         >
-                                            İsim (A → Z)
-                                        </SelectItem>
-                                        <SelectItem
-                                            value="name-desc"
-                                            className="text-xs"
-                                        >
-                                            İsim (Z → A)
-                                        </SelectItem>
-                                        <SelectItem
-                                            value="values-desc"
-                                            className="text-xs"
-                                        >
-                                            Değer Sayısı (Çoktan Aza)
-                                        </SelectItem>
-                                        <SelectItem
-                                            value="values-asc"
-                                            className="text-xs"
-                                        >
-                                            Değer Sayısı (Azdan Çoğa)
-                                        </SelectItem>
-                                    </SelectContent>
-                                </Select>
+                                            <SelectValue placeholder="Sıralama" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem
+                                                value="name-asc"
+                                                className="text-xs"
+                                            >
+                                                İsim (A → Z)
+                                            </SelectItem>
+                                            <SelectItem
+                                                value="name-desc"
+                                                className="text-xs"
+                                            >
+                                                İsim (Z → A)
+                                            </SelectItem>
+                                            <SelectItem
+                                                value="values-desc"
+                                                className="text-xs"
+                                            >
+                                                Değer Sayısı (Çoktan Aza)
+                                            </SelectItem>
+                                            <SelectItem
+                                                value="values-asc"
+                                                className="text-xs"
+                                            >
+                                                Değer Sayısı (Azdan Çoğa)
+                                            </SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
                             </div>
                         </div>
 
-                        {/* Arama Sonuç Durumu */}
-                        {searchTerm.trim() && (
+                        {/* Arama ve Filtre Durumu */}
+                        {(searchTerm.trim() || typeFilter !== 'all') && (
                             <div className="flex items-center justify-between px-1 text-xs text-muted-foreground">
                                 <span>
-                                    "
-                                    <strong className="text-foreground">
-                                        {searchTerm}
-                                    </strong>
-                                    " araması için{' '}
+                                    {searchTerm && (
+                                        <>
+                                            "
+                                            <strong className="text-foreground">
+                                                {searchTerm}
+                                            </strong>
+                                            "{' '}
+                                        </>
+                                    )}
+                                    {typeFilter !== 'all' && (
+                                        <>
+                                            (
+                                            <strong>
+                                                {getTypeLabel(typeFilter)}
+                                            </strong>
+                                            ){' '}
+                                        </>
+                                    )}
+                                    için{' '}
                                     <strong className="font-mono text-foreground tabular-nums">
                                         {filteredAndSortedAttributes.length}
                                     </strong>{' '}
@@ -365,10 +349,13 @@ export default function AttributeIndex({ attributes, types = [] }: Props) {
                                     type="button"
                                     variant="link"
                                     size="sm"
-                                    onClick={() => setSearchTerm('')}
+                                    onClick={() => {
+                                        setSearchTerm('');
+                                        setTypeFilter('all');
+                                    }}
                                     className="h-auto p-0 text-xs"
                                 >
-                                    Filtreyi Temizle
+                                    Filtreleri Temizle
                                 </Button>
                             </div>
                         )}
@@ -382,7 +369,9 @@ export default function AttributeIndex({ attributes, types = [] }: Props) {
                                 </h3>
                                 <p className="mt-1 max-w-sm text-xs text-muted-foreground">
                                     Arama veya filtre kriterlerinize uygun
-                                    nitelik bulunmuyor.
+                                    nitelik bulunmuyor. Filtreleri
+                                    temizleyebilir veya yeni bir nitelik
+                                    tanımlayabilirsiniz.
                                 </p>
                                 <Button
                                     type="button"
@@ -404,16 +393,13 @@ export default function AttributeIndex({ attributes, types = [] }: Props) {
                                     <TableHeader>
                                         <TableRow>
                                             <TableHead className="w-1/4">
-                                                Nitelik Adı
-                                            </TableHead>
-                                            <TableHead className="w-1/6">
-                                                Kod
+                                                Nitelik Adı / Kod
                                             </TableHead>
                                             <TableHead className="w-32">
                                                 Tür
                                             </TableHead>
                                             <TableHead className="w-36 text-center">
-                                                Varyant Belirleyici
+                                                Varyant Tanımlayıcı
                                             </TableHead>
                                             <TableHead className="w-auto">
                                                 Tanımlı Değerler
@@ -428,17 +414,14 @@ export default function AttributeIndex({ attributes, types = [] }: Props) {
                                             (attr) => (
                                                 <TableRow key={attr.id}>
                                                     <TableCell>
-                                                        <div className="flex items-center gap-2.5">
-                                                            <div className="flex size-7 items-center justify-center rounded-md bg-muted/60 text-muted-foreground">
-                                                                <SlidersHorizontal className="size-3.5" />
-                                                            </div>
+                                                        <div className="flex flex-col">
                                                             <span className="font-medium text-foreground">
                                                                 {attr.name}
                                                             </span>
+                                                            <span className="font-mono text-[11px] text-muted-foreground">
+                                                                {attr.code}
+                                                            </span>
                                                         </div>
-                                                    </TableCell>
-                                                    <TableCell className="font-mono text-xs text-muted-foreground tabular-nums">
-                                                        {attr.code}
                                                     </TableCell>
                                                     <TableCell>
                                                         <Badge
@@ -453,94 +436,101 @@ export default function AttributeIndex({ attributes, types = [] }: Props) {
                                                     <TableCell className="text-center">
                                                         {attr.isVariantDefining ? (
                                                             <Badge
-                                                                variant="secondary"
-                                                                className="gap-1 text-[11px] font-medium text-emerald-600 dark:text-emerald-400"
+                                                                variant="default"
+                                                                className="gap-1 text-[11px] font-normal shadow-2xs"
                                                             >
                                                                 <Check className="size-3" />
-                                                                Varyant
+                                                                Evet
                                                             </Badge>
                                                         ) : (
                                                             <span className="text-xs text-muted-foreground">
-                                                                —
+                                                                Hayır (Özellik)
                                                             </span>
                                                         )}
                                                     </TableCell>
                                                     <TableCell>
-                                                        {attr.values.length >
-                                                        0 ? (
-                                                            <div className="flex max-w-md flex-wrap items-center gap-1">
-                                                                {attr.values
-                                                                    .slice(0, 5)
-                                                                    .map(
-                                                                        (v) => (
-                                                                            <Badge
-                                                                                key={
-                                                                                    v.id ??
-                                                                                    v.value
-                                                                                }
-                                                                                variant="secondary"
-                                                                                className="h-5 px-1.5 text-[11px] font-normal"
-                                                                            >
-                                                                                {
-                                                                                    v.value
-                                                                                }
-                                                                            </Badge>
-                                                                        ),
+                                                        <div className="flex max-w-md flex-wrap items-center gap-1">
+                                                            {attr.values
+                                                                .length > 0 ? (
+                                                                <>
+                                                                    {attr.values
+                                                                        .slice(
+                                                                            0,
+                                                                            5,
+                                                                        )
+                                                                        .map(
+                                                                            (
+                                                                                v,
+                                                                            ) => (
+                                                                                <Badge
+                                                                                    key={
+                                                                                        v.id ??
+                                                                                        v.value
+                                                                                    }
+                                                                                    variant="secondary"
+                                                                                    className="h-5 px-1.5 text-[11px] font-normal"
+                                                                                >
+                                                                                    {
+                                                                                        v.value
+                                                                                    }
+                                                                                </Badge>
+                                                                            ),
+                                                                        )}
+                                                                    {attr.values
+                                                                        .length >
+                                                                        5 && (
+                                                                        <span className="text-[11px] text-muted-foreground">
+                                                                            +
+                                                                            {attr
+                                                                                .values
+                                                                                .length -
+                                                                                5}{' '}
+                                                                            daha
+                                                                        </span>
                                                                     )}
-                                                                {attr.values
-                                                                    .length >
-                                                                    5 && (
-                                                                    <Badge
-                                                                        variant="outline"
-                                                                        className="h-5 px-1.5 font-mono text-[10px] text-muted-foreground"
-                                                                    >
-                                                                        +
-                                                                        {attr
-                                                                            .values
-                                                                            .length -
-                                                                            5}{' '}
-                                                                        daha
-                                                                    </Badge>
-                                                                )}
-                                                            </div>
-                                                        ) : (
-                                                            <span className="text-xs text-muted-foreground italic">
-                                                                Değer
-                                                                tanımlanmamış
-                                                            </span>
-                                                        )}
+                                                                </>
+                                                            ) : (
+                                                                <span className="text-xs text-muted-foreground/60 italic">
+                                                                    Değer
+                                                                    tanımlanmamış
+                                                                </span>
+                                                            )}
+                                                        </div>
                                                     </TableCell>
                                                     <TableCell className="pr-4 text-right">
                                                         <TooltipProvider
                                                             delayDuration={200}
                                                         >
                                                             <div className="flex items-center justify-end gap-1">
-                                                                <Tooltip>
-                                                                    <TooltipTrigger
-                                                                        asChild
-                                                                    >
-                                                                        <PermissionButton
-                                                                            check={
-                                                                                canManage
-                                                                            }
-                                                                            type="button"
-                                                                            variant="ghost"
-                                                                            size="icon"
-                                                                            className="size-7 text-muted-foreground hover:text-foreground"
-                                                                            aria-label={`${attr.name} düzenle`}
-                                                                            onClick={() =>
-                                                                                openEdit(
-                                                                                    attr,
-                                                                                )
-                                                                            }
+                                                                {canManage && (
+                                                                    <Tooltip>
+                                                                        <TooltipTrigger
+                                                                            asChild
                                                                         >
-                                                                            <Pencil className="size-3.5" />
-                                                                        </PermissionButton>
-                                                                    </TooltipTrigger>
-                                                                    <TooltipContent side="top">
-                                                                        Düzenle
-                                                                    </TooltipContent>
-                                                                </Tooltip>
+                                                                            <Button
+                                                                                asChild
+                                                                                variant="ghost"
+                                                                                size="icon"
+                                                                                className="size-7 text-muted-foreground hover:text-foreground"
+                                                                                aria-label={`${attr.name} düzenle`}
+                                                                            >
+                                                                                <Link
+                                                                                    href={edit(
+                                                                                        {
+                                                                                            attribute:
+                                                                                                attr.id,
+                                                                                        },
+                                                                                    )}
+                                                                                >
+                                                                                    <Pencil className="size-3.5" />
+                                                                                </Link>
+                                                                            </Button>
+                                                                        </TooltipTrigger>
+                                                                        <TooltipContent side="top">
+                                                                            Düzenle
+                                                                        </TooltipContent>
+                                                                    </Tooltip>
+                                                                )}
 
                                                                 <Tooltip>
                                                                     <TooltipTrigger
@@ -582,14 +572,6 @@ export default function AttributeIndex({ attributes, types = [] }: Props) {
                 )}
             </div>
 
-            {/* Nitelik Ekleme / Düzenleme Modalı */}
-            <AttributeDialog
-                open={dialogOpen}
-                onOpenChange={setDialogOpen}
-                attributeToEdit={attributeToEdit}
-                types={types}
-            />
-
             {/* Nitelik Silme Onay Modalı */}
             <AttributeDeleteDialog
                 attribute={attributeToDelete}
@@ -602,7 +584,11 @@ export default function AttributeIndex({ attributes, types = [] }: Props) {
 AttributeIndex.layout = {
     breadcrumbs: [
         {
-            title: 'Nitelikler',
+            title: 'Tanımlamalar',
+            href: definitions(),
+        },
+        {
+            title: 'Özel Alanlar',
             href: index(),
         },
     ],

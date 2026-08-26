@@ -1,4 +1,4 @@
-import { Head } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 import {
     ArrowUpDown,
     Package,
@@ -11,7 +11,6 @@ import {
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { BrandDeleteDialog } from '@/components/catalog/brand-delete-dialog';
-import { BrandDialog } from '@/components/catalog/brand-dialog';
 import type { BrandRow } from '@/components/catalog/brand-dialog';
 import { PermissionButton } from '@/components/catalog/permission-button';
 import { EmptyState } from '@/components/empty-state';
@@ -41,7 +40,8 @@ import {
     TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { usePermission } from '@/hooks/use-permission';
-import { index } from '@/routes/brands';
+import { create, edit, index } from '@/routes/brands';
+import { index as definitions } from '@/routes/definitions';
 
 type SortOption = 'name-asc' | 'name-desc' | 'products-desc' | 'products-asc';
 
@@ -50,10 +50,6 @@ export default function BrandIndex({ brands }: { brands: BrandRow[] }) {
 
     const [searchTerm, setSearchTerm] = useState('');
     const [sortOption, setSortOption] = useState<SortOption>('name-asc');
-
-    // Dialog state'leri
-    const [dialogOpen, setDialogOpen] = useState(false);
-    const [brandToEdit, setBrandToEdit] = useState<BrandRow | null>(null);
     const [brandToDelete, setBrandToDelete] = useState<BrandRow | null>(null);
 
     // Toplam istatistikler
@@ -100,16 +96,6 @@ export default function BrandIndex({ brands }: { brands: BrandRow[] }) {
             }
         });
     }, [brands, searchTerm, sortOption]);
-
-    const openCreate = () => {
-        setBrandToEdit(null);
-        setDialogOpen(true);
-    };
-
-    const openEdit = (brand: BrandRow) => {
-        setBrandToEdit(brand);
-        setDialogOpen(true);
-    };
 
     const openDelete = (brand: BrandRow) => {
         setBrandToDelete(brand);
@@ -159,15 +145,17 @@ export default function BrandIndex({ brands }: { brands: BrandRow[] }) {
                         )}
                     </div>
 
-                    <PermissionButton
-                        check={canManage}
-                        type="button"
-                        onClick={openCreate}
-                        className="gap-1.5 self-start shadow-sm sm:self-auto"
-                    >
-                        <Plus className="size-4" />
-                        Yeni Marka
-                    </PermissionButton>
+                    {canManage && (
+                        <Button
+                            asChild
+                            className="gap-1.5 self-start shadow-sm sm:self-auto"
+                        >
+                            <Link href={create()}>
+                                <Plus className="size-4" />
+                                Yeni Marka
+                            </Link>
+                        </Button>
+                    )}
                 </div>
 
                 {brands.length === 0 ? (
@@ -176,15 +164,14 @@ export default function BrandIndex({ brands }: { brands: BrandRow[] }) {
                         title="Henüz marka eklenmemiş"
                         description="Ürünlerinizi markalarına göre gruplamak ve pazaryeri eşlemelerini kolaylaştırmak için ilk markanızı ekleyin."
                         action={
-                            <PermissionButton
-                                check={canManage}
-                                type="button"
-                                onClick={openCreate}
-                                className="gap-1.5"
-                            >
-                                <Plus className="size-4" />
-                                İlk Markayı Ekle
-                            </PermissionButton>
+                            canManage ? (
+                                <Button asChild className="gap-1.5">
+                                    <Link href={create()}>
+                                        <Plus className="size-4" />
+                                        İlk Markayı Ekle
+                                    </Link>
+                                </Button>
+                            ) : undefined
                         }
                     />
                 ) : (
@@ -373,32 +360,34 @@ export default function BrandIndex({ brands }: { brands: BrandRow[] }) {
                                                             delayDuration={200}
                                                         >
                                                             <div className="flex items-center justify-end gap-1">
-                                                                <Tooltip>
-                                                                    <TooltipTrigger
-                                                                        asChild
-                                                                    >
-                                                                        <PermissionButton
-                                                                            check={
-                                                                                canManage
-                                                                            }
-                                                                            type="button"
-                                                                            variant="ghost"
-                                                                            size="icon"
-                                                                            className="size-7 text-muted-foreground hover:text-foreground"
-                                                                            aria-label={`${brand.name} düzenle`}
-                                                                            onClick={() =>
-                                                                                openEdit(
-                                                                                    brand,
-                                                                                )
-                                                                            }
+                                                                {canManage && (
+                                                                    <Tooltip>
+                                                                        <TooltipTrigger
+                                                                            asChild
                                                                         >
-                                                                            <Pencil className="size-3.5" />
-                                                                        </PermissionButton>
-                                                                    </TooltipTrigger>
-                                                                    <TooltipContent side="top">
-                                                                        Düzenle
-                                                                    </TooltipContent>
-                                                                </Tooltip>
+                                                                            <Button
+                                                                                asChild
+                                                                                variant="ghost"
+                                                                                size="icon"
+                                                                                className="size-7 text-muted-foreground hover:text-foreground"
+                                                                                aria-label={`${brand.name} düzenle`}
+                                                                            >
+                                                                                <Link
+                                                                                    href={edit(
+                                                                                        {
+                                                                                            brand: brand.id,
+                                                                                        },
+                                                                                    )}
+                                                                                >
+                                                                                    <Pencil className="size-3.5" />
+                                                                                </Link>
+                                                                            </Button>
+                                                                        </TooltipTrigger>
+                                                                        <TooltipContent side="top">
+                                                                            Düzenle
+                                                                        </TooltipContent>
+                                                                    </Tooltip>
+                                                                )}
 
                                                                 <Tooltip>
                                                                     <TooltipTrigger
@@ -440,13 +429,6 @@ export default function BrandIndex({ brands }: { brands: BrandRow[] }) {
                 )}
             </div>
 
-            {/* Marka Ekleme / Düzenleme Modalı */}
-            <BrandDialog
-                open={dialogOpen}
-                onOpenChange={setDialogOpen}
-                brandToEdit={brandToEdit}
-            />
-
             {/* Marka Silme Onay Modalı */}
             <BrandDeleteDialog
                 brand={brandToDelete}
@@ -458,6 +440,10 @@ export default function BrandIndex({ brands }: { brands: BrandRow[] }) {
 
 BrandIndex.layout = {
     breadcrumbs: [
+        {
+            title: 'Tanımlamalar',
+            href: definitions(),
+        },
         {
             title: 'Markalar',
             href: index(),

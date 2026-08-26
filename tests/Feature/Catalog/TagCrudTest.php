@@ -61,3 +61,20 @@ it('deletes tag without deleting products', function (): void {
         ->and(Product::query()->count())->toBe(1)
         ->and($product->refresh()->tags)->toHaveCount(0);
 });
+
+it('renders tag create and edit pages', function (): void {
+    $tag = Tag::factory()->create(['name' => 'Fırsat']);
+
+    $this->actingAs($this->manager)
+        ->get(route('tags.create'))
+        ->assertOk()
+        ->assertInertia(fn (AssertableInertia $page) => $page->component('catalog/tags/create'));
+
+    $this->actingAs($this->manager)
+        ->get(route('tags.edit', $tag))
+        ->assertOk()
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->component('catalog/tags/edit')
+            ->where('tag.name', 'Fırsat')
+        );
+});
