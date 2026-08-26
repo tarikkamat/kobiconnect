@@ -8,7 +8,7 @@ use App\Enums\ConnectionStatus;
 use App\Mail\Digest\WeeklyOperationsSummary;
 use App\Models\Tenant;
 use App\Models\User;
-use Carbon\CarbonImmutable;
+use App\Support\AppTime;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
@@ -50,7 +50,7 @@ final class SendWeeklyOperationsSummary extends Command
             ];
         })->all());
 
-        $lastWeekStart = CarbonImmutable::now('Europe/Istanbul')->subWeek()->startOfWeek();
+        $lastWeekStart = AppTime::now()->subWeek()->startOfWeek();
 
         $failedSyncs = DB::table('sync_runs')
             ->where('started_at', '>=', $lastWeekStart->utc())

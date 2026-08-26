@@ -12,6 +12,7 @@ Before planning or editing, find the row whose globs match the file's path and r
 | app/Mcp/** | .ai/rules/mcp.md |
 | app/Actions/Onboarding/** | .ai/rules/onboarding.md |
 | app/Providers/TenancyServiceProvider.php | .ai/rules/providers.md |
+| app/Queries/** | .ai/rules/queries.md |
 | routes/tenant.php, routes/web.php | .ai/rules/routes.md |
 | database/seeders/** | .ai/rules/seeders.md |
 | app/Support/TenantUserProvider.php, config/auth.php | .ai/rules/support.md |

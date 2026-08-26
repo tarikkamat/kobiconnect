@@ -31,8 +31,6 @@ final class DashboardDemoData
     /** Donemden bagimsiz grafiklerin (spark, senkron isi) sabit penceresi. */
     private const int DAYS = 90;
 
-    private const string TIMEZONE = 'Europe/Istanbul';
-
     /** Kanal basina ortalama sepet (TRY); index buyudukce kucuk oyuncu. */
     private const array BASKETS = [420, 310, 260, 195, 168];
 
@@ -55,8 +53,8 @@ final class DashboardDemoData
      */
     public function forRange(CarbonImmutable $from, CarbonImmutable $to): void
     {
-        $this->from = $from->setTimezone(self::TIMEZONE)->startOfDay();
-        $this->to = $to->setTimezone(self::TIMEZONE)->startOfDay();
+        $this->from = $from->setTimezone(AppTime::ZONE)->startOfDay();
+        $this->to = $to->setTimezone(AppTime::ZONE)->startOfDay();
         $this->matrix = null;
     }
 
@@ -440,6 +438,6 @@ final class DashboardDemoData
 
     private function today(): CarbonImmutable
     {
-        return CarbonImmutable::now(self::TIMEZONE)->startOfDay();
+        return AppTime::now()->startOfDay();
     }
 }

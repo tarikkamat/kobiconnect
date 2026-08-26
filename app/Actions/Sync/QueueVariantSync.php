@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Actions\Sync;
 
 use App\Enums\AllocationType;
-use App\Enums\ConnectionStatus;
 use App\Enums\MarkupType;
 use App\Enums\RuleScope;
 use App\Marketplaces\Data\Enums\OperationType;
@@ -135,7 +134,7 @@ final class QueueVariantSync
     {
         /** @var EloquentCollection<int, ChannelConnection> $connections */
         $connections = ChannelConnection::query()
-            ->where('status', ConnectionStatus::Active)
+            ->active()
             ->when($only !== null, fn (Builder $query): Builder => $query->whereKey($only?->getKey()))
             ->whereIn('id', ChannelListing::query()
                 ->where('variant_id', $variant->getKey())

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
-use App\Enums\ConnectionStatus;
 use App\Jobs\Sync\PullOrders;
 use App\Models\ChannelConnection;
 use App\Models\SyncCursor;
@@ -44,7 +43,7 @@ final class SyncPull extends SyncCommand
             $due = now()->subMinutes($this->intervalMinutes());
 
             $connections = ChannelConnection::query()
-                ->where('status', ConnectionStatus::Active)
+                ->active()
                 ->get();
 
             foreach ($connections as $connection) {

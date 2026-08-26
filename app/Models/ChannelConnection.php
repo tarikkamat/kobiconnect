@@ -8,6 +8,8 @@ use App\Enums\ConnectionStatus;
 use Database\Factories\ChannelConnectionFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
+use Illuminate\Database\Eloquent\Attributes\Scope;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\ArrayObject;
 use Illuminate\Database\Eloquent\Casts\AsEncryptedArrayObject;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -42,6 +44,18 @@ class ChannelConnection extends Model
 {
     /** @use HasFactory<ChannelConnectionFactory> */
     use HasFactory;
+
+    /**
+     * Calisan baglantilar. Duraklatilmis ya da hatali bir baglantiya is
+     * kuyruklamak ya da onu bir secim kutusunda gostermek anlamsiz.
+     *
+     * @param  Builder<$this>  $query
+     */
+    #[Scope]
+    protected function active(Builder $query): void
+    {
+        $query->where('status', ConnectionStatus::Active);
+    }
 
     /** @return HasMany<ChannelListing, $this> */
     public function listings(): HasMany

@@ -2,6 +2,8 @@
 
 namespace App\Marketplaces\Data\Enums;
 
+use App\Concerns\HasLabels;
+
 /**
  * Marketplace-independent status of a single claim (return) item.
  *
@@ -9,6 +11,8 @@ namespace App\Marketplaces\Data\Enums;
  */
 enum CanonicalClaimStatus: string
 {
+    use HasLabels;
+
     case Created = 'created';
 
     case WaitingAction = 'waiting_action';
@@ -22,6 +26,22 @@ enum CanonicalClaimStatus: string
     case Cancelled = 'cancelled';
 
     case Unresolved = 'unresolved';
+
+    /**
+     * Arayuz metinleri Turkce, kanonik enum degerleri degil — FRONTEND-PLAN §7.
+     */
+    public function label(): string
+    {
+        return match ($this) {
+            self::Created => 'Açıldı',
+            self::WaitingAction => 'Aksiyon bekliyor',
+            self::UnderReview => 'İnceleniyor',
+            self::Accepted => 'Kabul edildi',
+            self::Rejected => 'Reddedildi',
+            self::Cancelled => 'İptal edildi',
+            self::Unresolved => 'Çözülmedi',
+        };
+    }
 
     /**
      * Whether the seller may still approve or reject the item.

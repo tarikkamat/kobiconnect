@@ -9,12 +9,11 @@ use App\Marketplaces\Data\Enums\CanonicalClaimStatus;
 use App\Models\ChannelConnection;
 use App\Models\Claim;
 use App\Models\ClaimItem;
-use DateTimeInterface;
+use App\Support\AppTime;
+use App\Support\Money;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Number;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -31,21 +30,6 @@ use Inertia\Response;
  */
 class ClaimController extends Controller
 {
-    /**
-     * Arayuz metinleri Turkce, kanonik enum degerleri degil — FRONTEND-PLAN §7.
-     *
-     * @var array<string, string>
-     */
-    private const array STATUS_LABELS = [
-        'created' => 'Açıldı',
-        'waiting_action' => 'Aksiyon bekliyor',
-        'under_review' => 'İnceleniyor',
-        'accepted' => 'Kabul edildi',
-        'rejected' => 'Reddedildi',
-        'cancelled' => 'İptal edildi',
-        'unresolved' => 'Çözülmedi',
-    ];
-
     public function index(Request $request): Response
     {
         Gate::authorize('orders.view');
@@ -88,12 +72,12 @@ class ClaimController extends Controller
                 'orderNumber' => $claim->order->remote_order_number,
                 'connection' => $claim->order->connection?->name,
                 'status' => $claim->status->value,
-                'statusLabel' => $this->statusLabel($claim->status->value),
+                'statusLabel' => $claim->status->label(),
                 'externalStatus' => $claim->external_status,
                 'reason' => $claim->reason,
                 'itemCount' => (int) $claim->getAttribute('items_count'),
                 'quantity' => (int) $claim->getAttribute('items_sum_quantity'),
-                'openedAt' => $this->dateTime($claim->opened_at),
+                'openedAt' => AppTime::dateTime($claim->opened_at),
             ]);
 
         return Inertia::render('claims/index', [
@@ -103,7 +87,7 @@ class ClaimController extends Controller
                 'status' => $status,
                 'connection' => $connection,
             ],
-            'statuses' => $this->statusOptions(),
+            'statuses' => CanonicalClaimStatus::options(),
             'connections' => ChannelConnection::query()->orderBy('name')->get(['id', 'name']),
             // Operatorun ilk bakacagi sayi: aksiyon bekleyen talep.
             'actionableTotal' => Claim::query()
@@ -127,17 +111,17 @@ class ClaimController extends Controller
                 'id' => $claim->getKey(),
                 'remoteClaimId' => $claim->remote_claim_id,
                 'status' => $claim->status->value,
-                'statusLabel' => $this->statusLabel($claim->status->value),
+                'statusLabel' => $claim->status->label(),
                 'externalStatus' => $claim->external_status,
                 'reason' => $claim->reason,
-                'openedAt' => $this->dateTime($claim->opened_at),
+                'openedAt' => AppTime::dateTime($claim->opened_at),
             ],
             'order' => [
                 'id' => $claim->order_id,
                 'orderNumber' => $claim->order->remote_order_number,
                 'packageId' => $claim->order->remote_id,
                 'connection' => $claim->order->connection?->name,
-                'placedAt' => $this->dateTime($claim->order->placed_at),
+                'placedAt' => AppTime::dateTime($claim->order->placed_at),
             ],
             'items' => $claim->items
                 ->map(fn (ClaimItem $item): array => [
@@ -145,7 +129,7 @@ class ClaimController extends Controller
                     'remoteItemId' => $item->remote_item_id,
                     'quantity' => $item->quantity,
                     'status' => $item->status->value,
-                    'statusLabel' => $this->statusLabel($item->status->value),
+                    'statusLabel' => $item->status->label(),
                     'externalStatus' => $item->external_status,
                     'reason' => $item->reason,
                     // Siparis satiri bulunamamis olabilir; talep yine de gorunur.
@@ -153,45 +137,9 @@ class ClaimController extends Controller
                     'barcode' => $item->orderLine?->barcode,
                     'unitPrice' => $item->orderLine === null
                         ? null
-                        : (string) Number::currency((float) $item->orderLine->unit_price, $claim->order->currency, 'tr'),
+                        : Money::format((float) $item->orderLine->unit_price, $claim->order->currency),
                 ])
                 ->all(),
         ]);
-    }
-
-    /**
-     * Bilinmeyen bir kanonik deger etikete katlanmaz, ham hâliyle gosterilir.
-     */
-    private function statusLabel(string $status): string
-    {
-        return self::STATUS_LABELS[$status] ?? $status;
-    }
-
-    /**
-     * @return list<array{value: string, label: string}>
-     */
-    private function statusOptions(): array
-    {
-        return array_map(
-            fn (CanonicalClaimStatus $status): array => [
-                'value' => $status->value,
-                'label' => $this->statusLabel($status->value),
-            ],
-            CanonicalClaimStatus::cases(),
-        );
-    }
-
-    /**
-     * Tarihler sunucuda bicimlenir, Europe/Istanbul — FRONTEND-PLAN §7.
-     */
-    private function dateTime(DateTimeInterface|string|null $value): ?string
-    {
-        if ($value === null) {
-            return null;
-        }
-
-        // Model cast'i CarbonImmutable dondurur, iliski uzerinden gelen deger
-        // ise ham string olabilir; tek bir yerde normalize ediyoruz.
-        return Carbon::parse($value)->timezone('Europe/Istanbul')->format('d.m.Y H:i');
     }
 }

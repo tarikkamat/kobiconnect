@@ -2,6 +2,8 @@
 
 namespace App\Marketplaces\Data\Enums;
 
+use App\Concerns\HasLabels;
+
 /**
  * Marketplace-independent order and shipment package status.
  *
@@ -10,6 +12,8 @@ namespace App\Marketplaces\Data\Enums;
  */
 enum CanonicalOrderStatus: string
 {
+    use HasLabels;
+
     /**
      * Payment is not confirmed yet. Nothing but stock reservation may be
      * triggered by this status; the marketplace accepts no responsibility
@@ -47,6 +51,28 @@ enum CanonicalOrderStatus: string
      * sessiz yanlis davranis uretir — ayri bir durum olmasi sart.
      */
     case Unknown = 'unknown';
+
+    /**
+     * Arayuz metinleri Turkce, kanonik enum degerleri degil — FRONTEND-PLAN §7.
+     */
+    public function label(): string
+    {
+        return match ($this) {
+            self::PendingPayment => 'Ödeme bekleniyor',
+            self::Created => 'Gönderime hazır',
+            self::Picking => 'Hazırlanıyor',
+            self::Invoiced => 'Faturalandı',
+            self::Shipped => 'Kargoda',
+            self::AtCollectionPoint => 'Teslimat noktasında',
+            self::Delivered => 'Teslim edildi',
+            self::Undelivered => 'Teslim edilemedi',
+            self::Unpacked => 'Paket bölündü',
+            self::Unsupplied => 'Tedarik edilemedi',
+            self::Cancelled => 'İptal edildi',
+            self::Returned => 'İade edildi',
+            self::Unknown => 'Bilinmeyen durum',
+        };
+    }
 
     /**
      * Whether the status can no longer change.

@@ -20,6 +20,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { useFilters } from '@/hooks/use-filters';
 import { index, show } from '@/routes/claims';
 import { show as orderShow } from '@/routes/orders';
 
@@ -62,19 +63,7 @@ export default function ClaimIndex({
     connections,
     actionableTotal,
 }: Props) {
-    const apply = (changes: Partial<Filters>): void => {
-        const query = Object.fromEntries(
-            Object.entries({ ...filters, ...changes }).filter(
-                ([, value]) => value !== null && value !== '',
-            ),
-        );
-
-        router.get(
-            index.url(undefined, { query }),
-            {},
-            { preserveState: true, preserveScroll: true, replace: true },
-        );
-    };
+    const { apply } = useFilters(index.url, filters);
 
     return (
         <>

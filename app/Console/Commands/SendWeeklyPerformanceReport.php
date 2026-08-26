@@ -7,7 +7,7 @@ namespace App\Console\Commands;
 use App\Mail\Digest\WeeklyPerformanceReport;
 use App\Models\Tenant;
 use App\Models\User;
-use Carbon\CarbonImmutable;
+use App\Support\AppTime;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
@@ -34,7 +34,7 @@ final class SendWeeklyPerformanceReport extends Command
 
     private function sendForCurrentTenant(): void
     {
-        $lastWeekStart = CarbonImmutable::now('Europe/Istanbul')->subWeek()->startOfWeek();
+        $lastWeekStart = AppTime::now()->subWeek()->startOfWeek();
         $lastWeekEnd = $lastWeekStart->endOfWeek();
         $period = sprintf('%s - %s %s', $lastWeekStart->isoFormat('D MMMM'), $lastWeekEnd->isoFormat('D MMMM'), $lastWeekEnd->format('Y'));
 

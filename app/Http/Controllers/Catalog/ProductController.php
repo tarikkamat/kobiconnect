@@ -7,13 +7,12 @@ namespace App\Http\Controllers\Catalog;
 use App\Actions\Catalog\BulkEditVariants;
 use App\Actions\Catalog\CreateProduct;
 use App\Actions\Catalog\ImportProducts;
-use App\Enums\ConnectionStatus;
 use App\Enums\ProductStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Catalog\ProductBulkEditRequest;
 use App\Http\Requests\Catalog\ProductStoreRequest;
 use App\Http\Requests\Catalog\ProductUpdateRequest;
-use App\Marketplaces\Contracts\SupportsProductSync;
+use App\Marketplaces\Support\Capability;
 use App\Marketplaces\Support\MarketplaceManager;
 use App\Models\Brand;
 use App\Models\Category;
@@ -24,6 +23,8 @@ use App\Models\Product;
 use App\Models\ProductImage;
 use App\Models\ProductVariant;
 use App\Models\Warehouse;
+use App\Support\AppTime;
+use App\Support\Money;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -32,7 +33,6 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Number;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
@@ -40,17 +40,6 @@ use Inertia\Response;
 
 class ProductController extends Controller
 {
-    /**
-     * Arayuz metinleri Turkce, kanonik enum degerleri degil — FRONTEND-PLAN §7.
-     *
-     * @var array<string, string>
-     */
-    private const array STATUS_LABELS = [
-        'draft' => 'Taslak',
-        'active' => 'Aktif',
-        'archived' => 'Arşivlendi',
-    ];
-
     /**
      * Bir üründe aynı kanala ait birçok varyant olabilir; avatarda gösterilecek
      * tek durumu bu sıra belirler — en kötü olan kazanır.
@@ -109,27 +98,20 @@ class ProductController extends Controller
                 'id' => $product->getKey(),
                 'name' => $product->name,
                 'status' => $product->status->value,
-                'statusLabel' => self::STATUS_LABELS[$product->status->value],
+                'statusLabel' => $product->status->label(),
                 'brand' => $product->brand?->name,
                 'variantCount' => $product->variants->count(),
                 'stock' => $this->availableStock($product->variants),
                 'price' => $this->lowestPrice($product->variants),
                 'channels' => $this->channels($product->variants),
-                // Tarih de sunucuda bicimlenir, Europe/Istanbul — FRONTEND-PLAN §7.
-                'createdAt' => $product->created_at?->timezone('Europe/Istanbul')->format('d.m.Y'),
+                'createdAt' => AppTime::date($product->created_at),
             ]);
 
         $pullableConnections = ChannelConnection::query()
-            ->where('status', ConnectionStatus::Active)
+            ->active()
+            ->whereIn('marketplace', $marketplaces->supporting(Capability::ProductSync))
             ->orderBy('name')
             ->get()
-            ->filter(function (ChannelConnection $connection) use ($marketplaces): bool {
-                try {
-                    return $marketplaces->driver($connection->marketplace) instanceof SupportsProductSync;
-                } catch (\Throwable) {
-                    return false;
-                }
-            })
             ->map(fn (ChannelConnection $c): array => [
                 'id' => $c->getKey(),
                 'name' => $c->name,
@@ -150,7 +132,7 @@ class ProductController extends Controller
                 'sort' => $sort,
                 'direction' => $direction,
             ],
-            'statuses' => $this->statusOptions(),
+            'statuses' => ProductStatus::options(),
             'connections' => ChannelConnection::query()->orderBy('name')->get(['id', 'name']),
             'pullableConnections' => $pullableConnections,
         ]);
@@ -188,9 +170,9 @@ class ProductController extends Controller
         return Inertia::render('catalog/products/create', [
             'brands' => Brand::query()->orderBy('name')->get(['id', 'name']),
             'categories' => Category::query()->orderBy('path')->get(['id', 'name']),
-            'statuses' => $this->statusOptions(),
+            'statuses' => ProductStatus::options(),
             'channelConnections' => ChannelConnection::query()
-                ->where('status', ConnectionStatus::Active)
+                ->active()
                 ->orderBy('name')
                 ->get(['id', 'name', 'marketplace']),
         ]);
@@ -257,7 +239,7 @@ class ProductController extends Controller
                 'brandId' => $product->brand_id,
                 'categoryId' => $product->category_id,
                 'status' => $product->status->value,
-                'statusLabel' => self::STATUS_LABELS[$product->status->value],
+                'statusLabel' => $product->status->label(),
                 // Silme uyarisinin dayanagi: bu urun pazaryerinde yayinda olabilir.
                 'listingCount' => $this->listingCount($product),
                 'channels' => $this->channels($product->variants),
@@ -276,7 +258,7 @@ class ProductController extends Controller
                 ])
                 ->all()),
             'channelConnections' => ChannelConnection::query()
-                ->where('status', ConnectionStatus::Active)
+                ->active()
                 ->orderBy('name')
                 ->get(['id', 'name', 'marketplace']),
             'activeChannelIds' => $product->variants
@@ -291,7 +273,7 @@ class ProductController extends Controller
             ],
             'brands' => Brand::query()->orderBy('name')->get(['id', 'name']),
             'categories' => Category::query()->orderBy('path')->get(['id', 'name']),
-            'statuses' => $this->statusOptions(),
+            'statuses' => ProductStatus::options(),
         ]);
     }
 
@@ -438,7 +420,7 @@ class ProductController extends Controller
             'onHand' => $item === null ? 0 : $item->on_hand,
             'available' => (int) $variant->inventoryItems->sum('available'),
             'price' => $price === null ? null : (float) $price->list_price,
-            'priceFormatted' => $price === null ? null : $this->money((float) $price->list_price),
+            'priceFormatted' => $price === null ? null : Money::format((float) $price->list_price),
         ];
     }
 
@@ -498,28 +480,6 @@ class ProductController extends Controller
             ->flatMap(fn (ProductVariant $variant) => $variant->prices)
             ->min('list_price');
 
-        return $lowest === null ? null : $this->money((float) $lowest);
-    }
-
-    /**
-     * Para birimi sunucuda bicimlendirilir — FRONTEND-PLAN §7.
-     */
-    private function money(float $amount): string
-    {
-        return (string) Number::currency($amount, 'TRY', 'tr');
-    }
-
-    /**
-     * @return list<array{value: string, label: string}>
-     */
-    private function statusOptions(): array
-    {
-        return array_map(
-            fn (ProductStatus $status): array => [
-                'value' => $status->value,
-                'label' => self::STATUS_LABELS[$status->value],
-            ],
-            ProductStatus::cases(),
-        );
+        return $lowest === null ? null : Money::format((float) $lowest);
     }
 }

@@ -9,6 +9,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Team\InviteUserRequest;
 use App\Http\Requests\Team\RoleAssignmentRequest;
 use App\Models\User;
+use App\Support\AppTime;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\ValidationException;
@@ -52,7 +53,7 @@ class TeamController extends Controller
                     // ve koltuk tuketmez.
                     'active' => $user->roles->isNotEmpty(),
                     'isSelf' => $current !== null && $user->is($current),
-                    'joinedAt' => $user->created_at?->timezone('Europe/Istanbul')->format('d.m.Y'),
+                    'joinedAt' => AppTime::date($user->created_at),
                 ])
                 ->all(),
             'roles' => Role::query()->orderBy('id')->pluck('name')->all(),

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Notifications\NotificationEvent;
+use App\Support\AppTime;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -121,7 +122,7 @@ class NotificationController extends Controller
             'body' => (string) ($data['body'] ?? ''),
             'url' => is_string($data['url'] ?? null) ? $data['url'] : null,
             'read' => $notification->read_at !== null,
-            'createdAt' => $notification->created_at?->timezone('Europe/Istanbul')->format('d.m.Y H:i'),
+            'createdAt' => AppTime::dateTime($notification->created_at),
         ];
     }
 }

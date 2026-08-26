@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 namespace App\Support;
 
-use App\Marketplaces\Contracts\MarketplaceDriver;
 use App\Marketplaces\Support\Capability;
-use App\Marketplaces\Support\Exceptions\MarketplaceException;
 use App\Marketplaces\Support\MarketplaceManager;
 
 /**
@@ -41,25 +39,6 @@ use App\Marketplaces\Support\MarketplaceManager;
  */
 final class AppCatalog
 {
-    /**
-     * Arayuz metinleri Turkce, kanonik enum degerleri degil — FRONTEND-PLAN §7.
-     *
-     * @var array<string, string>
-     */
-    private const array CAPABILITY_LABELS = [
-        'product_sync' => 'Ürün',
-        'inventory_sync' => 'Stok',
-        'price_sync' => 'Fiyat',
-        'order_sync' => 'Sipariş',
-        'shipment_updates' => 'Kargo',
-        'claims' => 'İade',
-        'questions' => 'Soru-Cevap',
-        'catalog_matching' => 'Ürün eşleştirme',
-        'category_catalog' => 'Kategori kataloğu',
-        'brand_catalog' => 'Marka kataloğu',
-        'webhooks' => 'Webhook',
-    ];
-
     public function __construct(private readonly MarketplaceManager $marketplaces) {}
 
     /**
@@ -91,7 +70,7 @@ final class AppCatalog
      */
     public function isInstallable(string $code): bool
     {
-        return $this->driver($code) !== null;
+        return $this->marketplaces->tryDriver($code) !== null;
     }
 
     /**
@@ -137,7 +116,7 @@ final class AppCatalog
      */
     private function capabilities(string $code): array
     {
-        $driver = $this->driver($code);
+        $driver = $this->marketplaces->tryDriver($code);
 
         if ($driver === null) {
             return [];
@@ -146,7 +125,7 @@ final class AppCatalog
         return array_map(
             static fn (Capability $capability): array => [
                 'value' => $capability->value,
-                'label' => self::CAPABILITY_LABELS[$capability->value],
+                'label' => $capability->label(),
             ],
             $driver->capabilities(),
         );
@@ -159,7 +138,7 @@ final class AppCatalog
      */
     private function credentialFields(string $code): array
     {
-        $driver = $this->driver($code);
+        $driver = $this->marketplaces->tryDriver($code);
 
         if ($driver === null) {
             return [];
@@ -173,15 +152,6 @@ final class AppCatalog
         }
 
         return $fields;
-    }
-
-    private function driver(string $code): ?MarketplaceDriver
-    {
-        try {
-            return $this->marketplaces->driver($code);
-        } catch (MarketplaceException) {
-            return null;
-        }
     }
 
     /**

@@ -10,7 +10,7 @@ use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\Tenant;
 use App\Models\Warehouse;
-use Carbon\CarbonImmutable;
+use App\Support\AppTime;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
@@ -119,7 +119,7 @@ class SeedDemoOrdersCommand extends Command
             ['first' => 'Selin', 'last' => 'Arslan', 'city' => 'Samsun', 'district' => 'Atakum'],
         ];
 
-        $now = CarbonImmutable::now('Europe/Istanbul');
+        $now = AppTime::now();
 
         for ($i = 1; $i <= $count; $i++) {
             /** @var ChannelConnection $conn */

@@ -34,6 +34,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { useFilters } from '@/hooks/use-filters';
 import { usePermission } from '@/hooks/use-permission';
 import { create, index, show } from '@/routes/products';
 
@@ -95,19 +96,7 @@ export default function ProductIndex({
                 : selected.filter((value) => value !== id),
         );
 
-    const apply = (changes: Partial<Filters>): void => {
-        const query = Object.fromEntries(
-            Object.entries({ ...filters, ...changes }).filter(
-                ([, value]) => value !== null && value !== '',
-            ),
-        );
-
-        router.get(
-            index.url(undefined, { query }),
-            {},
-            { preserveState: true, preserveScroll: true, replace: true },
-        );
-    };
+    const { apply } = useFilters(index.url, filters);
 
     const sortBy = (column: 'name' | 'created_at'): void =>
         apply({

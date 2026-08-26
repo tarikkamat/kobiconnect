@@ -7,19 +7,20 @@ namespace App\Http\Controllers\Orders;
 use App\Http\Controllers\Controller;
 use App\Marketplaces\Data\Enums\CanonicalOrderStatus;
 use App\Models\ChannelConnection;
+use App\Models\Order;
+use App\Models\OrderLine;
+use App\Models\OrderStatusHistory;
+use App\Models\ShipmentPackage;
+use App\Support\AppTime;
+use App\Support\Money;
 use Illuminate\Contracts\Encryption\DecryptException;
-use Illuminate\Database\Query\Builder;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Crypt;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Number;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
-use stdClass;
 
 /**
  * Sipariş listesi ve detayı — bu faz yalnızca OKUMA.
@@ -36,27 +37,6 @@ use stdClass;
  */
 class OrderController extends Controller
 {
-    /**
-     * Arayuz metinleri Turkce, kanonik enum degerleri degil — FRONTEND-PLAN §7.
-     *
-     * @var array<string, string>
-     */
-    private const array STATUS_LABELS = [
-        'pending_payment' => 'Ödeme bekleniyor',
-        'created' => 'Gönderime hazır',
-        'picking' => 'Hazırlanıyor',
-        'invoiced' => 'Faturalandı',
-        'shipped' => 'Kargoda',
-        'at_collection_point' => 'Teslimat noktasında',
-        'delivered' => 'Teslim edildi',
-        'undelivered' => 'Teslim edilemedi',
-        'unpacked' => 'Paket bölündü',
-        'unsupplied' => 'Tedarik edilemedi',
-        'cancelled' => 'İptal edildi',
-        'returned' => 'İade edildi',
-        'unknown' => 'Bilinmeyen durum',
-    ];
-
     public function index(Request $request): Response
     {
         Gate::authorize('orders.view');
@@ -73,56 +53,48 @@ class OrderController extends Controller
         $connection = isset($filters['connection']) ? (int) $filters['connection'] : null;
         $unmatched = (bool) ($filters['unmatched'] ?? false);
 
-        $orders = DB::table('orders')
-            ->leftJoin('channel_connections', 'channel_connections.id', '=', 'orders.connection_id')
+        $orders = Order::query()
             ->select([
-                'orders.id',
-                'orders.remote_order_number',
-                'orders.remote_id',
-                'orders.status',
-                'orders.external_status',
-                'orders.currency',
-                'orders.placed_at',
-                'orders.totals',
-                'orders.customer',
-                'channel_connections.name as connection_name',
-                'channel_connections.marketplace',
+                'id', 'connection_id', 'remote_order_number', 'remote_id', 'status',
+                'external_status', 'currency', 'placed_at', 'totals', 'customer',
             ])
-            ->selectSub($this->lineCount(), 'line_count')
-            ->selectSub($this->lineCount()->whereNull('order_lines.variant_id'), 'unmatched_count')
+            ->with('connection:id,name,marketplace')
+            ->withCount([
+                'lines as line_count',
+                'lines as unmatched_count' => fn (Builder $lines) => $lines->whereNull('variant_id'),
+            ])
             ->when($search !== '', fn (Builder $query) => $query->where(
                 fn (Builder $inner) => $inner
-                    ->where('orders.remote_order_number', 'like', "%{$search}%")
-                    ->orWhere('orders.remote_id', 'like', "%{$search}%"),
+                    ->where('remote_order_number', 'like', "%{$search}%")
+                    ->orWhere('remote_id', 'like', "%{$search}%"),
             ))
-            ->when($status !== null, fn (Builder $query) => $query->where('orders.status', $status))
-            ->when($connection !== null, fn (Builder $query) => $query->where('orders.connection_id', $connection))
+            ->when($status !== null, fn (Builder $query) => $query->where('status', $status))
+            ->when($connection !== null, fn (Builder $query) => $query->where('connection_id', $connection))
             // Esleşmemis satirlar ayri bir tablo degil, ayni listenin bir
             // filtresi: operatör siparisi baglaminda görmek zorunda.
-            ->when($unmatched, fn (Builder $query) => $query->whereExists(
-                fn (Builder $lines) => $lines->from('order_lines')
-                    ->whereColumn('order_lines.order_id', 'orders.id')
-                    ->whereNull('order_lines.variant_id'),
+            ->when($unmatched, fn (Builder $query) => $query->whereHas(
+                'lines',
+                fn (Builder $lines) => $lines->whereNull('variant_id'),
             ))
-            ->orderByDesc('orders.placed_at')
-            ->orderByDesc('orders.id')
+            ->orderByDesc('placed_at')
+            ->orderByDesc('id')
             ->paginate(25)
             ->withQueryString()
-            ->through(fn (stdClass $order): array => [
-                'id' => (int) $order->id,
+            ->through(fn (Order $order): array => [
+                'id' => $order->getKey(),
                 'orderNumber' => (string) $order->remote_order_number,
                 'packageId' => (string) $order->remote_id,
-                'status' => (string) $order->status,
-                'statusLabel' => $this->statusLabel((string) $order->status),
+                'status' => $order->status->value,
+                'statusLabel' => $order->status->label(),
                 'externalStatus' => (string) $order->external_status,
-                'connection' => $order->connection_name,
+                'connection' => $order->connection?->name,
                 // Logo yolu koddan turetilir (/apps/{kod}.svg) — AppCatalog ile
                 // ayni kaynak, bkz. AppCatalog::present().
-                'marketplace' => $order->marketplace,
-                'customer' => $this->maskedName($order->customer),
-                'customerLocation' => $this->maskedLocation($order->customer),
+                'marketplace' => $order->connection?->marketplace,
+                'customer' => $this->mask($this->customer($order)),
+                'customerLocation' => $this->maskedLocation($this->customer($order)),
                 'total' => $this->money($order->totals, (string) $order->currency),
-                'placedAt' => $this->dateTime($order->placed_at),
+                'placedAt' => AppTime::dateTime($order->placed_at),
                 'lineCount' => (int) $order->line_count,
                 'unmatchedCount' => (int) $order->unmatched_count,
             ]);
@@ -135,9 +107,9 @@ class OrderController extends Controller
                 'connection' => $connection,
                 'unmatched' => $unmatched,
             ],
-            'statuses' => $this->statusOptions(),
+            'statuses' => CanonicalOrderStatus::options(),
             'connections' => ChannelConnection::query()->orderBy('name')->get(['id', 'name']),
-            'unmatchedTotal' => (int) DB::table('order_lines')->whereNull('variant_id')->count(),
+            'unmatchedTotal' => OrderLine::query()->whereNull('variant_id')->count(),
         ]);
     }
 
@@ -145,34 +117,28 @@ class OrderController extends Controller
     {
         Gate::authorize('orders.view');
 
-        $row = DB::table('orders')
-            ->leftJoin('channel_connections', 'channel_connections.id', '=', 'orders.connection_id')
-            ->where('orders.id', $order)
-            ->select(['orders.*', 'channel_connections.name as connection_name', 'channel_connections.marketplace'])
-            ->first();
+        $model = Order::query()
+            ->with('connection:id,name,marketplace')
+            ->findOrFail($order);
 
-        abort_if($row === null, 404);
-
-        $customer = $this->customer($row->customer);
-        $lines = $this->lines($order);
-        $packages = $this->packages($order);
-        $history = $this->history($order);
-        $financials = $this->calculateFinancials($row->totals, (string) $row->currency, $lines);
+        $customer = $this->customer($model);
+        $lines = $this->lines($model);
+        $financials = $this->calculateFinancials($model->totals, (string) $model->currency, $lines);
 
         $data = [
             'order' => [
-                'id' => (int) $row->id,
-                'orderNumber' => (string) $row->remote_order_number,
-                'packageId' => (string) $row->remote_id,
-                'status' => (string) $row->status,
-                'statusLabel' => $this->statusLabel((string) $row->status),
-                'externalStatus' => (string) $row->external_status,
-                'connection' => $row->connection_name,
-                'marketplace' => $row->marketplace,
-                'currency' => (string) $row->currency,
-                'placedAt' => $this->dateTime($row->placed_at),
-                'lastModifiedAt' => $this->dateTime($row->remote_last_modified_at),
-                'totals' => $this->totals($row->totals, (string) $row->currency),
+                'id' => $model->getKey(),
+                'orderNumber' => (string) $model->remote_order_number,
+                'packageId' => (string) $model->remote_id,
+                'status' => $model->status->value,
+                'statusLabel' => $model->status->label(),
+                'externalStatus' => (string) $model->external_status,
+                'connection' => $model->connection?->name,
+                'marketplace' => $model->connection?->marketplace,
+                'currency' => (string) $model->currency,
+                'placedAt' => AppTime::dateTime($model->placed_at),
+                'lastModifiedAt' => AppTime::dateTime($model->remote_last_modified_at),
+                'totals' => $this->totals($model->totals, (string) $model->currency),
                 'financials' => $financials,
                 // Yalnizca maskelenmis alanlar; TCKN, tam adres, koordinat ve
                 // ham payload bu sinirdan gecmez.
@@ -185,8 +151,8 @@ class OrderController extends Controller
                 ],
             ],
             'lines' => $lines,
-            'packages' => $packages,
-            'history' => $history,
+            'packages' => $this->packages($model),
+            'history' => $this->history($model),
         ];
 
         if ($request->wantsJson() && ! $request->header('X-Inertia')) {
@@ -197,138 +163,137 @@ class OrderController extends Controller
     }
 
     /**
+     * Satirlar iliski uzerinden yuklenir. Onceki `leftJoin('prices')` bir
+     * varyantin birden fazla fiyat satiri oldugunda ayni siparis satirini
+     * cogaltiyordu — prices'ta (variant_id, currency) tekil degil.
+     *
      * @return list<array<string, mixed>>
      */
-    private function lines(int $orderId): array
+    private function lines(Order $order): array
     {
-        return array_values(DB::table('order_lines')
-            ->leftJoin('product_variants', 'product_variants.id', '=', 'order_lines.variant_id')
-            ->leftJoin('products', 'products.id', '=', 'product_variants.product_id')
-            ->leftJoin('prices', 'prices.variant_id', '=', 'product_variants.id')
-            ->where('order_lines.order_id', $orderId)
-            ->orderBy('order_lines.id')
-            ->select([
-                'order_lines.id', 'order_lines.remote_line_id', 'order_lines.sku', 'order_lines.barcode',
-                'order_lines.quantity', 'order_lines.unit_price', 'order_lines.status',
-                'order_lines.external_status', 'order_lines.vat_rate', 'order_lines.commission',
-                'order_lines.variant_id', 'product_variants.sku as variant_sku',
-                'products.name as product_name', 'prices.cost as variant_cost',
-            ])
+        return array_values($order->lines()
+            ->with(['variant:id,sku,product_id', 'variant.product:id,name', 'variant.prices:id,variant_id,currency,cost'])
+            ->orderBy('id')
             ->get()
-            ->map(function (stdClass $line): array {
+            ->map(function (OrderLine $line) use ($order): array {
                 $qty = (int) $line->quantity;
                 $unitPrice = (float) $line->unit_price;
                 $lineTotal = $qty * $unitPrice;
-                $cost = $line->variant_cost !== null ? ((float) $line->variant_cost * $qty) : null;
+                $unitCost = $this->unitCost($line, (string) $order->currency);
+                $cost = $unitCost !== null ? $unitCost * $qty : null;
                 $commissionRate = is_numeric($line->commission) ? (float) $line->commission : null;
                 $commissionAmount = $commissionRate !== null ? ($lineTotal * ($commissionRate > 1 ? $commissionRate / 100 : $commissionRate)) : null;
 
                 return [
-                    'id' => (int) $line->id,
+                    'id' => $line->getKey(),
                     'remoteLineId' => (string) $line->remote_line_id,
                     'sku' => (string) $line->sku,
-                    'productName' => $line->product_name,
+                    'productName' => $line->variant?->product?->name,
                     'barcode' => $line->barcode,
                     'quantity' => $qty,
-                    'unitPrice' => (string) Number::currency($unitPrice, 'TRY', 'tr'),
-                    'lineTotal' => (string) Number::currency($lineTotal, 'TRY', 'tr'),
-                    'cost' => $cost !== null ? (string) Number::currency($cost, 'TRY', 'tr') : null,
+                    'unitPrice' => Money::format($unitPrice),
+                    'lineTotal' => Money::format($lineTotal),
+                    'cost' => $cost !== null ? Money::format($cost) : null,
                     'costRaw' => $cost,
-                    'status' => (string) $line->status,
-                    'statusLabel' => $this->statusLabel((string) $line->status),
+                    'status' => $line->status->value,
+                    'statusLabel' => $line->status->label(),
                     'externalStatus' => (string) $line->external_status,
                     'vatRate' => $line->vat_rate !== null ? '%'.rtrim(rtrim((string) $line->vat_rate, '0'), '.') : null,
                     'commission' => $line->commission !== null ? '%'.rtrim(rtrim((string) $line->commission, '0'), '.') : null,
-                    'commissionAmount' => $commissionAmount !== null ? (string) Number::currency($commissionAmount, 'TRY', 'tr') : null,
+                    'commissionAmount' => $commissionAmount !== null ? Money::format($commissionAmount) : null,
                     // Eşleşmemiş satır: sipariş yine de tam olarak kaydedildi.
                     'matched' => $line->variant_id !== null,
-                    'variantSku' => $line->variant_sku,
+                    'variantSku' => $line->variant?->sku,
                 ];
             })
+
             ->all());
+    }
+
+    /**
+     * Siparisin para biriminde maliyet; yoksa varyantin ilk fiyat satiri.
+     * Onceki join hangi satirin geldigini garanti etmiyordu.
+     */
+    private function unitCost(OrderLine $line, string $currency): ?float
+    {
+        $prices = $line->variant?->prices;
+
+        if ($prices === null) {
+            return null;
+        }
+
+        $cost = ($prices->firstWhere('currency', $currency) ?? $prices->first())?->cost;
+
+        return $cost === null ? null : (float) $cost;
     }
 
     /**
      * @return list<array<string, mixed>>
      */
-    private function packages(int $orderId): array
+    private function packages(Order $order): array
     {
-        return array_values(DB::table('shipment_packages')
-            ->where('order_id', $orderId)
+        return array_values($order->packages()
             ->orderBy('id')
             ->get()
-            ->map(fn (stdClass $package): array => [
-                'id' => (int) $package->id,
+            ->map(fn (ShipmentPackage $package): array => [
+                'id' => $package->getKey(),
                 'remotePackageId' => (string) $package->remote_package_id,
                 'cargoProvider' => $package->cargo_provider,
                 // Kargo takip numarasi int64'u asar — uçtan uca string.
                 'trackingNumber' => $package->tracking_number === null ? null : (string) $package->tracking_number,
                 'trackingLink' => $package->tracking_link,
-                'status' => (string) $package->status,
-                'statusLabel' => $this->statusLabel((string) $package->status),
+                'status' => $package->status->value,
+                'statusLabel' => $package->status->label(),
                 'externalStatus' => (string) $package->external_status,
                 'deci' => $package->deci,
-                'shippedAt' => $this->dateTime($package->shipped_at),
-                'deliveredAt' => $this->dateTime($package->delivered_at),
+                'shippedAt' => AppTime::dateTime($package->shipped_at),
+                'deliveredAt' => AppTime::dateTime($package->delivered_at),
             ])
+
             ->all());
     }
 
     /**
      * @return list<array<string, mixed>>
      */
-    private function history(int $orderId): array
+    private function history(Order $order): array
     {
-        return array_values(DB::table('order_status_history')
-            ->where('order_id', $orderId)
+        return array_values($order->statusHistory()
             ->orderBy('occurred_at')
             ->orderBy('id')
             ->get()
-            ->map(fn (stdClass $entry): array => [
-                'id' => (int) $entry->id,
+            ->map(fn (OrderStatusHistory $entry): array => [
+                'id' => $entry->getKey(),
                 'fromStatus' => $entry->from_status,
                 'toStatus' => (string) $entry->to_status,
-                'occurredAt' => $this->dateTime($entry->occurred_at),
+                'occurredAt' => AppTime::dateTime($entry->occurred_at),
                 'source' => (string) $entry->source,
             ])
+
             ->all());
     }
 
-    private function lineCount(): Builder
+    /**
+     * Cozme isini model cast'i (AsEncryptedArrayObject) yapar; burada kalan tek
+     * sey bozuk satirin sayfayi dusurmemesi. Baska bir anahtarla sifrelenmis
+     * bir satir siparisi gizlemez, yalnizca kisisel veri bolumu bos kalir.
+     *
+     * @return array<string, mixed>
+     */
+    private function customer(Order $order): array
     {
-        return DB::table('order_lines')
-            ->selectRaw('count(*)')
-            ->whereColumn('order_lines.order_id', 'orders.id');
+        try {
+            return $order->customer?->toArray() ?? [];
+        } catch (DecryptException) {
+            return [];
+        }
     }
 
     /**
-     * @return array<string, mixed>
+     * @param  array<string, mixed>  $customer
      */
-    private function customer(mixed $encrypted): array
+    private function maskedLocation(array $customer): ?string
     {
-        if (! is_string($encrypted) || $encrypted === '') {
-            return [];
-        }
-
-        try {
-            $decoded = json_decode(Crypt::decryptString($encrypted), true, 512, JSON_THROW_ON_ERROR);
-        } catch (DecryptException|\JsonException) {
-            // Bozuk ya da baska bir anahtarla sifrelenmis satir siparisi
-            // gizlemez; yalnizca kisisel veri bolumu bos kalir.
-            return [];
-        }
-
-        return is_array($decoded) ? $decoded : [];
-    }
-
-    private function maskedName(mixed $encrypted): ?string
-    {
-        return $this->mask($this->customer($encrypted));
-    }
-
-    private function maskedLocation(mixed $encrypted): ?string
-    {
-        $customer = $this->customer($encrypted);
         $city = $this->addressPart($customer, 'city');
         $district = $this->addressPart($customer, 'district');
 
@@ -401,9 +366,9 @@ class OrderController extends Controller
      */
     private function money(mixed $totals, string $currency): ?string
     {
-        $net = $this->totalsArray($totals)['net'] ?? null;
+        $net = $totals['net'] ?? null;
 
-        return is_numeric($net) ? (string) Number::currency((float) $net, $currency, 'tr') : null;
+        return is_numeric($net) ? Money::format((float) $net, $currency) : null;
     }
 
     /**
@@ -412,7 +377,7 @@ class OrderController extends Controller
      */
     private function calculateFinancials(mixed $totals, string $currency, array $lines): array
     {
-        $arr = $this->totalsArray($totals);
+        $arr = $totals;
         $gross = (float) ($arr['gross'] ?? 0);
         $discount = (float) ($arr['discount'] ?? 0);
         $net = (float) ($arr['net'] ?? ($gross - $discount));
@@ -440,13 +405,13 @@ class OrderController extends Controller
         $margin = ($hasAnyCost && $net > 0) ? round(($profit / $net) * 100, 1) : null;
 
         return [
-            'gross' => (string) Number::currency($gross > 0 ? $gross : $net, $currency, 'tr'),
-            'discount' => (string) Number::currency($discount, $currency, 'tr'),
-            'commission' => (string) Number::currency($commission, $currency, 'tr'),
-            'netSales' => (string) Number::currency($net, $currency, 'tr'),
-            'totalCost' => $hasAnyCost ? (string) Number::currency($totalCost, $currency, 'tr') : null,
-            'netPayout' => (string) Number::currency($netPayout, $currency, 'tr'),
-            'estimatedProfit' => $profit !== null ? (string) Number::currency($profit, $currency, 'tr') : null,
+            'gross' => Money::format($gross > 0 ? $gross : $net, $currency),
+            'discount' => Money::format($discount, $currency),
+            'commission' => Money::format($commission, $currency),
+            'netSales' => Money::format($net, $currency),
+            'totalCost' => $hasAnyCost ? Money::format($totalCost, $currency) : null,
+            'netPayout' => Money::format($netPayout, $currency),
+            'estimatedProfit' => $profit !== null ? Money::format($profit, $currency) : null,
             'marginPercent' => $margin !== null ? '%'.$margin : null,
         ];
     }
@@ -458,64 +423,12 @@ class OrderController extends Controller
     {
         $formatted = [];
 
-        foreach ($this->totalsArray($totals) as $key => $value) {
+        foreach ($totals as $key => $value) {
             if (is_numeric($value)) {
-                $formatted[(string) $key] = (string) Number::currency((float) $value, $currency, 'tr');
+                $formatted[(string) $key] = Money::format((float) $value, $currency);
             }
         }
 
         return $formatted;
-    }
-
-    /**
-     * @return array<array-key, mixed>
-     */
-    private function totalsArray(mixed $totals): array
-    {
-        if (is_array($totals)) {
-            return $totals;
-        }
-
-        if (! is_string($totals) || $totals === '') {
-            return [];
-        }
-
-        $decoded = json_decode($totals, true);
-
-        return is_array($decoded) ? $decoded : [];
-    }
-
-    /**
-     * Tarih de sunucuda, Europe/Istanbul — FRONTEND-PLAN §7.
-     */
-    private function dateTime(mixed $value): ?string
-    {
-        if ($value === null || $value === '') {
-            return null;
-        }
-
-        return Carbon::parse((string) $value)->timezone('Europe/Istanbul')->format('d.m.Y H:i');
-    }
-
-    /**
-     * Bilinmeyen bir kanonik deger etikete katlanmaz, ham hâliyle gosterilir.
-     */
-    private function statusLabel(string $status): string
-    {
-        return self::STATUS_LABELS[$status] ?? $status;
-    }
-
-    /**
-     * @return list<array{value: string, label: string}>
-     */
-    private function statusOptions(): array
-    {
-        return array_map(
-            fn (CanonicalOrderStatus $status): array => [
-                'value' => $status->value,
-                'label' => $this->statusLabel($status->value),
-            ],
-            CanonicalOrderStatus::cases(),
-        );
     }
 }

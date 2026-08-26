@@ -32,6 +32,7 @@ import {
     TooltipContent,
     TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { useFilters } from '@/hooks/use-filters';
 import { usePermission } from '@/hooks/use-permission';
 import { cn } from '@/lib/utils';
 import { index, update } from '@/routes/stock';
@@ -292,19 +293,7 @@ export default function StockIndex({ variants, warehouses, filters }: Props) {
         return sum;
     }, [columnWidths, warehouses]);
 
-    const apply = (changes: Partial<Filters>): void => {
-        const query = Object.fromEntries(
-            Object.entries({ ...filters, ...changes }).filter(
-                ([, value]) => value !== '' && value !== false,
-            ),
-        );
-
-        router.get(
-            index.url(undefined, { query }),
-            {},
-            { preserveState: true, preserveScroll: true, replace: true },
-        );
-    };
+    const { apply } = useFilters(index.url, filters);
 
     /** Satir ici duzenleme; 422 donerse Inertia degeri kendisi geri alir. */
     const patch = (

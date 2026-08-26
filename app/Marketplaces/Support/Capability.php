@@ -2,6 +2,7 @@
 
 namespace App\Marketplaces\Support;
 
+use App\Concerns\HasLabels;
 use App\Marketplaces\Contracts\MarketplaceDriver;
 use App\Marketplaces\Contracts\SupportsBrandCatalog;
 use App\Marketplaces\Contracts\SupportsCatalogMatching;
@@ -24,6 +25,8 @@ use App\Marketplaces\Support\Exceptions\UnsupportedCapabilityException;
  */
 enum Capability: string
 {
+    use HasLabels;
+
     case ProductSync = 'product_sync';
 
     case InventorySync = 'inventory_sync';
@@ -46,6 +49,26 @@ enum Capability: string
     case CatalogMatching = 'catalog_matching';
 
     case Webhooks = 'webhooks';
+
+    /**
+     * Arayuz metinleri Turkce, kanonik enum degerleri degil — FRONTEND-PLAN §7.
+     */
+    public function label(): string
+    {
+        return match ($this) {
+            self::ProductSync => 'Ürün',
+            self::InventorySync => 'Stok',
+            self::PriceSync => 'Fiyat',
+            self::OrderSync => 'Sipariş',
+            self::ShipmentUpdates => 'Kargo',
+            self::Claims => 'İade',
+            self::Questions => 'Soru-Cevap',
+            self::CatalogMatching => 'Ürün eşleştirme',
+            self::CategoryCatalog => 'Kategori kataloğu',
+            self::BrandCatalog => 'Marka kataloğu',
+            self::Webhooks => 'Webhook',
+        };
+    }
 
     /**
      * The contract a driver implements to declare this capability.

@@ -170,7 +170,7 @@ it('surfaces errored connections so a silently stopped channel is visible', func
     expect($response->json('props.connections.errored'))->toBe(1)
         // Isme gore sirali: "Trendyol Ana" once gelir.
         ->and($response->json('props.connections.items.0.statusLabel'))->toBe('Hata')
-        ->and($response->json('props.connections.items.1.statusLabel'))->toBe('Bağlı');
+        ->and($response->json('props.connections.items.1.statusLabel'))->toBe('Aktif');
 });
 
 /*

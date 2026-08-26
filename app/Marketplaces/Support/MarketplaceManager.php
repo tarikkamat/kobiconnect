@@ -43,6 +43,40 @@ final class MarketplaceManager extends Manager
     }
 
     /**
+     * Kayitli olmayan / kurulamayan pazaryeri icin `null`.
+     *
+     * Cagiran taraflar bunu `try { driver() } catch { null }` olarak tekrar
+     * tekrar yaziyordu; yakalama tek yerde ve yalnizca MarketplaceException'i
+     * yutuyor — surucunun kendi hatasi yukari cikmaya devam eder.
+     */
+    public function tryDriver(?string $marketplace): ?MarketplaceDriver
+    {
+        try {
+            return $this->driver($marketplace);
+        } catch (MarketplaceException) {
+            return null;
+        }
+    }
+
+    /**
+     * Yetenegi destekleyen pazaryeri anahtarlari. Yetenek surucunun
+     * implement ettigi arayuzden turer, yani liste config'e eklenen her
+     * pazaryeriyle kendiliginden buyur.
+     *
+     * @return list<string>
+     */
+    public function supporting(Capability $capability): array
+    {
+        $drivers = $this->config->get('marketplaces.drivers');
+
+        return array_values(array_filter(
+            array_keys(is_array($drivers) ? $drivers : []),
+            fn (string $marketplace): bool => ($driver = $this->tryDriver($marketplace)) !== null
+                && $capability->driverSupports($driver),
+        ));
+    }
+
+    /**
      * @param  string  $driver
      *
      * @throws MarketplaceException

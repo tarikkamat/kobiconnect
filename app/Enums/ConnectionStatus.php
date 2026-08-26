@@ -4,8 +4,12 @@ declare(strict_types=1);
 
 namespace App\Enums;
 
+use App\Concerns\HasLabels;
+
 enum ConnectionStatus: string
 {
+    use HasLabels;
+
     case Active = 'active';
     case Paused = 'paused';
     case Error = 'error';

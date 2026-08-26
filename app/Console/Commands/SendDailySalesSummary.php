@@ -7,7 +7,7 @@ namespace App\Console\Commands;
 use App\Mail\Digest\DailySalesSummary;
 use App\Models\Tenant;
 use App\Models\User;
-use Carbon\CarbonImmutable;
+use App\Support\AppTime;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
@@ -34,7 +34,7 @@ final class SendDailySalesSummary extends Command
 
     private function sendForCurrentTenant(): void
     {
-        $yesterday = CarbonImmutable::now('Europe/Istanbul')->subDay()->startOfDay();
+        $yesterday = AppTime::now()->subDay()->startOfDay();
         $today = $yesterday->addDay();
 
         $orders = DB::table('orders')

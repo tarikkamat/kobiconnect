@@ -1,4 +1,4 @@
-import { Head, InfiniteScroll, Link, router } from '@inertiajs/react';
+import { Head, InfiniteScroll, Link } from '@inertiajs/react';
 import {
     Check,
     ChevronRight,
@@ -45,6 +45,7 @@ import {
     TooltipContent,
     TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { useFilters } from '@/hooks/use-filters';
 import { cn } from '@/lib/utils';
 import { index, show } from '@/routes/orders';
 
@@ -122,20 +123,7 @@ export default function OrderIndex({
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, []);
 
-    const apply = (changes: Partial<Filters>): void => {
-        const query = Object.fromEntries(
-            Object.entries({ ...filters, ...changes }).filter(
-                ([, value]) =>
-                    value !== null && value !== '' && value !== false,
-            ),
-        );
-
-        router.get(
-            index.url(undefined, { query }),
-            {},
-            { preserveState: true, preserveScroll: true, replace: true },
-        );
-    };
+    const { apply, clear } = useFilters(index.url, filters);
 
     const copyOrderNumber = (e: React.MouseEvent, order: OrderRow) => {
         e.stopPropagation();
@@ -163,11 +151,7 @@ export default function OrderIndex({
 
     const clearAllFilters = () => {
         setSearchValue('');
-        router.get(
-            index.url(),
-            {},
-            { preserveState: true, preserveScroll: true, replace: true },
-        );
+        clear();
     };
 
     // Active status label lookup

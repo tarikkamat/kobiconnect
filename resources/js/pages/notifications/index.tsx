@@ -1,4 +1,4 @@
-import { Form, Head, InfiniteScroll, Link, router } from '@inertiajs/react';
+import { Form, Head, InfiniteScroll, Link } from '@inertiajs/react';
 import { BellOff, CheckCheck } from 'lucide-react';
 import { EmptyState } from '@/components/empty-state';
 import Heading from '@/components/heading';
@@ -12,6 +12,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { useFilters } from '@/hooks/use-filters';
 import { edit as preferences } from '@/routes/notification-preferences';
 import { index, read } from '@/routes/notifications';
 
@@ -42,20 +43,7 @@ export default function Notifications({
     unreadCount,
     events,
 }: Props) {
-    const apply = (changes: Partial<Filters>): void => {
-        const query = Object.fromEntries(
-            Object.entries({ ...filters, ...changes }).filter(
-                ([, value]) =>
-                    value !== null && value !== '' && value !== false,
-            ),
-        );
-
-        router.get(
-            index.url(undefined, { query }),
-            {},
-            { preserveState: true, preserveScroll: true, replace: true },
-        );
-    };
+    const { apply } = useFilters(index.url, filters);
 
     return (
         <>

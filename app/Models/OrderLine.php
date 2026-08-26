@@ -8,6 +8,22 @@ use App\Marketplaces\Data\Enums\CanonicalOrderStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property int $id
+ * @property int $order_id
+ * @property int|null $variant_id
+ * @property string $remote_line_id
+ * @property string $sku
+ * @property string|null $barcode
+ * @property int $quantity
+ * @property string $unit_price
+ * @property array<string, mixed> $discounts
+ * @property string|null $commission oran, tutar degil
+ * @property string|null $vat_rate
+ * @property CanonicalOrderStatus $status
+ * @property string $external_status
+ * @property ProductVariant|null $variant
+ */
 class OrderLine extends Model
 {
     /**
