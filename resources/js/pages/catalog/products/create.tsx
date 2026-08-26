@@ -12,7 +12,10 @@ import {
 import { useState } from 'react';
 import { toast } from 'sonner';
 import ProductController from '@/actions/App/Http/Controllers/Catalog/ProductController';
-import type { VariantItem } from '@/components/catalog/attribute-variant-matrix';
+import type {
+    DefinedAttributeItem,
+    VariantItem,
+} from '@/components/catalog/attribute-variant-matrix';
 import { AttributeVariantMatrix } from '@/components/catalog/attribute-variant-matrix';
 import type { ChannelConnectionItem } from '@/components/catalog/channel-pricing-manager';
 import { ChannelPricingManager } from '@/components/catalog/channel-pricing-manager';
@@ -45,6 +48,7 @@ type Props = {
     categories: { id: number; name: string }[];
     statuses: { value: string; label: string }[];
     channelConnections?: ChannelConnectionItem[];
+    attributes?: DefinedAttributeItem[];
 };
 
 const NONE = 'none';
@@ -54,6 +58,7 @@ export default function ProductCreate({
     categories,
     statuses,
     channelConnections = [],
+    attributes = [],
 }: Props) {
     // Basic Form State
     const [name, setName] = useState('');
@@ -321,6 +326,7 @@ export default function ProductCreate({
                                     setVariants={setVariants}
                                     galleryImages={images}
                                     productName={name}
+                                    definedAttributes={attributes}
                                     errors={errors}
                                 />
 

@@ -34,8 +34,18 @@ export type VariantItem = {
     imageUrl?: string;
 };
 
+export type DefinedAttributeItem = {
+    id: number;
+    code: string;
+    name: string;
+    type: string;
+    isVariantDefining: boolean;
+    values: string[];
+};
+
 export type AttributeDefinition = {
     id: string;
+    selectedId?: string;
     name: string;
     values: string[];
     currentInput: string;
@@ -59,6 +69,7 @@ type Props = {
     // Gallery images available for variant image assignment
     galleryImages: ProductImageItem[];
     productName: string;
+    definedAttributes?: DefinedAttributeItem[];
     errors?: Record<string, string>;
 };
 
@@ -77,30 +88,166 @@ export function AttributeVariantMatrix({
     setVariants,
     galleryImages,
     productName,
+    definedAttributes = [],
     errors = {},
 }: Props) {
     // Attributes State (for WooCommerce-style generator)
-    const [attributes, setAttributes] = useState<AttributeDefinition[]>([
-        { id: '1', name: 'Beden', values: ['S', 'M', 'L'], currentInput: '' },
-        { id: '2', name: 'Renk', values: ['Siyah', 'Beyaz'], currentInput: '' },
-    ]);
+    const [attributes, setAttributes] = useState<AttributeDefinition[]>(() => {
+        if (definedAttributes && definedAttributes.length > 0) {
+            const initialList = definedAttributes
+                .filter((a) => a.isVariantDefining)
+                .slice(0, 2);
+
+            const chosen =
+                initialList.length > 0
+                    ? initialList
+                    : definedAttributes.slice(0, 2);
+
+            return chosen.map((attr, idx) => ({
+                id: String(idx + 1),
+                selectedId: String(attr.id),
+                name: attr.name,
+                values: [...attr.values],
+                currentInput: '',
+            }));
+        }
+
+        return [
+            {
+                id: '1',
+                selectedId: 'custom',
+                name: 'Beden',
+                values: ['S', 'M', 'L'],
+                currentInput: '',
+            },
+            {
+                id: '2',
+                selectedId: 'custom',
+                name: 'Renk',
+                values: ['Siyah', 'Beyaz'],
+                currentInput: '',
+            },
+        ];
+    });
 
     // Add Attribute Block
     const handleAddAttribute = () => {
-        setAttributes((prev) => [
-            ...prev,
-            {
-                id: String(Date.now() + Math.random()),
-                name: '',
-                values: [],
-                currentInput: '',
-            },
-        ]);
+        const usedAttributeIds = new Set(
+            attributes
+                .map((a) => a.selectedId)
+                .filter((id): id is string => Boolean(id && id !== 'custom')),
+        );
+
+        const unusedDefined = definedAttributes.find(
+            (a) => !usedAttributeIds.has(String(a.id)),
+        );
+
+        if (unusedDefined) {
+            setAttributes((prev) => [
+                ...prev,
+                {
+                    id: String(Date.now() + Math.random()),
+                    selectedId: String(unusedDefined.id),
+                    name: unusedDefined.name,
+                    values: [...unusedDefined.values],
+                    currentInput: '',
+                },
+            ]);
+        } else {
+            setAttributes((prev) => [
+                ...prev,
+                {
+                    id: String(Date.now() + Math.random()),
+                    selectedId: 'custom',
+                    name: '',
+                    values: [],
+                    currentInput: '',
+                },
+            ]);
+        }
+    };
+
+    // Change Selected Defined Attribute or switch to Custom
+    const handleSelectAttribute = (attrId: string, selectionValue: string) => {
+        if (selectionValue === 'custom') {
+            setAttributes((prev) =>
+                prev.map((a) =>
+                    a.id === attrId
+                        ? { ...a, selectedId: 'custom', name: '' }
+                        : a,
+                ),
+            );
+
+            return;
+        }
+
+        const found = definedAttributes.find(
+            (d) => String(d.id) === selectionValue,
+        );
+
+        if (found) {
+            setAttributes((prev) =>
+                prev.map((a) =>
+                    a.id === attrId
+                        ? {
+                              ...a,
+                              selectedId: String(found.id),
+                              name: found.name,
+                              values:
+                                  found.values.length > 0
+                                      ? [...found.values]
+                                      : a.values,
+                          }
+                        : a,
+                ),
+            );
+        }
     };
 
     // Remove Attribute Block
     const handleRemoveAttribute = (id: string) => {
         setAttributes((prev) => prev.filter((attr) => attr.id !== id));
+    };
+
+    // Toggle Defined Value in/out of Attribute values list
+    const handleToggleDefinedValue = (attrId: string, val: string) => {
+        setAttributes((prev) =>
+            prev.map((attr) => {
+                if (attr.id === attrId) {
+                    const exists = attr.values.includes(val);
+
+                    return {
+                        ...attr,
+                        values: exists
+                            ? attr.values.filter((v) => v !== val)
+                            : [...attr.values, val],
+                    };
+                }
+
+                return attr;
+            }),
+        );
+    };
+
+    // Add All Predefined Values of the Selected Attribute
+    const handleSelectAllDefinedValues = (
+        attrId: string,
+        allValues: string[],
+    ) => {
+        setAttributes((prev) =>
+            prev.map((attr) => {
+                if (attr.id === attrId) {
+                    return {
+                        ...attr,
+                        values: Array.from(
+                            new Set([...attr.values, ...allValues]),
+                        ),
+                    };
+                }
+
+                return attr;
+            }),
+        );
     };
 
     // Add Value to Attribute
@@ -370,8 +517,7 @@ export function AttributeVariantMatrix({
                             <div className="flex items-center gap-2">
                                 <Sparkles className="size-4 text-primary" />
                                 <h4 className="text-xs font-semibold text-foreground">
-                                    Nitelik Tanımlama (WooCommerce Stili Varyant
-                                    Üretici)
+                                    Nitelik Tanımlama
                                 </h4>
                             </div>
                             <Button
@@ -393,124 +539,265 @@ export function AttributeVariantMatrix({
                         </p>
 
                         <div className="space-y-3">
-                            {attributes.map((attr) => (
-                                <div
-                                    key={attr.id}
-                                    className="flex flex-col gap-3 rounded-lg border border-border bg-card p-3 sm:flex-row sm:items-center"
-                                >
-                                    <div className="w-full shrink-0 sm:w-44">
-                                        <Label className="mb-1 block text-[11px] text-muted-foreground">
-                                            Nitelik Adı
-                                        </Label>
-                                        <Input
-                                            value={attr.name}
-                                            onChange={(e) => {
-                                                const val = e.target.value;
-                                                setAttributes((prev) =>
-                                                    prev.map((a) =>
-                                                        a.id === attr.id
-                                                            ? {
-                                                                  ...a,
-                                                                  name: val,
-                                                              }
-                                                            : a,
-                                                    ),
-                                                );
-                                            }}
-                                            placeholder="Örn: Beden, Renk"
-                                            className="h-8 text-xs font-medium"
-                                        />
-                                    </div>
+                            {attributes.map((attr) => {
+                                const selectedDefined = definedAttributes.find(
+                                    (d) => String(d.id) === attr.selectedId,
+                                );
+                                const hasDefinedValues =
+                                    selectedDefined &&
+                                    selectedDefined.values.length > 0;
 
-                                    <div className="min-w-0 flex-1">
-                                        <Label className="mb-1 block text-[11px] text-muted-foreground">
-                                            Değerler / Seçenekler (Virgül veya
-                                            Enter ile ekleyin)
-                                        </Label>
-                                        <div className="flex min-h-8 flex-wrap items-center gap-1.5 rounded-md border border-input bg-background p-1.5">
-                                            {attr.values.map((v) => (
-                                                <Badge
-                                                    key={v}
-                                                    variant="secondary"
-                                                    className="h-5 gap-1 pr-1 pl-2 text-xs font-normal"
-                                                >
-                                                    {v}
-                                                    <button
-                                                        type="button"
-                                                        onClick={() =>
-                                                            handleRemoveValue(
+                                return (
+                                    <div
+                                        key={attr.id}
+                                        className="flex flex-col gap-3 rounded-lg border border-border bg-card p-3 sm:flex-row sm:items-start"
+                                    >
+                                        <div className="w-full shrink-0 sm:w-52">
+                                            <Label className="mb-1 block text-[11px] text-muted-foreground">
+                                                Nitelik Seçimi
+                                            </Label>
+                                            {definedAttributes.length > 0 ? (
+                                                <div className="space-y-1.5">
+                                                    <Select
+                                                        value={
+                                                            attr.selectedId ??
+                                                            'custom'
+                                                        }
+                                                        onValueChange={(val) =>
+                                                            handleSelectAttribute(
                                                                 attr.id,
-                                                                v,
+                                                                val,
                                                             )
                                                         }
-                                                        className="hover:text-destructive"
                                                     >
-                                                        <X className="size-3" />
-                                                    </button>
-                                                </Badge>
-                                            ))}
-                                            <input
-                                                type="text"
-                                                value={attr.currentInput}
-                                                onChange={(e) => {
-                                                    const val = e.target.value;
+                                                        <SelectTrigger className="h-8 text-xs font-medium">
+                                                            <SelectValue placeholder="Nitelik Seçin" />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            <SelectItem
+                                                                value="custom"
+                                                                className="text-xs text-muted-foreground italic"
+                                                            >
+                                                                + Özel Nitelik
+                                                            </SelectItem>
+                                                            {definedAttributes.map(
+                                                                (d) => (
+                                                                    <SelectItem
+                                                                        key={
+                                                                            d.id
+                                                                        }
+                                                                        value={String(
+                                                                            d.id,
+                                                                        )}
+                                                                        className="text-xs"
+                                                                    >
+                                                                        {d.name}
+                                                                    </SelectItem>
+                                                                ),
+                                                            )}
+                                                        </SelectContent>
+                                                    </Select>
 
-                                                    if (val.includes(',')) {
-                                                        const parts =
-                                                            val.split(',');
-                                                        parts.forEach((p) =>
-                                                            handleAddValue(
-                                                                attr.id,
-                                                                p,
-                                                            ),
-                                                        );
-                                                    } else {
+                                                    {attr.selectedId ===
+                                                        'custom' && (
+                                                        <Input
+                                                            value={attr.name}
+                                                            onChange={(e) => {
+                                                                const val =
+                                                                    e.target
+                                                                        .value;
+                                                                setAttributes(
+                                                                    (prev) =>
+                                                                        prev.map(
+                                                                            (
+                                                                                a,
+                                                                            ) =>
+                                                                                a.id ===
+                                                                                attr.id
+                                                                                    ? {
+                                                                                          ...a,
+                                                                                          name: val,
+                                                                                      }
+                                                                                    : a,
+                                                                        ),
+                                                                );
+                                                            }}
+                                                            placeholder="Örn: Beden, Renk"
+                                                            className="h-8 text-xs font-medium"
+                                                        />
+                                                    )}
+                                                </div>
+                                            ) : (
+                                                <Input
+                                                    value={attr.name}
+                                                    onChange={(e) => {
+                                                        const val =
+                                                            e.target.value;
                                                         setAttributes((prev) =>
                                                             prev.map((a) =>
                                                                 a.id === attr.id
                                                                     ? {
                                                                           ...a,
-                                                                          currentInput:
-                                                                              val,
+                                                                          name: val,
                                                                       }
                                                                     : a,
                                                             ),
                                                         );
-                                                    }
-                                                }}
-                                                onKeyDown={(e) => {
-                                                    if (e.key === 'Enter') {
-                                                        e.preventDefault();
-                                                        handleAddValue(
-                                                            attr.id,
-                                                            attr.currentInput,
-                                                        );
-                                                    }
-                                                }}
-                                                placeholder={
-                                                    attr.values.length === 0
-                                                        ? 'Örn: S, M, L, XL yazıp Enter basın'
-                                                        : '+ Ekle'
-                                                }
-                                                className="h-5 min-w-28 flex-1 border-0 bg-transparent px-1 text-xs outline-hidden"
-                                            />
+                                                    }}
+                                                    placeholder="Örn: Beden, Renk"
+                                                    className="h-8 text-xs font-medium"
+                                                />
+                                            )}
                                         </div>
-                                    </div>
 
-                                    <Button
-                                        type="button"
-                                        variant="ghost"
-                                        size="icon"
-                                        onClick={() =>
-                                            handleRemoveAttribute(attr.id)
-                                        }
-                                        className="size-8 shrink-0 self-end text-muted-foreground hover:text-destructive sm:self-center"
-                                        title="Niteliği Sil"
-                                    >
-                                        <Trash2 className="size-3.5" />
-                                    </Button>
-                                </div>
-                            ))}
+                                        <div className="min-w-0 flex-1">
+                                            <div className="mb-1 flex items-center justify-between">
+                                                <Label className="block text-[11px] text-muted-foreground">
+                                                    Seçilen Değerler (
+                                                    {attr.values.length})
+                                                </Label>
+                                                {hasDefinedValues && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() =>
+                                                            handleSelectAllDefinedValues(
+                                                                attr.id,
+                                                                selectedDefined.values,
+                                                            )
+                                                        }
+                                                        className="text-[11px] font-medium text-primary hover:underline"
+                                                    >
+                                                        Tümünü Ekle
+                                                    </button>
+                                                )}
+                                            </div>
+
+                                            <div className="flex min-h-8 flex-wrap items-center gap-1.5 rounded-md border border-input bg-background p-1.5">
+                                                {attr.values.map((v) => (
+                                                    <Badge
+                                                        key={v}
+                                                        variant="secondary"
+                                                        className="h-5 gap-1 pr-1 pl-2 text-xs font-normal"
+                                                    >
+                                                        {v}
+                                                        <button
+                                                            type="button"
+                                                            onClick={() =>
+                                                                handleRemoveValue(
+                                                                    attr.id,
+                                                                    v,
+                                                                )
+                                                            }
+                                                            className="hover:text-destructive"
+                                                        >
+                                                            <X className="size-3" />
+                                                        </button>
+                                                    </Badge>
+                                                ))}
+                                                <input
+                                                    type="text"
+                                                    value={attr.currentInput}
+                                                    onChange={(e) => {
+                                                        const val =
+                                                            e.target.value;
+
+                                                        if (val.includes(',')) {
+                                                            const parts =
+                                                                val.split(',');
+                                                            parts.forEach((p) =>
+                                                                handleAddValue(
+                                                                    attr.id,
+                                                                    p,
+                                                                ),
+                                                            );
+                                                        } else {
+                                                            setAttributes(
+                                                                (prev) =>
+                                                                    prev.map(
+                                                                        (a) =>
+                                                                            a.id ===
+                                                                            attr.id
+                                                                                ? {
+                                                                                      ...a,
+                                                                                      currentInput:
+                                                                                          val,
+                                                                                  }
+                                                                                : a,
+                                                                    ),
+                                                            );
+                                                        }
+                                                    }}
+                                                    onKeyDown={(e) => {
+                                                        if (e.key === 'Enter') {
+                                                            e.preventDefault();
+                                                            handleAddValue(
+                                                                attr.id,
+                                                                attr.currentInput,
+                                                            );
+                                                        }
+                                                    }}
+                                                    placeholder={
+                                                        attr.values.length === 0
+                                                            ? 'Örn: S, M, L yazıp Enter basın'
+                                                            : '+ Ekle'
+                                                    }
+                                                    className="h-5 min-w-24 flex-1 border-0 bg-transparent px-1 text-xs outline-hidden"
+                                                />
+                                            </div>
+
+                                            {/* Önceden tanımlı kayıtlı seçenekler chips */}
+                                            {hasDefinedValues && (
+                                                <div className="mt-1.5 flex flex-wrap items-center gap-1">
+                                                    <span className="mr-0.5 text-[10px] text-muted-foreground">
+                                                        Kayıtlı:
+                                                    </span>
+                                                    {selectedDefined.values.map(
+                                                        (opt) => {
+                                                            const isSelected =
+                                                                attr.values.includes(
+                                                                    opt,
+                                                                );
+
+                                                            return (
+                                                                <button
+                                                                    key={opt}
+                                                                    type="button"
+                                                                    onClick={() =>
+                                                                        handleToggleDefinedValue(
+                                                                            attr.id,
+                                                                            opt,
+                                                                        )
+                                                                    }
+                                                                    className={`inline-flex items-center rounded-xs px-1.5 py-0.5 text-[10px] font-medium transition-colors ${
+                                                                        isSelected
+                                                                            ? 'bg-primary text-primary-foreground'
+                                                                            : 'border border-border bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground'
+                                                                    }`}
+                                                                >
+                                                                    {opt}
+                                                                </button>
+                                                            );
+                                                        },
+                                                    )}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={() =>
+                                                handleRemoveAttribute(attr.id)
+                                            }
+                                            className="size-8 shrink-0 self-end text-muted-foreground hover:text-destructive sm:self-center"
+                                            title="Niteliği Sil"
+                                        >
+                                            <Trash2 className="size-3.5" />
+                                        </Button>
+                                    </div>
+                                );
+                            })}
                         </div>
 
                         <div className="flex justify-end pt-1">

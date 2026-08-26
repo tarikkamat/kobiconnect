@@ -225,7 +225,14 @@ export default function Dashboard({
         <>
             <Head title="Gösterge Paneli" />
 
-            <div className="relative min-h-[calc(100vh-4rem)] p-4 sm:p-6 lg:p-8">
+            <div
+                className={cn(
+                    'relative p-4 sm:p-6 lg:p-8',
+                    !started
+                        ? 'h-[calc(100vh-4rem)] overflow-hidden'
+                        : 'min-h-[calc(100vh-4rem)]',
+                )}
+            >
                 {/* Onboarding Overlay over blurred dashboard when not started */}
                 {!started && <OnboardingOverlay steps={steps} />}
 
@@ -233,7 +240,7 @@ export default function Dashboard({
                     className={cn(
                         'flex flex-col gap-6 transition-all duration-300',
                         !started &&
-                            'pointer-events-none opacity-40 blur-md filter select-none',
+                            'pointer-events-none opacity-70 blur-[4px] filter select-none',
                     )}
                 >
                     <div className="flex flex-wrap items-end justify-between gap-3">

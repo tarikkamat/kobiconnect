@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Catalog\AttributeController;
 use App\Http\Controllers\Catalog\BrandController;
 use App\Http\Controllers\Catalog\CategoryController;
 use App\Http\Controllers\Catalog\ProductController;
@@ -59,6 +60,11 @@ Route::middleware(ConfigureTenantHost::class)->group(function (): void {
             Route::post('categories', [CategoryController::class, 'store'])->name('categories.store');
             Route::patch('categories/{category}', [CategoryController::class, 'update'])->name('categories.update');
             Route::delete('categories/{category}', [CategoryController::class, 'destroy'])->name('categories.destroy');
+
+            Route::get('attributes', [AttributeController::class, 'index'])->name('attributes.index');
+            Route::post('attributes', [AttributeController::class, 'store'])->name('attributes.store');
+            Route::patch('attributes/{attribute}', [AttributeController::class, 'update'])->name('attributes.update');
+            Route::delete('attributes/{attribute}', [AttributeController::class, 'destroy'])->name('attributes.destroy');
         });
     });
 

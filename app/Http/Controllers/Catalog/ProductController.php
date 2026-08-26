@@ -14,6 +14,7 @@ use App\Http\Requests\Catalog\ProductStoreRequest;
 use App\Http\Requests\Catalog\ProductUpdateRequest;
 use App\Marketplaces\Support\Capability;
 use App\Marketplaces\Support\MarketplaceManager;
+use App\Models\Attribute;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\ChannelConnection;
@@ -175,6 +176,19 @@ class ProductController extends Controller
                 ->active()
                 ->orderBy('name')
                 ->get(['id', 'name', 'marketplace']),
+            'attributes' => Attribute::query()
+                ->with(['values' => fn ($q) => $q->orderBy('position')->orderBy('id')])
+                ->orderBy('name')
+                ->get()
+                ->map(fn (Attribute $a): array => [
+                    'id' => $a->getKey(),
+                    'code' => $a->code,
+                    'name' => $a->name,
+                    'type' => $a->type->value,
+                    'isVariantDefining' => $a->is_variant_defining,
+                    'values' => $a->values->pluck('value')->all(),
+                ])
+                ->all(),
         ]);
     }
 

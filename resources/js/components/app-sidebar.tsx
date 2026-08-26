@@ -26,6 +26,7 @@ import {
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
 import { index as apps } from '@/routes/apps';
+import { index as attributes } from '@/routes/attributes';
 import { index as brands } from '@/routes/brands';
 import { index as categories } from '@/routes/categories';
 import { index as claims } from '@/routes/claims';
@@ -99,6 +100,7 @@ function navGroups(): NavGroup[] {
                 { title: 'Ürünler', href: products() },
                 { title: 'Markalar', href: brands() },
                 { title: 'Kategoriler', href: categories() },
+                { title: 'Nitelikler', href: attributes() },
             ],
         },
         {

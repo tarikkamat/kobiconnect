@@ -78,14 +78,14 @@ export function OnboardingOverlay({ steps }: OnboardingOverlayProps) {
 
     return (
         <>
-            <div className="pointer-events-auto absolute inset-0 z-20 flex items-center justify-center p-4 sm:p-6">
-                <div className="w-full max-w-2xl rounded-2xl border border-border bg-card/95 p-6 shadow-2xl backdrop-blur-xl transition-all sm:p-8">
+            <div className="pointer-events-auto absolute inset-0 z-20 flex items-center justify-center p-4">
+                <div className="w-full max-w-xl rounded-2xl border border-border bg-card/95 p-5 shadow-2xl backdrop-blur-xl transition-all sm:p-6">
                     {/* Header */}
-                    <div className="flex flex-col gap-2">
+                    <div className="flex flex-col gap-1.5">
                         <div className="flex items-center justify-between">
                             <Badge
                                 variant="outline"
-                                className="inline-flex items-center gap-1.5 border-primary/20 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary"
+                                className="inline-flex items-center gap-1.5 border-primary/20 bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary"
                             >
                                 <Sparkles className="size-3.5" />
                                 Kurulum Rehberi
@@ -95,10 +95,10 @@ export function OnboardingOverlay({ steps }: OnboardingOverlayProps) {
                             </span>
                         </div>
 
-                        <h2 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">
+                        <h2 className="text-lg font-bold tracking-tight text-foreground sm:text-xl">
                             KobiConnect&apos;e Hoş Geldiniz
                         </h2>
-                        <p className="text-sm leading-relaxed text-muted-foreground">
+                        <p className="text-xs leading-relaxed text-muted-foreground sm:text-sm">
                             Pazaryeri mağazalarınızı bağlayarak satış, stok ve
                             siparişlerinizi tek bir merkezden anlık olarak
                             yönetmeye başlayın.
@@ -106,7 +106,7 @@ export function OnboardingOverlay({ steps }: OnboardingOverlayProps) {
                     </div>
 
                     {/* Step Cards */}
-                    <div className="mt-6 flex flex-col gap-3">
+                    <div className="mt-4 flex flex-col gap-2.5">
                         {steps.map((step, index) => {
                             const IconComponent = STEP_ICONS[index] ?? Cable;
 
@@ -114,16 +114,16 @@ export function OnboardingOverlay({ steps }: OnboardingOverlayProps) {
                                 <div
                                     key={step.title}
                                     className={cn(
-                                        'group flex flex-col justify-between gap-4 rounded-xl border p-4 transition-colors sm:flex-row sm:items-center',
+                                        'group flex flex-col justify-between gap-3 rounded-xl border p-3.5 transition-colors sm:flex-row sm:items-center',
                                         step.done
                                             ? 'border-border/60 bg-muted/30 opacity-75'
                                             : 'border-border bg-card hover:border-primary/40 hover:bg-secondary/40',
                                     )}
                                 >
-                                    <div className="flex items-start gap-3.5">
+                                    <div className="flex items-start gap-3">
                                         <div
                                             className={cn(
-                                                'mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-lg border text-sm font-semibold',
+                                                'mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg border text-sm font-semibold',
                                                 step.done
                                                     ? 'border-success/30 bg-success/10 text-success'
                                                     : 'border-border bg-secondary text-foreground',
@@ -137,18 +137,16 @@ export function OnboardingOverlay({ steps }: OnboardingOverlayProps) {
                                         </div>
 
                                         <div className="flex flex-col gap-0.5">
-                                            <div className="flex items-center gap-2">
-                                                <span
-                                                    className={cn(
-                                                        'text-sm font-semibold tracking-tight',
-                                                        step.done
-                                                            ? 'text-muted-foreground line-through'
-                                                            : 'text-foreground',
-                                                    )}
-                                                >
-                                                    {step.title}
-                                                </span>
-                                            </div>
+                                            <span
+                                                className={cn(
+                                                    'text-xs font-semibold tracking-tight sm:text-sm',
+                                                    step.done
+                                                        ? 'text-muted-foreground line-through'
+                                                        : 'text-foreground',
+                                                )}
+                                            >
+                                                {step.title}
+                                            </span>
                                             <p className="text-xs leading-normal text-muted-foreground">
                                                 {step.description}
                                             </p>
@@ -168,11 +166,11 @@ export function OnboardingOverlay({ steps }: OnboardingOverlayProps) {
                                                 asChild
                                                 variant="outline"
                                                 size="sm"
-                                                className="group-hover:border-primary/50 group-hover:bg-background"
+                                                className="h-8 text-xs group-hover:border-primary/50 group-hover:bg-background"
                                             >
                                                 <Link href={step.href}>
                                                     Başla
-                                                    <ArrowRight className="ml-1 size-3.5 transition-transform group-hover:translate-x-0.5" />
+                                                    <ArrowRight className="ml-1 size-3 transition-transform group-hover:translate-x-0.5" />
                                                 </Link>
                                             </Button>
                                         )}
@@ -183,27 +181,25 @@ export function OnboardingOverlay({ steps }: OnboardingOverlayProps) {
                     </div>
 
                     {/* Footer CTA */}
-                    <div className="mt-6 flex flex-col items-center justify-between gap-3 border-t border-border pt-5 sm:flex-row">
+                    <div className="mt-5 flex flex-col items-center justify-between gap-3 border-t border-border pt-4 sm:flex-row">
                         <p className="text-xs text-muted-foreground">
                             Adımları tamamladığınızda canlı gösterge paneliniz
                             aktif olacaktır.
                         </p>
 
-                        <div className="flex w-full items-center gap-2 sm:w-auto">
-                            <Button
-                                type="button"
-                                variant="default"
-                                size="default"
-                                className="w-full gap-2 sm:w-auto"
-                                onClick={() => {
-                                    setWizardStep(0);
-                                    setWizardOpen(true);
-                                }}
-                            >
-                                <Rocket className="size-4" />
-                                Şimdi Başla
-                            </Button>
-                        </div>
+                        <Button
+                            type="button"
+                            variant="default"
+                            size="sm"
+                            className="h-9 w-full gap-2 sm:w-auto"
+                            onClick={() => {
+                                setWizardStep(0);
+                                setWizardOpen(true);
+                            }}
+                        >
+                            <Rocket className="size-3.5" />
+                            Şimdi Başla
+                        </Button>
                     </div>
                 </div>
             </div>
