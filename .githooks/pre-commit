@@ -1,21 +1,71 @@
-#!/bin/sh
-# Prettier ve Pint, CI'da ancak tag atildiktan sonra calisiyor. Bu hook ayni
-# duzeltmeleri commit aninda staged dosyalara uygular, boylece format hatasi
-# CI'a hic ulasmaz.
+#!/usr/bin/env sh
+#
+# CI'daki statik analiz kapilarini commit aninda calistirir.
+#
+# Neden: bu kapilar yalnizca CI'da kosuyordu ve her biri ayri bir surum
+# tag'inde ortaya cikiyordu — tek bir deploy icin dort tag harcandi.
+#
+# Iki asama:
+#   1. Mekanik duzeltilebilenler (Prettier, Pint, ESLint --fix) staged
+#      dosyalara uygulanir ve yeniden stage'lenir.
+#   2. Duzeltilemeyenler (PHPStan, tsc, kalan ESLint) commit'i bloklar.
+#
+# Testler BILEREK disarida: ~4 dakika suruyor, commit akisini bogar. CI kosar.
+#
 # ponytail: bosluklu dosya adlarinda xargs bolunur; repo'da yok, cikarsa -z/-0'a gec.
-set -e
+#
+# Atlamak icin: git commit --no-verify
 
-changed=$(git diff --cached --name-only --diff-filter=ACMR)
-[ -z "$changed" ] && exit 0
+staged=$(git diff --cached --name-only --diff-filter=ACMR)
+[ -z "$staged" ] && exit 0
 
-res=$(echo "$changed" | grep '^resources/' || true)
+res=$(printf '%s\n' "$staged" | grep -E '^resources/.*\.(ts|tsx|js|jsx|css)$' || true)
+phpfiles=$(printf '%s\n' "$staged" | grep -E '\.php$' || true)
+
+# --- 1. Otomatik duzeltmeler ---------------------------------------------
 if [ -n "$res" ]; then
-    echo "$res" | xargs npx prettier --write --ignore-unknown --log-level warn
-    echo "$res" | xargs git add
+    printf '%s\n' "$res" | xargs npx prettier --write --ignore-unknown --log-level warn
+    printf '%s\n' "$res" | xargs npx eslint --fix --no-warn-ignored >/dev/null 2>&1 || true
+    printf '%s\n' "$res" | xargs git add
 fi
 
-phpfiles=$(echo "$changed" | grep '\.php$' || true)
 if [ -n "$phpfiles" ] && [ -x vendor/bin/pint ]; then
-    echo "$phpfiles" | xargs vendor/bin/pint -q
-    echo "$phpfiles" | xargs git add
+    printf '%s\n' "$phpfiles" | xargs vendor/bin/pint -q
+    printf '%s\n' "$phpfiles" | xargs git add
 fi
+
+# --- 2. Bloklayan kapilar -------------------------------------------------
+failed=''
+
+# Ilk hatada cikmiyoruz: kirmizi olan HER kapiyi tek seferde gormek,
+# birini duzeltip digerini bir sonraki tag'de kesfetmekten iyidir.
+run() {
+    label="$1"
+    shift
+    printf '  %-10s' "$label"
+    if output=$("$@" 2>&1); then
+        echo 'ok'
+    else
+        echo 'HATA'
+        printf '%s\n' "$output" | tail -25
+        failed="$failed $label"
+    fi
+}
+
+if [ -n "$phpfiles" ]; then
+    run phpstan vendor/bin/phpstan analyse --memory-limit=512M --no-progress
+fi
+
+if [ -n "$res" ]; then
+    run eslint npm run --silent lint:check
+    run tsc npm run --silent types:check
+fi
+
+if [ -n "$failed" ]; then
+    echo
+    echo "pre-commit BASARISIZ:$failed"
+    echo 'Atlamak icin: git commit --no-verify'
+    exit 1
+fi
+
+exit 0
