@@ -13,8 +13,10 @@ use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Inertia\Inertia;
 use Stancl\Tenancy\Middleware\InitializeTenancyByPath;
 use Stancl\Tenancy\Middleware\ScopeSessions;
+use Symfony\Component\HttpFoundation\Response;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -110,4 +112,26 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
         );
+
+        $exceptions->respond(function (Response $response, Throwable $exception, Request $request) {
+            if ($request->is('api/*') || $request->expectsJson()) {
+                return $response;
+            }
+
+            $statusCode = $response->getStatusCode();
+
+            if (! in_array($statusCode, [500, 503, 404, 403, 401, 419, 429], true)) {
+                return $response;
+            }
+
+            if (app()->hasDebugModeEnabled() && $statusCode >= 500) {
+                return $response;
+            }
+
+            return Inertia::render('error', [
+                'status' => $statusCode,
+            ])
+                ->toResponse($request)
+                ->setStatusCode($statusCode);
+        });
     })->create();

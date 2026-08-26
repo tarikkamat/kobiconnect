@@ -202,11 +202,10 @@ return [
     /**
      * Should tenancy routes be registered.
      *
-     * Tenancy routes include tenant asset routes. By default, this route is
-     * enabled. But it may be useful to disable them if you use external
-     * storage (e.g. S3 / Dropbox) or have a custom asset controller.
+     * Tenancy routes include tenant asset routes. Domain-based asset routes
+     * are disabled because tenancy is path-based and assets are served globally via Vite.
      */
-    'routes' => true,
+    'routes' => false,
 
     /**
      * Parameters used by the tenants:migrate command.

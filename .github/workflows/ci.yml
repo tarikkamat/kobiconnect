@@ -85,7 +85,10 @@ jobs:
         run: npm run types:check
 
       - name: PHPUnit Tests
-        run: php artisan test --compact
+        # --parallel: her surec kendi veritabaninda kosar. Tenancy'nin
+        # `central`/`tenant` baglantilarini Laravel kendiliginden
+        # yeniden adlandirmaz; hizalama tests/TestCase::setUpTraits()'te.
+        run: php artisan test --parallel --compact
 
   build:
     name: Build & push Docker image

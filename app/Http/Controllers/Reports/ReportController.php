@@ -8,7 +8,6 @@ use App\Http\Controllers\Controller;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Number;
@@ -40,7 +39,6 @@ class ReportController extends Controller
     public function index(Request $request): Response
     {
         $this->authorizeView();
-        $this->ensureOrdersExist();
 
         [$from, $to] = $this->range($request);
         $connectionId = $request->filled('connection') ? (int) $request->input('connection') : null;
@@ -69,7 +67,6 @@ class ReportController extends Controller
     public function channels(Request $request): Response
     {
         $this->authorizeView();
-        $this->ensureOrdersExist();
 
         [$from, $to] = $this->range($request);
         $connectionId = $request->filled('connection') ? (int) $request->input('connection') : null;
@@ -98,7 +95,6 @@ class ReportController extends Controller
     public function products(Request $request): Response
     {
         $this->authorizeView();
-        $this->ensureOrdersExist();
 
         [$from, $to] = $this->range($request);
         $connectionId = $request->filled('connection') ? (int) $request->input('connection') : null;
@@ -127,7 +123,6 @@ class ReportController extends Controller
     public function penalties(Request $request): Response
     {
         $this->authorizeView();
-        $this->ensureOrdersExist();
 
         [$from, $to] = $this->range($request);
         $connectionId = $request->filled('connection') ? (int) $request->input('connection') : null;
@@ -156,7 +151,6 @@ class ReportController extends Controller
     public function orders(Request $request): Response
     {
         $this->authorizeView();
-        $this->ensureOrdersExist();
 
         [$from, $to] = $this->range($request);
         $connectionId = $request->filled('connection') ? (int) $request->input('connection') : null;
@@ -181,25 +175,6 @@ class ReportController extends Controller
             'totalOrders' => $orderCount,
             'statusDistribution' => $statusDistribution,
         ]);
-    }
-
-    private function ensureOrdersExist(): void
-    {
-        if (DB::table('orders')->exists()) {
-            return;
-        }
-
-        if (app()->runningUnitTests()) {
-            return;
-        }
-
-        $tenant = tenant();
-        if ($tenant !== null) {
-            Artisan::call('demo:seed-orders', [
-                '--tenant' => (string) $tenant->getTenantKey(),
-                '--count' => 60,
-            ]);
-        }
     }
 
     private function authorizeView(): void

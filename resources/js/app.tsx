@@ -13,7 +13,7 @@ createInertiaApp({
     title: (title) => (title ? `${title} - ${appName}` : appName),
     layout: (name) => {
         switch (true) {
-            case name === 'welcome':
+            case name === 'welcome' || name === 'error':
                 return null;
             // Central onboarding sayfalarinda oturum yoktur; AppLayout'un
             // kenar cubugu ve auth.user beklentisi burada karsilanamaz.

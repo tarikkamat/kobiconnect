@@ -19,5 +19,5 @@ vendor/bin/phpstan analyse --memory-limit=512M --no-progress
 npm run lint:check
 npm run format:check
 npm run types:check
-php artisan test --compact
+php artisan test --parallel --compact
 echo "==> Tum kontroller gecti, tag gonderiliyor."

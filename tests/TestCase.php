@@ -86,6 +86,43 @@ abstract class TestCase extends BaseTestCase
      * `initialize()`/`end()` cifti arasinda purge edildigi icin bir transaction
      * istek sinirini asamaz.
      */
+    /**
+     * Laravel'in paralel veritabani degisimi `setUpTestCase` geri
+     * cagrilarinda olur; RefreshDatabase'in migration'lari ise hemen sonraki
+     * `setUpTraits()` icinde. Hizalama tam bu araliga girmeli — daha gec
+     * yapilirsa migration'lar hala eski veritabanina yazar.
+     */
+    protected function setUpTraits()
+    {
+        $this->alignTenancyConnectionsWithParallelDatabase();
+
+        return parent::setUpTraits();
+    }
+
+    /**
+     * Paralel kosuda Laravel YALNIZCA default baglantinin veritabani adini
+     * degistirir (Illuminate\Testing\Concerns\TestDatabases::switchToDatabase).
+     * Tenancy'nin `central` ve `tenant` baglantilari ayri tanimlardir ve eski
+     * adi tutmaya devam eder — hizalanmazsa butun surecler ayni veritabaninda
+     * bulusur ve birbirinin semasini siler.
+     *
+     * Seri kosuda iki ad zaten ayni oldugu icin bu metot hicbir sey yapmaz.
+     */
+    private function alignTenancyConnectionsWithParallelDatabase(): void
+    {
+        $default = (string) config('database.default');
+        $database = config("database.connections.{$default}.database");
+
+        foreach (['central', 'tenant'] as $connection) {
+            if (config("database.connections.{$connection}.database") === $database) {
+                continue;
+            }
+
+            config()->set("database.connections.{$connection}.database", $database);
+            DB::purge($connection);
+        }
+    }
+
     private function truncateTenantTables(): void
     {
         $schema = (string) DB::connection('tenant')->getConfig('search_path');
