@@ -58,7 +58,13 @@ jobs:
         run: npm install
 
       - name: Prepare environment
-        run: cp .env.example .env && php artisan key:generate
+        # passport:keys ZORUNLU: imza anahtarlari repoda tutulmaz (gizli) ve
+        # AppServiceProvider onlari base_path('storage')'da arar. Yoksa her
+        # OAuth istegi "Invalid key supplied" ile 500 doner.
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+          php artisan passport:keys --force
 
       - name: Build frontend assets
         run: npm run build
@@ -145,6 +151,12 @@ jobs:
               echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             fi
             docker compose --env-file .env --env-file .image.env pull app worker scheduler
+
+            # Passport imza anahtarlari: repoda tutulmaz, storage volume'unde
+            # yasar. Ilk deploy'da yoklar; uretilmezse her OAuth istegi
+            # "Invalid key supplied" ile 500 doner. Idempotent.
+            docker compose --env-file .env --env-file .image.env run --rm app \
+              sh -c '[ -f storage/oauth-private.key ] || php artisan passport:keys'
 
             # Run migrations
             docker compose --env-file .env --env-file .image.env run --rm app php artisan migrate --force
